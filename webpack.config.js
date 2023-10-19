@@ -7,7 +7,8 @@ module.exports = {
   mode: isDevelopment ? 'development' : 'production',
   entry: {
     //popup: path.join(__dirname, 'src/popup.ts'),
-    background: path.join(__dirname, 'src/background.ts')
+    background: path.join(__dirname, 'src/background.ts'),
+    content: path.join(__dirname, 'src/content.ts')
   },
   module: {
     rules: [
