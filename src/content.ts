@@ -1,12 +1,12 @@
 import * as $ from 'jquery';
 import {getSavedWords} from "./helpers";
+import {scriptName} from "./constants";
 
 /*
 some logic taken from:
 https://github.com/yeahpython/filter-anything-everywhere/blob/main/extension/content.ts
  */
 
-const scriptName= "mindguard"
 const min_feed_neighbors = 3;
 const DEBUG = process.env.NODE_ENV === 'development'
 
@@ -132,20 +132,9 @@ async function checkAndFilterElements() {
   let wordsToFilter: string[] = [];
 
   try {
-    const savedWords = await getSavedWords();  // Using await to get the saved words
-
-    if (!Array.isArray(savedWords) || !savedWords.every(() => true)) {
-      console.error("Invalid format for saved words. Must be an array of strings.");
-      return;
-    }
-    wordsToFilter = savedWords;  // You can now use the savedWords as you need
+    wordsToFilter = await getSavedWords();
   } catch (e) {
     console.error("Error retrieving saved words.", e);
-  }
-  if (process.env.NODE_ENV === 'development') {
-    // Sample array of words to filter
-    const devWords: string[] = ["c++", "requiem", "elon musk"];
-    wordsToFilter = wordsToFilter.concat(devWords)
   }
 
   // Traverse through all text nodes
