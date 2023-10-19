@@ -26,7 +26,7 @@ function isSimilar(my_rect:DOMRect, sib_rect:DOMRect) {
   }
 }
 
-function getFeedlikeAncestor(node:Node) {
+function getFeedlikeAncestor(node:Node): Node{
   let chosen_dom_element;
   const parents = $(node).add($(node).parents());
   const sibling_counts = parents.map(function(index, elem) {
@@ -74,7 +74,7 @@ function getFeedlikeAncestor(node:Node) {
   } else {
     chosen_dom_element = parents[best_index]; // Select one level below the identified ancestor
   }
-  return $(chosen_dom_element);
+  return $(chosen_dom_element)[0];
 }
 
 
@@ -153,8 +153,8 @@ async function checkAndFilterElements() {
         // Find the feed-like ancestor of the parent element
         const ancestor = getFeedlikeAncestor(node);
         // Hide the ancestor
-        if (ancestor[0] instanceof HTMLElement) {
-          hideElement(ancestor[0]);
+        if (ancestor instanceof HTMLElement) {
+          hideElement(ancestor);
         }
       }
     }
