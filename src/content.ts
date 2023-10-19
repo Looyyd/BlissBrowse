@@ -1,4 +1,5 @@
 import * as $ from 'jquery';
+import {getSavedWords} from "./helpers";
 
 /*
 some logic taken from:
@@ -93,17 +94,39 @@ function filterTextContent(textContent: string, wordsToFilter: string[]): boolea
 
 
 
-// Sample array of words to filter
-const wordsToFilter = ["c++", "requiem", "elon musk"];
 
 
-function checkAndFilterElements() {
+async function checkAndFilterElements() {
   // Create a TreeWalker to traverse text nodes
   const walker = document.createTreeWalker(
     document.body,
     NodeFilter.SHOW_TEXT,
     null,
   );
+
+  let wordsToFilter: string[] = [];
+
+  try {
+    const savedWords = await getSavedWords();  // Using await to get the saved words
+
+    if (!Array.isArray(savedWords) || !savedWords.every(() => true)) {
+      console.error("Invalid format for saved words. Must be an array of strings.");
+      return;
+    }
+
+    wordsToFilter = savedWords;  // You can now use the savedWords as you need
+
+  } catch (e) {
+    console.error("Error retrieving saved words.", e);
+  }
+
+
+  if (process.env.NODE_ENV === 'development') {
+    // Sample array of words to filter
+    const devWords: string[] = ["c++", "requiem", "elon musk"];
+    wordsToFilter = wordsToFilter.concat(devWords)
+  }
+
 
   // Traverse through all text nodes
   let node = walker.nextNode();
@@ -134,15 +157,14 @@ function checkAndFilterElements() {
   }
 }
 
-
-
-
 // Run the function
 checkAndFilterElements();
 
-const observer = new MutationObserver(() => {
-  checkAndFilterElements();
+const observer = new MutationObserver(async () => {
+  await checkAndFilterElements();
 });
 
 observer.observe(document.body, { childList: true, subtree: true });
+
+chrome.storage.onChanged.addListener(checkAndFilterElements);
 

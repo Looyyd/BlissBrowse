@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Mindguard",
   "version": "1.0",
-  "permissions": ["tabs", "http://*/*", "https://*/*"],
+  "permissions": ["tabs", "http://*/*", "https://*/*", "storage"],
   "background": {
     "scripts": ["dist/background.js"],
     "persistent": false
@@ -13,7 +13,10 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["dist/content.js"]
+      "js": [
+        "dist/content.js",
+        "dist/helpers.js"
+      ]
     }
   ]
 }
