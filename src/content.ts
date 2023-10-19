@@ -6,7 +6,9 @@ some logic taken from:
 https://github.com/yeahpython/filter-anything-everywhere/blob/main/extension/content.ts
  */
 
+const scriptName= "mindguard"
 const min_feed_neighbors = 3;
+const DEBUG = process.env.NODE_ENV === 'development'
 
 function isSimilar(my_rect:DOMRect, sib_rect:DOMRect) {
   const my_x = my_rect.left + my_rect.width / 2;
@@ -92,11 +94,34 @@ function filterTextContent(textContent: string, wordsToFilter: string[]): boolea
   return false; // No words found, element should not be filtered
 }
 
+function unhideAndUnprocessElements() {
+  const hiddenElements = document.querySelectorAll('[data-hidden-by-' + scriptName + '="true"]');
+  hiddenElements.forEach(element => {
+    element.removeAttribute('data-processed');
+    element.removeAttribute('data-hidden-by-' + scriptName);
+
+    (element as HTMLElement).style.display =
+      element.getAttribute('data-original-display-' + scriptName) || '';
+
+    element.removeAttribute('data-original-display-' + scriptName);
+  });
+}
+function hideElement(element: HTMLElement) {
+  if(DEBUG){
+    console.log(`Hidden ancestor: ${element.tagName} - Text: ${element.textContent?.substring(0, 100)}`);
+  }
+  const originalDisplay = element.style.display;
+  element.setAttribute('data-original-display-' + scriptName, originalDisplay);
+  element.setAttribute('data-hidden-by-' + scriptName, 'true');
+  element.setAttribute('data-processed', 'true');
+  element.style.display = 'none';
+}
 
 
 
 
 async function checkAndFilterElements() {
+  unhideAndUnprocessElements();//TODO: implement a more efficient solution
   // Create a TreeWalker to traverse text nodes
   const walker = document.createTreeWalker(
     document.body,
@@ -113,20 +138,15 @@ async function checkAndFilterElements() {
       console.error("Invalid format for saved words. Must be an array of strings.");
       return;
     }
-
     wordsToFilter = savedWords;  // You can now use the savedWords as you need
-
   } catch (e) {
     console.error("Error retrieving saved words.", e);
   }
-
-
   if (process.env.NODE_ENV === 'development') {
     // Sample array of words to filter
     const devWords: string[] = ["c++", "requiem", "elon musk"];
     wordsToFilter = wordsToFilter.concat(devWords)
   }
-
 
   // Traverse through all text nodes
   let node = walker.nextNode();
@@ -143,13 +163,10 @@ async function checkAndFilterElements() {
 
         // Find the feed-like ancestor of the parent element
         const ancestor = getFeedlikeAncestor(node);
-
         // Hide the ancestor
         if (ancestor[0] instanceof HTMLElement) {
-          console.log(`Hidden ancestor: ${ancestor[0].tagName} - Text: ${ancestor[0].textContent?.substring(0, 100)}`);
-          ancestor[0].style.display = "none";
+          hideElement(ancestor[0]);
         }
-
       }
     }
 
