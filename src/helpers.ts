@@ -1,4 +1,5 @@
 import {devWords} from "./constants";
+import {DEBUG} from "./constants";
 
 export function getSavedWords(): Promise<string[]> {
   return new Promise((resolve, reject) => {
@@ -7,7 +8,7 @@ export function getSavedWords(): Promise<string[]> {
         return reject(new Error(chrome.runtime.lastError.message));
       }
       let userDefinedWords: string[] = result.userDefinedWords ? result.userDefinedWords : [];
-      if (process.env.NODE_ENV === 'development') {
+      if (DEBUG) {
         userDefinedWords = userDefinedWords.concat(devWords);
       }
       resolve(userDefinedWords);

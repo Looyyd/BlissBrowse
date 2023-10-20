@@ -8,7 +8,6 @@ https://github.com/yeahpython/filter-anything-everywhere/blob/main/extension/con
  */
 
 const min_feed_neighbors = 3;
-const DEBUG = process.env.NODE_ENV === 'development'
 
 function isSimilar(my_rect:DOMRect, sib_rect:DOMRect) {
   const my_x = my_rect.left + my_rect.width / 2;
@@ -79,49 +78,74 @@ function getFeedlikeAncestor(node:Node): Node{
 
 
 
-function filterTextContent(textContent: string, wordsToFilter: string[]): boolean {
+// Define a new type for the filter result
+type FilterResult = {
+  shouldFilter: boolean;
+  triggeringWord?: string;
+};
+
+// Update the function to return the new type
+function filterTextContent(textContent: string, wordsToFilter: string[]): FilterResult {
   const cleanedTextContent = textContent.toLowerCase().trim();
-  if (cleanedTextContent === "") {
-    return false;
-  }
+  const result: FilterResult = {
+    shouldFilter: false,
+  };
 
   for (const word of wordsToFilter) {
     if (cleanedTextContent.includes(word.toLowerCase())) {
-      return true; // Word found, the element should be filtered
+      result.shouldFilter = true;
+      result.triggeringWord = word;
+      return result;
     }
   }
-
-  return false; // No words found, element should not be filtered
+  return result;
 }
 
-function unhideAndUnprocessElements() {
-  const hiddenElements = document.querySelectorAll('[data-hidden-by-' + scriptName + '="true"]');
-  hiddenElements.forEach(element => {
-    element.removeAttribute('data-processed');
-    element.removeAttribute('data-hidden-by-' + scriptName);
-
-    (element as HTMLElement).style.display =
-      element.getAttribute('data-original-display-' + scriptName) || '';
-
-    element.removeAttribute('data-original-display-' + scriptName);
-  });
-}
-function hideElement(element: HTMLElement) {
-  if(DEBUG){
-    console.log(`Hidden ancestor: ${element.tagName} - Text: ${element.textContent?.substring(0, 100)}`);
-  }
+// Function to hide an element
+function hideElement(element: HTMLElement, triggeringWord: string) {
   const originalDisplay = element.style.display;
   element.setAttribute('data-original-display-' + scriptName, originalDisplay);
   element.setAttribute('data-hidden-by-' + scriptName, 'true');
   element.setAttribute('data-processed', 'true');
+  element.setAttribute('data-triggering-word', triggeringWord);
   element.style.display = 'none';
+}
+
+async function unhideAndUnprocessElements(currentWords: string[]) {
+  // Function to unhide and unprocess elements based on a list of current words
+  //TODO: can this be more afficient?
+  const hiddenElements = document.querySelectorAll('[data-hidden-by-' + scriptName + '="true"]');
+  hiddenElements.forEach(element => {
+    const triggeringWord = element.getAttribute('data-triggering-word') || '';
+
+    const shouldUnhide = !currentWords.includes(triggeringWord);
+
+    if (shouldUnhide) {
+      element.removeAttribute('data-processed');
+      element.removeAttribute('data-hidden-by-' + scriptName);
+      element.removeAttribute('data-triggering-words');
+
+      (element as HTMLElement).style.display =
+        element.getAttribute('data-original-display-' + scriptName) || '';
+
+      element.removeAttribute('data-original-display-' + scriptName);
+    }
+  });
+}
+
+
+let debounceTimeout: NodeJS.Timeout;
+
+function debouncedCheckAndFilter() {
+  clearTimeout(debounceTimeout);
+  debounceTimeout = setTimeout(() => {
+    checkAndFilterElements()
+  }, 300);
 }
 
 
 
-
 async function checkAndFilterElements() {
-  unhideAndUnprocessElements();//TODO: implement a more efficient solution
   // Create a TreeWalker to traverse text nodes
   const walker = document.createTreeWalker(
     document.body,
@@ -130,12 +154,12 @@ async function checkAndFilterElements() {
   );
 
   let wordsToFilter: string[] = [];
-
   try {
     wordsToFilter = await getSavedWords();
   } catch (e) {
     console.error("Error retrieving saved words.", e);
   }
+  await unhideAndUnprocessElements(wordsToFilter);
 
   // Traverse through all text nodes
   let node = walker.nextNode();
@@ -146,31 +170,32 @@ async function checkAndFilterElements() {
     if (node.nodeType === Node.TEXT_NODE &&
       node.textContent &&
       !['script', 'style'].includes(parentTagName)) {  // Skip certain tags
-      if (filterTextContent(node.textContent, wordsToFilter)) {
-        console.log(`Target text: ${node.textContent.substring(0, 100)}`);
 
+      const filterResult = filterTextContent(node.textContent!, wordsToFilter);
 
-        // Find the feed-like ancestor of the parent element
+      if (filterResult.shouldFilter && filterResult.triggeringWord) {
         const ancestor = getFeedlikeAncestor(node);
-        // Hide the ancestor
         if (ancestor instanceof HTMLElement) {
-          hideElement(ancestor);
+          hideElement(ancestor, filterResult.triggeringWord);
         }
       }
     }
 
     node = walker.nextNode();
-  }
+  }//end node traversal
 }
 
+
 // Run the function
-checkAndFilterElements();
 
 const observer = new MutationObserver(async () => {
-  await checkAndFilterElements();
+  await debouncedCheckAndFilter();
 });
 
 observer.observe(document.body, { childList: true, subtree: true });
 
-chrome.storage.onChanged.addListener(checkAndFilterElements);
+chrome.storage.onChanged.addListener(async () => {
+  await debouncedCheckAndFilter();
+});
 
+debouncedCheckAndFilter()
