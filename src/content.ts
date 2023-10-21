@@ -1,5 +1,5 @@
 import * as $ from 'jquery';
-import {getSavedWords, isDisabledOnSite} from "./helpers";
+import {getSavedWords, isDisabledOnSiteContent} from "./helpers";
 import {scriptName} from "./constants";
 
 /*
@@ -146,7 +146,7 @@ function debouncedCheckAndFilter() {
 
 
 async function checkAndFilterElements() {
-  const isDisabled = await isDisabledOnSite();
+  const isDisabled = await isDisabledOnSiteContent();
   if (isDisabled) {
     await unhideAndUnprocessElements([])//unhide all
     return;

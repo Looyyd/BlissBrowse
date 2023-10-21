@@ -18,15 +18,24 @@ export async function currentTabHostnamePopup(): Promise<string> {
 }
 
 document.getElementById('disableButton')?.addEventListener('click', async () => {
-  const hostname = await currentTabHostnamePopup();  // Await if it's async
+  const hostname = await currentTabHostnamePopup();
   const key = `disabled-${hostname}`;
   chrome.storage.sync.get(key, (data) => {
     const disabled = !data[key];
-    chrome.storage.sync.set({ [key]: disabled }, () => {
-      updateDisableButtonText(disabled);
-    });
+    if (disabled) {
+      chrome.storage.sync.set({ [key]: true }, () => {
+        updateDisableButtonText(true);
+      });
+    } else {
+      // don't store the key if it's false
+      chrome.storage.sync.remove(key, () => {
+        updateDisableButtonText(false);
+      });
+    }
   });
 });
+
+
 
 
 function updateDisableButtonText(disabled: boolean) : void {
@@ -76,18 +85,26 @@ async function displayFilteredWords() {
   }
 }
 
+async function isDisabledOnSitePopup(): Promise<boolean> {
+  const hostname = await currentTabHostnamePopup();
+  const key = `disabled-${hostname}`;
+
+  return new Promise<boolean>((resolve) => {
+    chrome.storage.sync.get(key, (data) => {
+      resolve(!!data[key]);
+    });
+  });
+}
+
+
 /*
 INITIAL SETUP:
  */
 
-displayFilteredWords(); // Initial display
+displayFilteredWords();
 
 
-// Initial button state
-const hostname = currentTabHostnamePopup();
-if(hostname){
-  const key = `disabled-${hostname}`;
-  chrome.storage.sync.get(key, (data) => {
-    updateDisableButtonText(data[key]);
-  });
-}
+(async () => {
+  const isDisabled = await isDisabledOnSitePopup();
+  updateDisableButtonText(isDisabled);
+})();

@@ -40,7 +40,7 @@ export function currentTabHostnameContent(): string{
   return hostname
 }
 
-export async function isDisabledOnSite(): Promise<boolean> {
+export async function isDisabledOnSiteContent(): Promise<boolean> {
   const hostname = currentTabHostnameContent();
   const key = `disabled-${hostname}`;
   const isDisabled = await new Promise<boolean>((resolve) => {
@@ -48,7 +48,6 @@ export async function isDisabledOnSite(): Promise<boolean> {
       resolve(!!data[key]);
     });
   });
-  //TODO: what does it resolve to if the value is not set?
   if(DEBUG){
     console.log('isDisabledOnSite:', isDisabled);
   }
