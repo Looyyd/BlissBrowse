@@ -1,6 +1,9 @@
 import {devWords} from "./constants";
 import {DEBUG} from "./constants";
 
+const blacklistKey = 'blacklist';
+
+
 export function getSavedWords(): Promise<string[]> {
   return new Promise((resolve, reject) => {
     chrome.storage.local.get(['userDefinedWords'], function(result) {
@@ -42,17 +45,44 @@ export function currentTabHostnameContent(): string{
 
 export async function isDisabledOnSiteContent(): Promise<boolean> {
   const hostname = currentTabHostnameContent();
-  const key = `disabled-${hostname}`;
-  const isDisabled = await new Promise<boolean>((resolve) => {
-    chrome.storage.sync.get(key, (data) => {
-      resolve(!!data[key]);
+  return isDisabledOnSite(hostname);
+}
+
+export async function isDisabledOnSite(hostname: string): Promise<boolean> {
+  const blacklist = await new Promise<string[]>((resolve) => {
+    chrome.storage.sync.get(blacklistKey, (data) => {
+      resolve(data[blacklistKey] || []);
     });
   });
-  if(DEBUG){
-    console.log('isDisabledOnSite:', isDisabled);
-  }
-  return isDisabled;
+  return blacklist.includes(hostname);
 }
 
 
+async function getBlacklist(): Promise<string[]> {
+  return new Promise<string[]>((resolve) => {
+    chrome.storage.sync.get(blacklistKey, (data) => {
+      resolve(data[blacklistKey] || []);
+    });
+  });
+}
+
+async function setBlacklist(blacklist: string[]) {
+  await chrome.storage.sync.set({[blacklistKey]: blacklist});
+}
+
+export async function addToBlacklist(hostname: string) {
+  const blacklist = await getBlacklist();
+  blacklist.push(hostname);
+  await setBlacklist(blacklist);
+}
+
+
+export async function removeFromBlacklist(hostname: string) {
+  const blacklist = await getBlacklist();
+  const index = blacklist.indexOf(hostname);
+  if (index > -1) {
+    blacklist.splice(index, 1);
+  }
+  await setBlacklist(blacklist);
+}
 

@@ -1,4 +1,5 @@
 import {getSavedWords, saveNewWord} from "./helpers";
+import {isDisabledOnSite, addToBlacklist, removeFromBlacklist} from "./helpers";
 import {DEBUG} from "./constants";
 
 
@@ -19,20 +20,14 @@ export async function currentTabHostnamePopup(): Promise<string> {
 
 document.getElementById('disableButton')?.addEventListener('click', async () => {
   const hostname = await currentTabHostnamePopup();
-  const key = `disabled-${hostname}`;
-  chrome.storage.sync.get(key, (data) => {
-    const disabled = !data[key];
-    if (disabled) {
-      chrome.storage.sync.set({ [key]: true }, () => {
-        updateDisableButtonText(true);
-      });
-    } else {
-      // don't store the key if it's false
-      chrome.storage.sync.remove(key, () => {
-        updateDisableButtonText(false);
-      });
-    }
-  });
+  const isDisabled = await isDisabledOnSite(hostname);
+  if (isDisabled) {
+    await removeFromBlacklist(hostname);
+    updateDisableButtonText(false);
+  } else {
+    await addToBlacklist(hostname);
+    updateDisableButtonText(true);
+  }
 });
 
 
@@ -87,13 +82,7 @@ async function displayFilteredWords() {
 
 async function isDisabledOnSitePopup(): Promise<boolean> {
   const hostname = await currentTabHostnamePopup();
-  const key = `disabled-${hostname}`;
-
-  return new Promise<boolean>((resolve) => {
-    chrome.storage.sync.get(key, (data) => {
-      resolve(!!data[key]);
-    });
-  });
+  return await isDisabledOnSite(hostname);
 }
 
 
