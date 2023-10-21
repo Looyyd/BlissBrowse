@@ -17,7 +17,6 @@ export function getSavedWords(): Promise<string[]> {
 }
 
 
-
 export async function saveNewWord(newWord: string, existingWords: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
     const updatedWords = [...existingWords, newWord];
@@ -29,5 +28,32 @@ export async function saveNewWord(newWord: string, existingWords: string[]): Pro
     });
   });
 }
+
+export function currentTabHostnameContent(): string{
+  const hostname = window.location.hostname;
+  if(DEBUG){
+    console.log('Hostname in content:', hostname);
+  }
+  if (hostname.startsWith('www.')) {
+    return hostname.slice(4);
+  }
+  return hostname
+}
+
+export async function isDisabledOnSite(): Promise<boolean> {
+  const hostname = currentTabHostnameContent();
+  const key = `disabled-${hostname}`;
+  const isDisabled = await new Promise<boolean>((resolve) => {
+    chrome.storage.sync.get(key, (data) => {
+      resolve(!!data[key]);
+    });
+  });
+  //TODO: what does it resolve to if the value is not set?
+  if(DEBUG){
+    console.log('isDisabledOnSite:', isDisabled);
+  }
+  return isDisabled;
+}
+
 
 

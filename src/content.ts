@@ -1,5 +1,5 @@
 import * as $ from 'jquery';
-import {getSavedWords} from "./helpers";
+import {getSavedWords, isDisabledOnSite} from "./helpers";
 import {scriptName} from "./constants";
 
 /*
@@ -113,7 +113,7 @@ function hideElement(element: HTMLElement, triggeringWord: string) {
 
 async function unhideAndUnprocessElements(currentWords: string[]) {
   // Function to unhide and unprocess elements based on a list of current words
-  //TODO: can this be more afficient?
+  //TODO: can this be more efficient?
   const hiddenElements = document.querySelectorAll('[data-hidden-by-' + scriptName + '="true"]');
   hiddenElements.forEach(element => {
     const triggeringWord = element.getAttribute('data-triggering-word') || '';
@@ -140,12 +140,17 @@ function debouncedCheckAndFilter() {
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
     checkAndFilterElements()
-  }, 300);
+  }, 100);//TODO: what value should this be?
 }
 
 
 
 async function checkAndFilterElements() {
+  const isDisabled = await isDisabledOnSite();
+  if (isDisabled) {
+    await unhideAndUnprocessElements([])//unhide all
+    return;
+  }
   // Create a TreeWalker to traverse text nodes
   const walker = document.createTreeWalker(
     document.body,
