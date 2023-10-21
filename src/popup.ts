@@ -1,26 +1,14 @@
-import {getSavedWords, saveNewWord} from "./helpers";
-import {isDisabledOnSite, addToBlacklist, removeFromBlacklist} from "./helpers";
+import {getSavedWords, isCurrentSiteDisabled, saveNewWord} from "./helpers";
+import {isHostnameDisabled, addToBlacklist, removeFromBlacklist} from "./helpers";
+import {currentTabHostname} from "./helpers";
 import {DEBUG} from "./constants";
 
+const context = "popup";
 
-export async function currentTabHostnamePopup(): Promise<string> {
-  const queryOptions = { active: true, lastFocusedWindow: true };
-  // `tab` will either be a `tabs.Tab` instance or `undefined`.
-  const [tab] = await chrome.tabs.query(queryOptions);
-  const url = tab.url ?? '';
-  const hostname = new URL(url).hostname;
-  if(DEBUG){
-    console.log('Hostname in popup:', hostname);
-  }
-  if (hostname.startsWith('www.')) {
-    return hostname.slice(4);
-  }
-  return hostname
-}
 
 document.getElementById('disableButton')?.addEventListener('click', async () => {
-  const hostname = await currentTabHostnamePopup();
-  const isDisabled = await isDisabledOnSite(hostname);
+  const hostname = await currentTabHostname("popup");
+  const isDisabled = await isHostnameDisabled(hostname);
   if (isDisabled) {
     await removeFromBlacklist(hostname);
     updateDisableButtonText(false);
@@ -80,10 +68,6 @@ async function displayFilteredWords() {
   }
 }
 
-async function isDisabledOnSitePopup(): Promise<boolean> {
-  const hostname = await currentTabHostnamePopup();
-  return await isDisabledOnSite(hostname);
-}
 
 
 /*
@@ -94,6 +78,6 @@ displayFilteredWords();
 
 
 (async () => {
-  const isDisabled = await isDisabledOnSitePopup();
+  const isDisabled = await isCurrentSiteDisabled(context);
   updateDisableButtonText(isDisabled);
 })();

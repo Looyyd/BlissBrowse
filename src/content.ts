@@ -1,5 +1,5 @@
 import * as $ from 'jquery';
-import {getSavedWords, isDisabledOnSiteContent} from "./helpers";
+import {getSavedWords, isCurrentSiteDisabled} from "./helpers";
 import {scriptName} from "./constants";
 
 /*
@@ -8,6 +8,7 @@ https://github.com/yeahpython/filter-anything-everywhere/blob/main/extension/con
  */
 
 const min_feed_neighbors = 3;
+const context = "content";
 
 function isSimilar(my_rect:DOMRect, sib_rect:DOMRect) {
   const my_x = my_rect.left + my_rect.width / 2;
@@ -146,7 +147,7 @@ function debouncedCheckAndFilter() {
 
 
 async function checkAndFilterElements() {
-  const isDisabled = await isDisabledOnSiteContent();
+  const isDisabled = await isCurrentSiteDisabled(context);
   if (isDisabled) {
     await unhideAndUnprocessElements([])//unhide all
     return;
