@@ -137,7 +137,7 @@ async function unhideAndUnprocessElements(currentWords: string[]) {
 
 let debounceTimeout: NodeJS.Timeout;
 
-function debouncedCheckAndFilter() {
+async function debouncedCheckAndFilter() {
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
     checkAndFilterElements()

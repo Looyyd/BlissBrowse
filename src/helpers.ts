@@ -4,32 +4,41 @@ import {DEBUG} from "./constants";
 const blacklistKey = 'blacklist';
 
 
-export function getSavedWords(): Promise<string[]> {
+//TODO: are the types right here?
+export async function getStorageKey(key: string): Promise<string[]> {
   return new Promise((resolve, reject) => {
-    chrome.storage.local.get(['userDefinedWords'], function(result) {
-      if (chrome.runtime.lastError) {
-        return reject(new Error(chrome.runtime.lastError.message));
+    chrome.storage.sync.get(key, (data) => {
+      const value = data[key];
+      if (Array.isArray(value) && value.every(item => typeof item === 'string')) {
+        resolve(value);
+      } else if (value === undefined || value === null) {
+        resolve([]);
+      } else {
+        reject(new Error(`The key "${key}" did not contain a valid array of strings.`));
       }
-      let userDefinedWords: string[] = result.userDefinedWords ? result.userDefinedWords : [];
-      if (DEBUG) {
-        userDefinedWords = userDefinedWords.concat(devWords);
-      }
-      resolve(userDefinedWords);
     });
   });
 }
 
+export async function setStorageKey(key: string, value: string[]) {
+  await chrome.storage.sync.set({[key]: value});
+}
+
+export async function getSavedWords(): Promise<string[]> {
+  let userDefinedWords: string[] = await getStorageKey('userDefinedWords');
+  if (DEBUG) {
+    userDefinedWords = userDefinedWords.concat(devWords);
+  }
+  return userDefinedWords;
+}
+
+
 
 export async function saveNewWord(newWord: string, existingWords: string[]): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const updatedWords = [...existingWords, newWord];
-    chrome.storage.local.set({ 'userDefinedWords': updatedWords }, function() {
-      if (chrome.runtime.lastError) {
-        return reject(chrome.runtime.lastError);
-      }
-      resolve();
-    });
-  });
+  if (existingWords.includes(newWord)) {
+    return;
+  }
+  await setStorageKey('userDefinedWords', existingWords.concat(newWord));
 }
 
 
@@ -71,15 +80,11 @@ export async function isHostnameDisabled(hostname: string): Promise<boolean> {
 
 
 async function getBlacklist(): Promise<string[]> {
-  return new Promise<string[]>((resolve) => {
-    chrome.storage.sync.get(blacklistKey, (data) => {
-      resolve(data[blacklistKey] || []);
-    });
-  });
+  return getStorageKey(blacklistKey);
 }
 
 async function setBlacklist(blacklist: string[]) {
-  await chrome.storage.sync.set({[blacklistKey]: blacklist});
+  await setStorageKey(blacklistKey, blacklist);
 }
 
 export async function addToBlacklist(hostname: string) {
