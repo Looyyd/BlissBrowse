@@ -5,7 +5,7 @@ const blacklistKey = 'blacklist';
 
 
 //TODO: are the types right here?
-export async function getStorageKey(key: string): Promise<string[]> {
+async function getStorageKey(key: string): Promise<string[]> {
   return new Promise((resolve, reject) => {
     chrome.storage.sync.get(key, (data) => {
       const value = data[key];
@@ -20,7 +20,7 @@ export async function getStorageKey(key: string): Promise<string[]> {
   });
 }
 
-export async function setStorageKey(key: string, value: string[]) {
+async function setStorageKey(key: string, value: string[]) {
   await chrome.storage.sync.set({[key]: value});
 }
 
