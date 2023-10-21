@@ -41,6 +41,15 @@ export async function saveNewWord(newWord: string, existingWords: string[]): Pro
   await setStorageKey('userDefinedWords', existingWords.concat(newWord));
 }
 
+export async function removeFilterWord(wordToRemove: string): Promise<void> {
+  const existingWords = await getSavedWords();
+  const index = existingWords.indexOf(wordToRemove);
+  if (index > -1) {
+    existingWords.splice(index, 1);
+    await setStorageKey('userDefinedWords', existingWords);
+  }
+}
+
 
 export async function currentTabHostname(context: "popup" | "content"): Promise<string> {
   let hostname;

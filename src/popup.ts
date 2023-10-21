@@ -1,4 +1,4 @@
-import {getSavedWords, isCurrentSiteDisabled, saveNewWord} from "./helpers";
+import {getSavedWords, isCurrentSiteDisabled, removeFilterWord, saveNewWord} from "./helpers";
 import {isHostnameDisabled, addToBlacklist, removeFromBlacklist} from "./helpers";
 import {currentTabHostname} from "./helpers";
 import {DEBUG} from "./constants";
@@ -61,13 +61,30 @@ async function displayFilteredWords() {
   if (ul) {
     ul.innerHTML = '';
     words.forEach((word: string) => {
+      // Create list item
       const li = document.createElement('li');
-      li.textContent = word;
+
+      // Create text node for the word
+      const text = document.createTextNode(word);
+      li.appendChild(text);
+
+      // Create delete button
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'X';
+      deleteButton.className = 'delete-button';
+
+      // Attach event listener to call the deletion function
+      deleteButton.addEventListener('click', function() {
+        removeFilterWord(word);
+        displayFilteredWords();//TODO: maybe juste remove the li?
+      });
+
+      // Append delete button to list item
+      li.appendChild(deleteButton);
       ul.appendChild(li);
     });
   }
 }
-
 
 
 /*
@@ -81,3 +98,4 @@ displayFilteredWords();
   const isDisabled = await isCurrentSiteDisabled(context);
   updateDisableButtonText(isDisabled);
 })();
+
