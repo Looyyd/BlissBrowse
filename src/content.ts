@@ -11,6 +11,7 @@ const min_feed_neighbors = 3;
 const context = "content";
 
 function isSimilar(my_rect:DOMRect, sib_rect:DOMRect) {
+  //TODO: test if this logic can be improved or another functio nused
   const my_x = my_rect.left + my_rect.width / 2;
   const sib_x = sib_rect.left + sib_rect.width / 2;
 
@@ -30,11 +31,6 @@ function getFeedlikeAncestor(node:Node): Node{
   let chosen_dom_element;
   const parents = $(node).add($(node).parents());
   const sibling_counts = parents.map(function(index, elem) {
-    // three siblings is good enough to be a list.
-    // I used to check whether siblings were hidden, but this caused problems
-    // when there were large hidden arrays of objects, e.g. in YouTube, which would
-    // cause the whole page to be hidden. This new setting hopefully is less prone
-    // to hiding entire lists.
     if (!(elem instanceof Element)) {
       return 0;
     }
@@ -48,13 +44,11 @@ function getFeedlikeAncestor(node:Node): Node{
     const matching_siblings = $(elem)
       .siblings()
       .filter(function(index, sib) {
-        // Function returns true iff sibling has a class in common with the original.
         if (sib.nodeType != Node.ELEMENT_NODE) {
           return false;
         }
         const sibRect = sib.getBoundingClientRect();
-
-        return isSimilar(myRect, sibRect);
+        return isSimilar(myRect, sibRect);//is similar helps on youtube to avoir hiding everythin
       });
     return matching_siblings.length;
   });
@@ -72,7 +66,7 @@ function getFeedlikeAncestor(node:Node): Node{
     console.log('Uh oh: best_index < 0 or best_index is the node itself');
     chosen_dom_element = node;
   } else {
-    chosen_dom_element = parents[best_index]; // Select one level below the identified ancestor
+    chosen_dom_element = parents[best_index];
   }
   return $(chosen_dom_element)[0];
 }
@@ -102,34 +96,57 @@ function filterTextContent(textContent: string, wordsToFilter: string[]): Filter
   return result;
 }
 
-// Function to hide an element
-function hideElement(element: HTMLElement, triggeringWord: string) {
-  const originalDisplay = element.style.display;
-  element.setAttribute('data-original-display-' + scriptName, originalDisplay);
-  element.setAttribute('data-hidden-by-' + scriptName, 'true');
-  element.setAttribute('data-processed', 'true');
-  element.setAttribute('data-triggering-word', triggeringWord);
-  element.style.display = 'none';
+
+enum Action {
+  BLUR = "blur",
+  HIDE = "hide"
 }
+
+function processElement(element: HTMLElement, triggeringWord: string, action: Action) {
+  //TODO: hardcoded strings should be constants
+  element.setAttribute('processed-by-' + scriptName, 'true');
+  element.setAttribute('triggering-word', triggeringWord);
+  element.setAttribute('applied-action', action);
+
+  if (action === Action.BLUR) {
+    const originalFilter = element.style.filter;
+    element.setAttribute('original-filter-' + scriptName, originalFilter);
+    element.style.filter = 'blur(8px)';  // Set the amount of blur as needed
+  }
+  else if (action === Action.HIDE) {
+    const originalDisplay = element.style.display;
+    element.setAttribute('original-display-' + scriptName, originalDisplay);
+    element.style.display = 'none';
+  }
+}
+
+function unprocessElement(element: HTMLElement) {
+  const action = element.getAttribute('applied-action') || Action.HIDE;
+  element.removeAttribute('processed-by' + scriptName);
+  element.removeAttribute('triggering-words');
+
+  if (action === Action.BLUR) {
+    element.style.filter = element.getAttribute('original-filter-' + scriptName) || '';
+    element.removeAttribute('original-filter-' + scriptName);
+  }
+  else if (action === Action.HIDE) {
+    element.style.display = element.getAttribute('original-display-' + scriptName) || '';
+    element.removeAttribute('original-display-' + scriptName);
+  }
+}
+
 
 async function unhideAndUnprocessElements(currentWords: string[]) {
   // Function to unhide and unprocess elements based on a list of current words
   //TODO: can this be more efficient?
-  const hiddenElements = document.querySelectorAll('[data-hidden-by-' + scriptName + '="true"]');
+  const hiddenElements = document.querySelectorAll('[processed-by-' + scriptName + '="true"]');
   hiddenElements.forEach(element => {
-    const triggeringWord = element.getAttribute('data-triggering-word') || '';
-
+    const triggeringWord = element.getAttribute('triggering-word') || '';
     const shouldUnhide = !currentWords.includes(triggeringWord);
-
     if (shouldUnhide) {
-      element.removeAttribute('data-processed');
-      element.removeAttribute('data-hidden-by-' + scriptName);
-      element.removeAttribute('data-triggering-words');
-
-      (element as HTMLElement).style.display =
-        element.getAttribute('data-original-display-' + scriptName) || '';
-
-      element.removeAttribute('data-original-display-' + scriptName);
+      if (element instanceof HTMLElement) {
+        unprocessElement(element);
+      }
     }
   });
 }
@@ -182,7 +199,7 @@ async function checkAndFilterElements() {
       if (filterResult.shouldFilter && filterResult.triggeringWord) {
         const ancestor = getFeedlikeAncestor(node);
         if (ancestor instanceof HTMLElement) {
-          hideElement(ancestor, filterResult.triggeringWord);
+          processElement(ancestor, filterResult.triggeringWord, Action.BLUR)
         }
       }
     }
