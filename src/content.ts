@@ -215,7 +215,7 @@ async function checkAndFilterElements() {
       if (filterResult.shouldFilter && filterResult.triggeringWord) {
         const ancestor = getFeedlikeAncestor(node);
         if (ancestor instanceof HTMLElement) {
-          processElement(ancestor, filterResult.triggeringWord, Action.BLUR)
+          await processElement(ancestor, filterResult.triggeringWord, Action.BLUR)
         }
       }
     }
