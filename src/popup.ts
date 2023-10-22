@@ -54,6 +54,7 @@ document.getElementById('customWordForm')?.addEventListener('submit', async func
 });
 
 document.getElementById('openOptionsButton')?.addEventListener('click', function() {
+  //TODO: browser agnostic
   chrome.runtime.openOptionsPage();
 });
 
