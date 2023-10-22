@@ -1,5 +1,9 @@
 import * as $ from 'jquery';
-import {decrementWordStatistics, getSavedWords, incrementWordStatistics, isCurrentSiteDisabled} from "./helpers";
+import {
+  addWordStatistics,
+  getSavedWords,
+  isCurrentSiteDisabled
+} from "./helpers";
 import {getLists} from "./helpers";
 import {DEBUG, scriptName, wordStatisticsKeyPrefix} from "./constants";
 
@@ -10,6 +14,12 @@ https://github.com/yeahpython/filter-anything-everywhere/blob/main/extension/con
 
 const min_feed_neighbors = 3;
 const context = "content";
+
+interface MyStats {
+  [key: string]: number;
+}
+
+let inMemoryStatistics: MyStats = {};
 
 function isSimilar(my_rect:DOMRect, sib_rect:DOMRect) {
   //TODO: test if this logic can be improved or another functio nused
@@ -109,9 +119,7 @@ async function processElement(element: HTMLElement, triggeringWord: string, acti
   element.setAttribute('triggering-word', triggeringWord);
   element.setAttribute('applied-action', action);
 
-  //increment statistics
-  //TODO: statistics trigger storage observer
-  await incrementWordStatistics(triggeringWord);
+  inMemoryStatistics[triggeringWord] = (inMemoryStatistics[triggeringWord] || 0) + 1;
 
   if (action === Action.BLUR) {
     const originalFilter = element.style.filter;
@@ -130,9 +138,7 @@ async function unprocessElement(element: HTMLElement) {
   const triggeringWord = element.getAttribute('triggering-word') || '';
   element.removeAttribute('triggering-words');
 
-  //decrement statistics
-  await decrementWordStatistics(triggeringWord);
-
+  inMemoryStatistics[triggeringWord] = (inMemoryStatistics[triggeringWord] || 0) - 1;
 
   if (action === Action.BLUR) {
     element.style.filter = element.getAttribute('original-filter-' + scriptName) || '';
@@ -251,3 +257,29 @@ chrome.storage.onChanged.addListener(async (changes) => {
 (async () => {
   await debouncedCheckAndFilter();
 })();
+
+
+//statistics
+
+const BATCH_UPDATE_INTERVAL = 60000; // 60 seconds
+
+async function writeInMemoryStatisticsToStorage() {
+  // Go over keys
+  for (const key in inMemoryStatistics) {
+    if (Object.prototype.hasOwnProperty.call(inMemoryStatistics, key)) {
+      const value = inMemoryStatistics[key];
+      await addWordStatistics(key, value);
+    }
+  }
+  inMemoryStatistics = {};
+}
+
+setInterval(async () => {
+  if (Object.keys(inMemoryStatistics).length > 0) {
+    await writeInMemoryStatisticsToStorage();
+  }
+}, BATCH_UPDATE_INTERVAL);
+window.addEventListener('beforeunload', async function() {
+  console.log('Statistics saved at tab close.');
+  await writeInMemoryStatisticsToStorage();
+});

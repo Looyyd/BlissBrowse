@@ -1,5 +1,4 @@
-import {DEBUG} from "./constants";
-import {wordStatisticsKeyPrefix} from "./constants";
+import {DEBUG, wordStatisticsKeyPrefix} from "./constants";
 
 const siteBlacklistKey = 'blacklist';
 const wordBlacklistKeyPrefix = 'list-';
@@ -7,6 +6,7 @@ const listNamesKey = "listNames"
 
 
 //TODO: are the types right here?
+//TODO: do we want more types?
 async function getStorageKey(key: string): Promise<string[]> {
   return new Promise((resolve, reject) => {
     chrome.storage.sync.get(key, (data) => {
@@ -45,23 +45,20 @@ export async function getWordStatistics(word: string): Promise<number> {
   if (n.length === 0) {
     return 0;
   }
-  const number = parseInt(n[0]);
-  return number;
+  return parseInt(n[0]);
 }
 
-export async function incrementWordStatistics(word: string){
+
+export async function addWordStatistics(word: string, count: number){
+  if(DEBUG){
+    console.log('addWordStatistics:', word, count);
+  }
   const key = wordStatisticsKeyPrefix + word;
-  const n = await getWordStatistics(key);
-  const value = n + 1;
+  const currentCount = await getWordStatistics(key);
+  const value = currentCount + count;
   await setStorageKey(key, [value.toString()]);
 }
 
-export async function decrementWordStatistics(word: string){
-  const key = wordStatisticsKeyPrefix + word;
-  const n = await getWordStatistics(key);
-  const value = n - 1;//TODO: negative numbers?
-  await setStorageKey(key, [value.toString()]);
-}
 
 export async function getLists(): Promise<string[]> {
   const listNames = await getStorageKey(listNamesKey);
