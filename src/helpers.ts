@@ -26,7 +26,7 @@ async function setStorageKey(key: string, value: string[]) {
   await chrome.storage.sync.set({[key]: value});
 }
 
-export async function getSavedWords(list: string): Promise<string[]> {
+export async function getSavedWordsFromList(list: string): Promise<string[]> {
   const key =  wordBlacklistKeyPrefix + list;
   return await getStorageKey(key);
 }
@@ -49,13 +49,13 @@ export async function getWordStatistics(word: string): Promise<number> {
 }
 
 
-export async function addWordStatistics(word: string, count: number){
+export async function addToWordStatistics(word: string, countToAdd: number){
   if(DEBUG){
-    console.log('addWordStatistics:', word, count);
+    console.log('addWordStatistics:', word, countToAdd);
   }
   const key = wordStatisticsKeyPrefix + word;
   const currentCount = await getWordStatistics(key);
-  const value = currentCount + count;
+  const value = currentCount + countToAdd;
   await setStorageKey(key, [value.toString()]);
 }
 
@@ -80,7 +80,7 @@ export async function deleteList(listName: string): Promise<void> {
 }
 
 
-export async function saveNewWord(newWord: string, existingWords: string[], list:string): Promise<void> {
+export async function saveNewWordToList(newWord: string, existingWords: string[], list:string): Promise<void> {
   const key = wordBlacklistKeyPrefix + list;
   if (existingWords.includes(newWord)) {
     return;
@@ -88,8 +88,8 @@ export async function saveNewWord(newWord: string, existingWords: string[], list
   await setStorageKey(key, existingWords.concat(newWord));
 }
 
-export async function removeFilterWord(wordToRemove: string, list: string): Promise<void> {
-  const existingWords = await getSavedWords(list);
+export async function removeWordFromList(wordToRemove: string, list: string): Promise<void> {
+  const existingWords = await getSavedWordsFromList(list);
   const index = existingWords.indexOf(wordToRemove);
   if (index > -1) {
     const key = wordBlacklistKeyPrefix + list;
@@ -131,32 +131,32 @@ export async function isCurrentSiteDisabled(context: "popup" | "content"): Promi
 }
 
 export async function isHostnameDisabled(hostname: string): Promise<boolean> {
-  const blacklist = await getBlacklist();
+  const blacklist = await getHostnameBlacklist();
   return blacklist.includes(hostname);
 }
 
 
-async function getBlacklist(): Promise<string[]> {
+async function getHostnameBlacklist(): Promise<string[]> {
   return getStorageKey(siteBlacklistKey);
 }
 
-async function setBlacklist(blacklist: string[]) {
+async function setHostnameBlacklist(blacklist: string[]) {
   await setStorageKey(siteBlacklistKey, blacklist);
 }
 
-export async function addToBlacklist(hostname: string) {
-  const blacklist = await getBlacklist();
+export async function addHostnameToBlacklist(hostname: string) {
+  const blacklist = await getHostnameBlacklist();
   blacklist.push(hostname);
-  await setBlacklist(blacklist);
+  await setHostnameBlacklist(blacklist);
 }
 
 
-export async function removeFromBlacklist(hostname: string) {
-  const blacklist = await getBlacklist();
+export async function removeHostnameFromBlacklist(hostname: string) {
+  const blacklist = await getHostnameBlacklist();
   const index = blacklist.indexOf(hostname);
   if (index > -1) {
     blacklist.splice(index, 1);
   }
-  await setBlacklist(blacklist);
+  await setHostnameBlacklist(blacklist);
 }
 

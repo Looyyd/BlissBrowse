@@ -1,11 +1,11 @@
 import * as $ from 'jquery';
 import {
-  addWordStatistics,
-  getSavedWords,
+  addToWordStatistics,
+  getSavedWordsFromList,
   isCurrentSiteDisabled
 } from "./helpers";
 import {getLists} from "./helpers";
-import {DEBUG, scriptName, wordStatisticsKeyPrefix} from "./constants";
+import {DEBUG, scriptName, wordStatisticsKeyPrefix, BATCH_STAT_UPDATE_INTERVAL} from "./constants";
 
 /*
 some logic taken from:
@@ -91,7 +91,7 @@ type FilterResult = {
 };
 
 // Update the function to return the new type
-function filterTextContent(textContent: string, wordsToFilter: string[]): FilterResult {
+function shouldFilterTextContent(textContent: string, wordsToFilter: string[]): FilterResult {
   const cleanedTextContent = textContent.toLowerCase().trim();
   const result: FilterResult = {
     shouldFilter: false,
@@ -151,8 +151,8 @@ async function unprocessElement(element: HTMLElement) {
 }
 
 
-async function unhideAndUnprocessElements(currentWords: string[]) {
-  // Function to unhide and unprocess elements based on a list of current words
+async function unprocessElements(currentWords: string[]) {
+  // Function to unprocess elements based on a list of current words
   //TODO: can this be more efficient?
   const hiddenElements = document.querySelectorAll('[processed-by-' + scriptName + '="true"]');
   hiddenElements.forEach(element => {
@@ -172,16 +172,16 @@ let debounceTimeout: NodeJS.Timeout;
 async function debouncedCheckAndFilter() {
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
-    checkAndFilterElements()
+    checkAndProcessElements()
   }, 100);//TODO: what value should this be?
 }
 
 
 
-async function checkAndFilterElements() {
+async function checkAndProcessElements() {
   const isDisabled = await isCurrentSiteDisabled(context);
   if (isDisabled) {
-    await unhideAndUnprocessElements([])//unhide all
+    await unprocessElements([])//unhide all
     return;
   }
   // Create a TreeWalker to traverse text nodes
@@ -195,7 +195,7 @@ async function checkAndFilterElements() {
   try {
     const lists = await getLists();
     for (const list of lists) {
-      const savedWords = await getSavedWords(list);
+      const savedWords = await getSavedWordsFromList(list);
       wordsToFilter = wordsToFilter.concat(savedWords);
     }
   } catch (e) {
@@ -204,7 +204,7 @@ async function checkAndFilterElements() {
   if(DEBUG){
     console.log('wordsToFilter:', wordsToFilter);
   }
-  await unhideAndUnprocessElements(wordsToFilter);
+  await unprocessElements(wordsToFilter);
 
   // Traverse through all text nodes
   let node = walker.nextNode();
@@ -214,9 +214,9 @@ async function checkAndFilterElements() {
 
     if (node.nodeType === Node.TEXT_NODE &&
       node.textContent &&
-      !['script', 'style'].includes(parentTagName)) {  // Skip certain tags
+      !['script', 'style'].includes(parentTagName)) {  // Skip script and style tags
 
-      const filterResult = filterTextContent(node.textContent!, wordsToFilter);
+      const filterResult = shouldFilterTextContent(node.textContent!, wordsToFilter);
 
       if (filterResult.shouldFilter && filterResult.triggeringWord) {
         const ancestor = getFeedlikeAncestor(node);
@@ -229,9 +229,6 @@ async function checkAndFilterElements() {
     node = walker.nextNode();
   }//end node traversal
 }
-
-
-// Run the function
 
 const observer = new MutationObserver(async () => {
   await debouncedCheckAndFilter();
@@ -260,15 +257,12 @@ chrome.storage.onChanged.addListener(async (changes) => {
 
 
 //statistics
-
-const BATCH_UPDATE_INTERVAL = 60000; // 60 seconds
-
 async function writeInMemoryStatisticsToStorage() {
   // Go over keys
   for (const key in inMemoryStatistics) {
     if (Object.prototype.hasOwnProperty.call(inMemoryStatistics, key)) {
       const value = inMemoryStatistics[key];
-      await addWordStatistics(key, value);
+      await addToWordStatistics(key, value);
     }
   }
   inMemoryStatistics = {};
@@ -278,7 +272,7 @@ setInterval(async () => {
   if (Object.keys(inMemoryStatistics).length > 0) {
     await writeInMemoryStatisticsToStorage();
   }
-}, BATCH_UPDATE_INTERVAL);
+}, BATCH_STAT_UPDATE_INTERVAL);
 window.addEventListener('beforeunload', async function() {
   console.log('Statistics saved at tab close.');
   await writeInMemoryStatisticsToStorage();

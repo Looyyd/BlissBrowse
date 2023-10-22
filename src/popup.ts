@@ -1,5 +1,5 @@
-import {createNewList, getSavedWords, isCurrentSiteDisabled, removeFilterWord, saveNewWord} from "./helpers";
-import {isHostnameDisabled, addToBlacklist, removeFromBlacklist} from "./helpers";
+import {createNewList, getSavedWordsFromList, isCurrentSiteDisabled, removeWordFromList, saveNewWordToList} from "./helpers";
+import {isHostnameDisabled, addHostnameToBlacklist, removeHostnameFromBlacklist} from "./helpers";
 import {getLists} from "./helpers";
 import {currentTabHostname} from "./helpers";
 import {DEBUG} from "./constants";
@@ -11,10 +11,10 @@ document.getElementById('disableButton')?.addEventListener('click', async () => 
   const hostname = await currentTabHostname("popup");
   const isDisabled = await isHostnameDisabled(hostname);
   if (isDisabled) {
-    await removeFromBlacklist(hostname);
+    await removeHostnameFromBlacklist(hostname);
     updateDisableButtonText(false);
   } else {
-    await addToBlacklist(hostname);
+    await addHostnameToBlacklist(hostname);
     updateDisableButtonText(true);
   }
 });
@@ -39,7 +39,7 @@ document.getElementById('customWordForm')?.addEventListener('submit', async func
   const list = (document.getElementById('customWordListSelect') as HTMLInputElement)?.value ?? "default"
   let userDefinedWords: string[] = [];
   try {
-    userDefinedWords = await getSavedWords(list);
+    userDefinedWords = await getSavedWordsFromList(list);
   } catch (error) {
     console.error('Error fetching saved words:', error);
     return;
@@ -48,7 +48,7 @@ document.getElementById('customWordForm')?.addEventListener('submit', async func
   const newWord = (document.getElementById('customWord') as HTMLInputElement)?.value;
   if (newWord) {
     try {
-      await saveNewWord(newWord, userDefinedWords, list);
+      await saveNewWordToList(newWord, userDefinedWords, list);
     } catch (error) {
       console.error('Error saving new word:', error);
     }
@@ -100,7 +100,7 @@ async function displayFilteredWords(listName: string) {
   const ul = document.getElementById(listName+ 'FilteredWords');
 
   if (ul) {
-    const words = await getSavedWords(listName)
+    const words = await getSavedWordsFromList(listName)
     ul.innerHTML = '';
     words.forEach((word: string) => {
       // Create list item
@@ -117,7 +117,7 @@ async function displayFilteredWords(listName: string) {
 
       // Attach event listener to call the deletion function
       deleteButton.addEventListener('click', function() {
-        removeFilterWord(word, listName);
+        removeWordFromList(word, listName);
         displayFilteredWords(listName);//TODO: maybe juste remove the li?
       });
 
