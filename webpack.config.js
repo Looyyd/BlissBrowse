@@ -33,6 +33,11 @@ module.exports = {
       filename: 'popup.html',
       chunks: ['popup']
     }),
+    new HtmlWebpackPlugin({
+      template: 'src/options.html',
+      filename: 'options.html',
+      chunks: ['options']
+    }),
   ],
   devtool: 'cheap-module-source-map',
 };

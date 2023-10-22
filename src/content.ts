@@ -111,7 +111,7 @@ function processElement(element: HTMLElement, triggeringWord: string, action: Ac
   if (action === Action.BLUR) {
     const originalFilter = element.style.filter;
     element.setAttribute('original-filter-' + scriptName, originalFilter);
-    element.style.filter = 'blur(8px)';  // Set the amount of blur as needed
+    element.style.filter = 'blur(8px)';
   }
   else if (action === Action.HIDE) {
     const originalDisplay = element.style.display;

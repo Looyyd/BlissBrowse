@@ -4,6 +4,7 @@
   "version": "1.0",
   "permissions": ["tabs", "storage"],
   "host_permissions": ["http://*/*", "https://*/*"],
+  "options_page": "dist/options.html",
   "background": {
     "service_worker": "dist/background.js"
   },

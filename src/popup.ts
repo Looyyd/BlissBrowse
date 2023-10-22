@@ -53,6 +53,10 @@ document.getElementById('customWordForm')?.addEventListener('submit', async func
   }
 });
 
+document.getElementById('openOptionsButton')?.addEventListener('click', function() {
+  chrome.runtime.openOptionsPage();
+});
+
 
 async function displayFilteredWords() {
   const words = await getSavedWords()
