@@ -1,8 +1,8 @@
-import {devWords} from "./constants";
 import {DEBUG} from "./constants";
 
 const siteBlacklistKey = 'blacklist';
 const wordBlacklistKeyPrefix = 'list-';
+const listNamesKey = "listNames"
 
 
 //TODO: are the types right here?
@@ -27,13 +27,35 @@ async function setStorageKey(key: string, value: string[]) {
 
 export async function getSavedWords(list: string): Promise<string[]> {
   const key =  wordBlacklistKeyPrefix + list;
-  let userDefinedWords: string[] = await getStorageKey(key);
-  if (DEBUG) {
-    userDefinedWords = userDefinedWords.concat(devWords);
-  }
-  return userDefinedWords;
+  return await getStorageKey(key);
 }
 
+export async function createNewList(listName: string): Promise<void> {
+  const listNames = await getStorageKey(listNamesKey);
+  if (!listNames.includes(listName)) {
+    await setStorageKey(listName, []);
+    await setStorageKey(listNamesKey, listNames.concat(listName));
+  }
+}
+
+export async function getLists(): Promise<string[]> {
+  const listNames = await getStorageKey(listNamesKey);
+  if(DEBUG){
+    console.log('listNames:', listNames);
+  }
+  return listNames;
+}
+
+export async function deleteList(listName: string): Promise<void> {
+  const listNames = await getStorageKey(listNamesKey);
+  const index = listNames.indexOf(listName);
+  if (index > -1) {
+    const key = listName;
+    listNames.splice(index, 1);
+    await setStorageKey(listNamesKey, listNames);
+    await setStorageKey(key, []);
+  }
+}
 
 
 export async function saveNewWord(newWord: string, existingWords: string[], list:string): Promise<void> {
@@ -61,7 +83,7 @@ export async function currentTabHostname(context: "popup" | "content"): Promise<
   if (context === "popup") {
     const queryOptions = { active: true, lastFocusedWindow: true };
     const [tab] = await chrome.tabs.query(queryOptions);
-    const url = tab.url ?? '';
+    const url = tab?.url ?? '';
     hostname = new URL(url).hostname;
   } else if (context === "content") {
     hostname = window.location.hostname;

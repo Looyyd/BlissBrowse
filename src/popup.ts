@@ -1,5 +1,6 @@
-import {getSavedWords, isCurrentSiteDisabled, removeFilterWord, saveNewWord} from "./helpers";
+import {createNewList, getSavedWords, isCurrentSiteDisabled, removeFilterWord, saveNewWord} from "./helpers";
 import {isHostnameDisabled, addToBlacklist, removeFromBlacklist} from "./helpers";
+import {getLists} from "./helpers";
 import {currentTabHostname} from "./helpers";
 import {DEBUG} from "./constants";
 
@@ -35,7 +36,7 @@ function updateDisableButtonText(disabled: boolean) : void {
 
 document.getElementById('customWordForm')?.addEventListener('submit', async function() {
   // Load from local storage using getSavedWords
-  const list = "default";
+  const list = (document.getElementById('customWordListSelect') as HTMLInputElement)?.value ?? "default"
   let userDefinedWords: string[] = [];
   try {
     userDefinedWords = await getSavedWords(list);
@@ -54,18 +55,52 @@ document.getElementById('customWordForm')?.addEventListener('submit', async func
   }
 });
 
+document.getElementById("newListForm")?.addEventListener('submit', async function() {
+  const listName = (document.getElementById('listName') as HTMLInputElement)?.value;
+  if (listName) {
+    try {
+      await createNewList(listName);
+    } catch (error) {
+      console.error('Error saving new list:', error);
+    }
+  }
+});
+
 document.getElementById('openOptionsButton')?.addEventListener('click', function() {
   //TODO: browser agnostic
   chrome.runtime.openOptionsPage();
 });
 
+async function addListToSelect(listName: string) {
+  const select = document.getElementById('customWordListSelect');
+  if (select) {
+    const option = document.createElement('option');
+    option.value = listName;
+    option.text = listName;
+    select.appendChild(option);
+  }
+}
 
-async function displayFilteredWords() {
-  const list = "default"
-  const words = await getSavedWords(list)
-  const ul = document.getElementById('filteredWords');
+async function removePreviousListOptions() {
+  const select = document.getElementById('customWordListSelect');
+  if (select) {
+    select.innerHTML = '';
+  }
+}
+
+async function displayListsSelect() {
+  const lists = await getLists();
+  await removePreviousListOptions();
+  lists.forEach((listName: string) => {
+    addListToSelect(listName);
+  });
+}
+
+async function displayFilteredWords(listName: string) {
+  const ul = document.getElementById(listName+ 'FilteredWords');
 
   if (ul) {
+    const words = await getSavedWords(listName)
     ul.innerHTML = '';
     words.forEach((word: string) => {
       // Create list item
@@ -82,8 +117,8 @@ async function displayFilteredWords() {
 
       // Attach event listener to call the deletion function
       deleteButton.addEventListener('click', function() {
-        removeFilterWord(word, list);
-        displayFilteredWords();//TODO: maybe juste remove the li?
+        removeFilterWord(word, listName);
+        displayFilteredWords(listName);//TODO: maybe juste remove the li?
       });
 
       // Append delete button to list item
@@ -93,15 +128,43 @@ async function displayFilteredWords() {
   }
 }
 
+async function displayLists() {
+  if(DEBUG){
+    console.log("displaying lists")
+  }
+  const ul = document.getElementById('listsList');
+
+  if (ul){
+    if(DEBUG){
+      console.log("creating lists list")
+    }
+    const lists = await getLists();
+    ul.innerHTML = '';
+    lists.forEach((listName: string) => {
+      const li = document.createElement('li');
+      const text = document.createTextNode(listName);
+      li.appendChild(text);
+      ul.appendChild(li);
+
+      //add filtered words
+      const filteredWords = document.createElement('ul');
+      filteredWords.id = listName + "FilteredWords";
+      li.appendChild(filteredWords);
+      displayFilteredWords(listName);
+    });
+  }
+}
+
 
 /*
 INITIAL SETUP:
  */
 
-displayFilteredWords();
-
-
+//TODO: don't fetch lists multiple times
 (async () => {
+  console.log("initial setup")
+  await displayLists();
+  await displayListsSelect();
   const isDisabled = await isCurrentSiteDisabled(context);
   updateDisableButtonText(isDisabled);
 })();

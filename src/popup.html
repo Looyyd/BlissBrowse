@@ -6,6 +6,10 @@
     #filteredWords {
       margin-top: 20px;
     }
+    body {
+      width: 400px;
+      height: 600px;
+    }
   </style>
 </head>
 <body>
@@ -13,12 +17,20 @@
 <form id="customWordForm">
   <label for="customWord">Enter a custom word:</label>
   <input type="text" id="customWord" placeholder="Enter a custom word">
+  <label for="customWordListSelect">Select a list:</label>
+  <select id="customWordListSelect">
+  </select>
   <button type="submit">Add Word</button>
 </form>
+<form id="newListForm">
+  <label for="listName">Enter a list name:</label>
+  <input type="text" id="listName" placeholder="Enter a list name">
+  <button type="submit">Add List</button>
+</form>
 <button id="disableButton"></button>
-<div id="filteredWordsSection">
-  <h3>Filtered Words:</h3>
-  <ul id="filteredWords"></ul>
+<div id="listsSection">
+  <h3>Lists:</h3>
+  <ul id="listsList"></ul>
 </div>
 <script src="popup.js"></script>
 </body>

@@ -1,6 +1,7 @@
 import * as $ from 'jquery';
 import {getSavedWords, isCurrentSiteDisabled} from "./helpers";
-import {scriptName} from "./constants";
+import {getLists} from "./helpers";
+import {DEBUG, scriptName} from "./constants";
 
 /*
 some logic taken from:
@@ -178,10 +179,16 @@ async function checkAndFilterElements() {
 
   let wordsToFilter: string[] = [];
   try {
-    const list = "default";
-    wordsToFilter = await getSavedWords(list);
+    const lists = await getLists();
+    for (const list of lists) {
+      const savedWords = await getSavedWords(list);
+      wordsToFilter = wordsToFilter.concat(savedWords);
+    }
   } catch (e) {
     console.error("Error retrieving saved words.", e);
+  }
+  if(DEBUG){
+    console.log('wordsToFilter:', wordsToFilter);
   }
   await unhideAndUnprocessElements(wordsToFilter);
 
@@ -222,4 +229,7 @@ chrome.storage.onChanged.addListener(async () => {
   await debouncedCheckAndFilter();
 });
 
-debouncedCheckAndFilter()
+//init
+(async () => {
+  await debouncedCheckAndFilter();
+})();
