@@ -1,8 +1,12 @@
-import {createNewList, getSavedWordsFromList, isCurrentSiteDisabled, removeWordFromList, saveNewWordToList} from "./helpers";
-import {isHostnameDisabled, addHostnameToBlacklist, removeHostnameFromBlacklist} from "./helpers";
-import {getLists} from "./helpers";
-import {currentTabHostname} from "./helpers";
+import {createNewList, getSavedWordsFromList, removeWordFromList, saveNewWordToList} from "./modules/wordLists";
+import {getLists} from "./modules/wordLists";
 import {DEBUG} from "./constants";
+import {
+  addHostnameToBlacklist, currentTabHostname,
+  isCurrentSiteDisabled,
+  isHostnameDisabled,
+  removeHostnameFromBlacklist
+} from "./modules/hostname";
 
 const context = "popup";
 

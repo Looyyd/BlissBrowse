@@ -1,4 +1,4 @@
-import {createNewList} from "./helpers";
+import {createNewList} from "./modules/wordLists";
 
 //TODO: browser agnostic
 chrome.runtime.onInstalled.addListener(async function(details) {

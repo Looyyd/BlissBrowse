@@ -1,11 +1,11 @@
 import * as $ from 'jquery';
 import {
   addToWordStatistics,
-  getSavedWordsFromList,
-  isCurrentSiteDisabled
-} from "./helpers";
-import {getLists} from "./helpers";
+  getSavedWordsFromList
+} from "./modules/wordLists";
+import {getLists} from "./modules/wordLists";
 import {DEBUG, scriptName, wordStatisticsKeyPrefix, BATCH_STAT_UPDATE_INTERVAL} from "./constants";
+import {isCurrentSiteDisabled} from "./modules/hostname";
 
 /*
 some logic taken from:
