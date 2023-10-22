@@ -23,9 +23,6 @@ document.getElementById('disableButton')?.addEventListener('click', async () => 
   }
 });
 
-
-
-
 function updateDisableButtonText(disabled: boolean) : void {
   const btn = document.getElementById('disableButton');
   if (DEBUG) {
@@ -59,21 +56,7 @@ document.getElementById('customWordForm')?.addEventListener('submit', async func
   }
 });
 
-document.getElementById("newListForm")?.addEventListener('submit', async function() {
-  const listName = (document.getElementById('listName') as HTMLInputElement)?.value;
-  if (listName) {
-    try {
-      await createNewList(listName);
-    } catch (error) {
-      console.error('Error saving new list:', error);
-    }
-  }
-});
 
-document.getElementById('openOptionsButton')?.addEventListener('click', function() {
-  //TODO: browser agnostic
-  chrome.runtime.openOptionsPage();
-});
 
 async function addListToSelect(listName: string) {
   const select = document.getElementById('customWordListSelect');
@@ -173,3 +156,18 @@ INITIAL SETUP:
   updateDisableButtonText(isDisabled);
 })();
 
+document.getElementById("newListForm")?.addEventListener('submit', async function() {
+  const listName = (document.getElementById('listName') as HTMLInputElement)?.value;
+  if (listName) {
+    try {
+      await createNewList(listName);
+    } catch (error) {
+      console.error('Error saving new list:', error);
+    }
+  }
+});
+
+document.getElementById('openOptionsButton')?.addEventListener('click', function() {
+  //TODO: browser agnostic
+  chrome.runtime.openOptionsPage();
+});

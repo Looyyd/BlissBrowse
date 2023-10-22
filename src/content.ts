@@ -12,14 +12,12 @@ some logic taken from:
 https://github.com/yeahpython/filter-anything-everywhere/blob/main/extension/content.ts
  */
 
-const min_feed_neighbors = 3;
-const context = "content";
-
 interface MyStats {
   [key: string]: number;
 }
-
 let inMemoryStatistics: MyStats = {};
+const min_feed_neighbors = 3;
+const context = "content";
 
 function isSimilar(my_rect:DOMRect, sib_rect:DOMRect) {
   //TODO: test if this logic can be improved or another functio nused
@@ -150,7 +148,6 @@ async function unprocessElement(element: HTMLElement) {
   }
 }
 
-
 async function unprocessElements(currentWords: string[]) {
   // Function to unprocess elements based on a list of current words
   //TODO: can this be more efficient?
@@ -165,18 +162,6 @@ async function unprocessElements(currentWords: string[]) {
     }
   });
 }
-
-
-let debounceTimeout: NodeJS.Timeout;
-
-async function debouncedCheckAndFilter() {
-  clearTimeout(debounceTimeout);
-  debounceTimeout = setTimeout(() => {
-    checkAndProcessElements()
-  }, 100);//TODO: what value should this be?
-}
-
-
 
 async function checkAndProcessElements() {
   const isDisabled = await isCurrentSiteDisabled(context);
@@ -230,6 +215,19 @@ async function checkAndProcessElements() {
   }//end node traversal
 }
 
+let debounceTimeout: NodeJS.Timeout;
+
+async function debouncedCheckAndFilter() {
+  clearTimeout(debounceTimeout);
+  debounceTimeout = setTimeout(() => {
+    checkAndProcessElements()
+  }, 100);//TODO: what value should this be?
+}
+
+
+/*
+INITIALIZE
+ */
 const observer = new MutationObserver(async () => {
   await debouncedCheckAndFilter();
 });
@@ -250,7 +248,6 @@ chrome.storage.onChanged.addListener(async (changes) => {
 });
 
 
-//init
 (async () => {
   await debouncedCheckAndFilter();
 })();
