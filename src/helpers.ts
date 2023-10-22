@@ -1,7 +1,8 @@
 import {devWords} from "./constants";
 import {DEBUG} from "./constants";
 
-const blacklistKey = 'blacklist';
+const siteBlacklistKey = 'blacklist';
+const wordBlacklistKeyPrefix = 'list-';
 
 
 //TODO: are the types right here?
@@ -24,8 +25,9 @@ async function setStorageKey(key: string, value: string[]) {
   await chrome.storage.sync.set({[key]: value});
 }
 
-export async function getSavedWords(): Promise<string[]> {
-  let userDefinedWords: string[] = await getStorageKey('userDefinedWords');
+export async function getSavedWords(list: string): Promise<string[]> {
+  const key =  wordBlacklistKeyPrefix + list;
+  let userDefinedWords: string[] = await getStorageKey(key);
   if (DEBUG) {
     userDefinedWords = userDefinedWords.concat(devWords);
   }
@@ -34,19 +36,21 @@ export async function getSavedWords(): Promise<string[]> {
 
 
 
-export async function saveNewWord(newWord: string, existingWords: string[]): Promise<void> {
+export async function saveNewWord(newWord: string, existingWords: string[], list:string): Promise<void> {
+  const key = wordBlacklistKeyPrefix + list;
   if (existingWords.includes(newWord)) {
     return;
   }
-  await setStorageKey('userDefinedWords', existingWords.concat(newWord));
+  await setStorageKey(key, existingWords.concat(newWord));
 }
 
-export async function removeFilterWord(wordToRemove: string): Promise<void> {
-  const existingWords = await getSavedWords();
+export async function removeFilterWord(wordToRemove: string, list: string): Promise<void> {
+  const existingWords = await getSavedWords(list);
   const index = existingWords.indexOf(wordToRemove);
   if (index > -1) {
+    const key = wordBlacklistKeyPrefix + list;
     existingWords.splice(index, 1);
-    await setStorageKey('userDefinedWords', existingWords);
+    await setStorageKey(key, existingWords);
   }
 }
 
@@ -89,11 +93,11 @@ export async function isHostnameDisabled(hostname: string): Promise<boolean> {
 
 
 async function getBlacklist(): Promise<string[]> {
-  return getStorageKey(blacklistKey);
+  return getStorageKey(siteBlacklistKey);
 }
 
 async function setBlacklist(blacklist: string[]) {
-  await setStorageKey(blacklistKey, blacklist);
+  await setStorageKey(siteBlacklistKey, blacklist);
 }
 
 export async function addToBlacklist(hostname: string) {

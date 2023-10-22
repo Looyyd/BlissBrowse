@@ -178,7 +178,8 @@ async function checkAndFilterElements() {
 
   let wordsToFilter: string[] = [];
   try {
-    wordsToFilter = await getSavedWords();
+    const list = "default";
+    wordsToFilter = await getSavedWords(list);
   } catch (e) {
     console.error("Error retrieving saved words.", e);
   }

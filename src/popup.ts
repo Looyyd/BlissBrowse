@@ -35,9 +35,10 @@ function updateDisableButtonText(disabled: boolean) : void {
 
 document.getElementById('customWordForm')?.addEventListener('submit', async function() {
   // Load from local storage using getSavedWords
+  const list = "default";
   let userDefinedWords: string[] = [];
   try {
-    userDefinedWords = await getSavedWords();
+    userDefinedWords = await getSavedWords(list);
   } catch (error) {
     console.error('Error fetching saved words:', error);
     return;
@@ -46,7 +47,7 @@ document.getElementById('customWordForm')?.addEventListener('submit', async func
   const newWord = (document.getElementById('customWord') as HTMLInputElement)?.value;
   if (newWord) {
     try {
-      await saveNewWord(newWord, userDefinedWords);
+      await saveNewWord(newWord, userDefinedWords, list);
     } catch (error) {
       console.error('Error saving new word:', error);
     }
@@ -60,7 +61,8 @@ document.getElementById('openOptionsButton')?.addEventListener('click', function
 
 
 async function displayFilteredWords() {
-  const words = await getSavedWords()
+  const list = "default"
+  const words = await getSavedWords(list)
   const ul = document.getElementById('filteredWords');
 
   if (ul) {
@@ -80,7 +82,7 @@ async function displayFilteredWords() {
 
       // Attach event listener to call the deletion function
       deleteButton.addEventListener('click', function() {
-        removeFilterWord(word);
+        removeFilterWord(word, list);
         displayFilteredWords();//TODO: maybe juste remove the li?
       });
 
