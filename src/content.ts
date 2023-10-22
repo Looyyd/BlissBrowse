@@ -1,7 +1,7 @@
 import * as $ from 'jquery';
-import {getSavedWords, isCurrentSiteDisabled} from "./helpers";
+import {decrementWordStatistics, getSavedWords, incrementWordStatistics, isCurrentSiteDisabled} from "./helpers";
 import {getLists} from "./helpers";
-import {DEBUG, scriptName} from "./constants";
+import {DEBUG, scriptName, wordStatisticsKeyPrefix} from "./constants";
 
 /*
 some logic taken from:
@@ -103,28 +103,36 @@ enum Action {
   HIDE = "hide"
 }
 
-function processElement(element: HTMLElement, triggeringWord: string, action: Action) {
+async function processElement(element: HTMLElement, triggeringWord: string, action: Action) {
   //TODO: hardcoded strings should be constants
   element.setAttribute('processed-by-' + scriptName, 'true');
   element.setAttribute('triggering-word', triggeringWord);
   element.setAttribute('applied-action', action);
 
+  //increment statistics
+  //TODO: statistics trigger storage observer
+  await incrementWordStatistics(triggeringWord);
+
   if (action === Action.BLUR) {
     const originalFilter = element.style.filter;
     element.setAttribute('original-filter-' + scriptName, originalFilter);
     element.style.filter = 'blur(8px)';
-  }
-  else if (action === Action.HIDE) {
+  } else if (action === Action.HIDE) {
     const originalDisplay = element.style.display;
     element.setAttribute('original-display-' + scriptName, originalDisplay);
     element.style.display = 'none';
   }
 }
 
-function unprocessElement(element: HTMLElement) {
+async function unprocessElement(element: HTMLElement) {
   const action = element.getAttribute('applied-action') || Action.HIDE;
   element.removeAttribute('processed-by' + scriptName);
+  const triggeringWord = element.getAttribute('triggering-word') || '';
   element.removeAttribute('triggering-words');
+
+  //decrement statistics
+  await decrementWordStatistics(triggeringWord);
+
 
   if (action === Action.BLUR) {
     element.style.filter = element.getAttribute('original-filter-' + scriptName) || '';
@@ -225,9 +233,19 @@ const observer = new MutationObserver(async () => {
 
 observer.observe(document.body, { childList: true, subtree: true });
 
-chrome.storage.onChanged.addListener(async () => {
-  await debouncedCheckAndFilter();
+chrome.storage.onChanged.addListener(async (changes) => {
+  let shouldRunDebounce = false;
+  for (const key in changes) {
+    if (!key.startsWith(wordStatisticsKeyPrefix)) {
+      shouldRunDebounce = true;
+      break;
+    }
+  }
+  if (shouldRunDebounce) {
+    await debouncedCheckAndFilter();
+  }
 });
+
 
 //init
 (async () => {

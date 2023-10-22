@@ -1,4 +1,5 @@
 import {DEBUG} from "./constants";
+import {wordStatisticsKeyPrefix} from "./constants";
 
 const siteBlacklistKey = 'blacklist';
 const wordBlacklistKeyPrefix = 'list-';
@@ -36,6 +37,30 @@ export async function createNewList(listName: string): Promise<void> {
     await setStorageKey(listName, []);
     await setStorageKey(listNamesKey, listNames.concat(listName));
   }
+}
+
+export async function getWordStatistics(word: string): Promise<number> {
+  const key = wordStatisticsKeyPrefix + word;
+  const n = await getStorageKey(key);
+  if (n.length === 0) {
+    return 0;
+  }
+  const number = parseInt(n[0]);
+  return number;
+}
+
+export async function incrementWordStatistics(word: string){
+  const key = wordStatisticsKeyPrefix + word;
+  const n = await getWordStatistics(key);
+  const value = n + 1;
+  await setStorageKey(key, [value.toString()]);
+}
+
+export async function decrementWordStatistics(word: string){
+  const key = wordStatisticsKeyPrefix + word;
+  const n = await getWordStatistics(key);
+  const value = n - 1;//TODO: negative numbers?
+  await setStorageKey(key, [value.toString()]);
 }
 
 export async function getLists(): Promise<string[]> {
