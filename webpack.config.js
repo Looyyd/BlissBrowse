@@ -8,7 +8,8 @@ module.exports = {
   entry: {
     background: path.join(__dirname, 'src/background.ts'),
     content: path.join(__dirname, 'src/content.ts'),
-    popup: path.join(__dirname, 'src/popup.ts')
+    popup: path.join(__dirname, 'src/popup.ts'),
+    options: path.join(__dirname, 'src/options.ts')
   },
   module: {
     rules: [

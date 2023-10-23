@@ -1,18 +1,31 @@
+<!-- options.html -->
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <title>Extension Settings</title>
-  </head>
-  <body>
-    <h1>Statistics</h1>
-    <div id="stats"></div>
+<html>
+<head>
+  <title>Options</title>
+</head>
+<body>
+  <ul>
+    <li><a href="#" id="StatisticsTab">Statistics</a></li>
+    <li><a href="#" id="WordlistsTab">Wordlists</a></li>
+    <li><a href="#" id="BlacklistedSitesTab">Blacklisted sites</a></li>
+  </ul>
 
-    <h1>Advanced Settings</h1>
-    <label>
-      Enable Feature A: <input type="checkbox" id="feature-a">
-    </label>
-    <button id="save">Save</button>
+  <div id="Statistics" style="display:none;">
+    <!-- Option content for tab 1 -->
+    Statistics
+  </div>
 
-    <script src="options.js"></script>
-  </body>
+  <div id="WordLists" style="display:none;">
+    <!-- Option content for tab 2 -->
+    Wordlists
+  </div>
+
+  <div id="BlacklistedSites" style="display:none;">
+    <!-- Option content for tab 2 -->
+    Blacklisted sites
+  </div>
+
+  <script src="options.js"></script>
+</body>
 </html>
