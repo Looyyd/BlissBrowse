@@ -111,6 +111,17 @@ enum Action {
   HIDE = "hide"
 }
 
+/*
+TODO: add a visual indicator using react, something like this:
+  // Create a DOM element to host the React component
+  const reactRoot = document.createElement('div');
+  element.appendChild(reactRoot);
+  // Create React root and render the component
+  const rootContainer = ReactDOM.createRoot(reactRoot);
+  rootContainer.render(<VisualIndicator message={`Filtered by: ${triggeringWord}`} />);
+  // Your existing logic here...
+
+ */
 async function processElement(element: HTMLElement, triggeringWord: string, action: Action) {
   //TODO: hardcoded strings should be constants
   element.setAttribute('processed-by-' + scriptName, 'true');

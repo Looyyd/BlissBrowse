@@ -1,12 +1,11 @@
 import React from "react";
 import { createRoot } from 'react-dom/client';
+import TabContainer from "./components/OptionsTabContainer";
 
 
 const App: React.FC = () => {
   return (
-    <div>
-      Hello, this is options!
-    </div>
+    <TabContainer />
   );
 };
 
