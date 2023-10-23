@@ -3,7 +3,9 @@
     "outDir": "./dist",
     "strict": true,
     "module": "es6",
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "jsx": "react",
+    "esModuleInterop": true
   },
   "include": [
     "src/**/*.ts"

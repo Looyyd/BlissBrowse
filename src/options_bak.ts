@@ -2,7 +2,7 @@ import {getLists, getSavedWordsFromList, getWordStatistics} from "./modules/word
 
 //TODO: don't hardcode all those strings
 //TODO: use typescript or React?
-async function displayStatisticsContent(StatisticsHTMLElement: HTMLElement){
+async function displayStatisticsContent(){
   //select a list
   const lists = await getLists();
 
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show the content associated with the clicked tab
         contentElement.style.display = 'block';
         if (item.content == "Statistics") {
-          await displayStatisticsContent(contentElement);
+          await displayStatisticsContent();
         }
       });
     }
