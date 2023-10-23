@@ -88,22 +88,35 @@ type FilterResult = {
   triggeringWord?: string;
 };
 
-// Update the function to return the new type
-function shouldFilterTextContent(textContent: string, wordsToFilter: string[]): FilterResult {
+function shouldFilterTextContent(textContent: string, wordsToFilter: string[], isRegex: boolean): FilterResult {
   const cleanedTextContent = textContent.toLowerCase().trim();
   const result: FilterResult = {
     shouldFilter: false,
   };
 
-  for (const word of wordsToFilter) {
-    if (cleanedTextContent.includes(word.toLowerCase())) {
-      result.shouldFilter = true;
-      result.triggeringWord = word;
-      return result;
+  if (isRegex) {
+    for (const word of wordsToFilter) {
+      const regex = new RegExp(word, 'i'); // case-insensitive matching
+      const match = cleanedTextContent.match(regex);
+      if (match) {
+        result.shouldFilter = true;
+        result.triggeringWord = word;
+        return result;
+      }
+    }
+  } else {
+    for (const word of wordsToFilter) {
+      if (cleanedTextContent.includes(word.toLowerCase())) {
+        result.shouldFilter = true;
+        result.triggeringWord = word;
+        return result;
+      }
     }
   }
   return result;
 }
+
+
 
 
 enum Action {
@@ -212,7 +225,7 @@ async function checkAndProcessElements() {
       node.textContent &&
       !['script', 'style'].includes(parentTagName)) {  // Skip script and style tags
 
-      const filterResult = shouldFilterTextContent(node.textContent!, wordsToFilter);
+      const filterResult = shouldFilterTextContent(node.textContent!, wordsToFilter, false);
 
       if (filterResult.shouldFilter && filterResult.triggeringWord) {
         const ancestor = getFeedlikeAncestor(node);
