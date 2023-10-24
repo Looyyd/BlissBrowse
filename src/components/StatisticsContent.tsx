@@ -1,6 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import {getLists, getSavedWordsFromList, getWordStatistics} from "../modules/wordLists";
 
+
+const ALL_LISTS = 'All_LISTS_3213546516541';
+
 const StatisticsContent = () => {
   const [lists, setLists] = useState<string[]>([]);
   const [selectedList, setSelectedList] = useState<string | null>(null);
@@ -24,11 +27,26 @@ const StatisticsContent = () => {
 
   const fetchStatistics = async (list: string | null) => {
     if (!list) return;
+    let lists_to_show: string[] = [];
+    if (list === ALL_LISTS) {
+      lists_to_show = lists;
+    }
+    else {
+      lists_to_show = [list];
+    }
+
+    let words_to_show: string[] = [];
+    for (const list of lists_to_show) {
+      const words = await getSavedWordsFromList(list);
+      words_to_show = words_to_show.concat(words);
+    }
+
+    words_to_show = [...new Set(words_to_show)];
+
+
 
     const statisticsDiv: { [word: string]: number } = {};
-    const words = await getSavedWordsFromList(list);
-
-    for (const word of words) {
+    for (const word of words_to_show) {
       statisticsDiv[word] = await getWordStatistics(word);
     }
 
@@ -47,6 +65,9 @@ const StatisticsContent = () => {
         id="ListSelectionSelect"
         onChange={handleListChange}
       >
+        <option key={ALL_LISTS} value={ALL_LISTS}>
+          All Lists
+        </option>
         {lists.map((listName) => (
           <option key={listName} value={listName}>
             {listName}
