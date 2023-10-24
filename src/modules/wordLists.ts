@@ -67,6 +67,14 @@ export async function saveNewWordToList(newWord: string, existingWords: string[]
   await setStorageKey(key, existingWords.concat(newWord));
 }
 
+export async function saveList(words: string[], list:string): Promise<void> {
+  const key = wordBlacklistKeyPrefix + list;
+  //filter out duplicates
+  const uniqueWords = [...new Set(words)];
+  removeWordFromList('', list);//TODO: how to handle whitepace after words? maybe make it obvious in editing
+  await setStorageKey(key, uniqueWords);
+}
+
 export async function removeWordFromList(wordToRemove: string, list: string): Promise<void> {
   const existingWords = await getSavedWordsFromList(list);
   const index = existingWords.indexOf(wordToRemove);
