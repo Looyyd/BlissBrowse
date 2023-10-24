@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import FilteredWords from './FilteredWords';
 import {getLists} from "../modules/wordLists";
-import { List, ListItem, ListItemText, Divider, Collapse } from '@mui/material';
+import {List, ListItem, ListItemText, Divider, Collapse, Typography} from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 
 
@@ -31,23 +31,26 @@ const ListsDisplay: React.FC = () => {
   }, []);
 
     return (
-    <List id="listsList">
-      {lists.map((listName, index) => (
-        <div key={index}>
-          <ListItem onClick={handleClick}>
-            <ListItemText primary={listName} />
-            {open ? <ExpandLess /> : <ExpandMore />}
-          </ListItem>
-          <Collapse in={open} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>
-              <FilteredWords listName={listName} />
-            </List>
-          </Collapse>
-          <Divider />
-        </div>
-      ))}
-    </List>
-  );
+      <>
+        <Typography variant="h6">Your Lists</Typography>
+        <List id="listsList">
+          {lists.map((listName, index) => (
+            <div key={index}>
+              <ListItem onClick={handleClick}>
+                <ListItemText primary={listName} />
+                {open ? <ExpandLess /> : <ExpandMore />}
+              </ListItem>
+              <Collapse in={open} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  <FilteredWords listName={listName} />
+                </List>
+              </Collapse>
+              <Divider />
+            </div>
+          ))}
+        </List>
+      </>
+    );
 };
 
 

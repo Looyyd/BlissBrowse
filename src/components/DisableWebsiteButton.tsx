@@ -41,8 +41,9 @@ const DisableWebsiteButton: React.FC = () => {
   return (
     <Button
       variant="contained"
-      color={isDisabled ? "warning" : "secondary"}
+      color={isDisabled ? "warning" : "primary"}
       onClick={handleClick}
+      style={{ margin: "10px 2px" }}
     >
       {isDisabled ? 'Enable on This Site' : 'Disable on This Site'}
     </Button>

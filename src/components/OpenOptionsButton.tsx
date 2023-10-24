@@ -10,9 +10,10 @@ const OpenOptionsButton: React.FC = () => {
   return (
     <Button
       id="openOptionsButton"
-      color="secondary"
+      color="primary"
       onClick={handleClick}
       variant="contained"
+      style={{ margin: "10px 2px" }}
     >
       Open Options
     </Button>
