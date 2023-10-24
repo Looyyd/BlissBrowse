@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import StatisticsContent from "./StatisticsContent";
+import BlacklistedSitesContent from "./BlacklistedSitesContent";
 
 const TabContainer = () => {
   const [activeTab, setActiveTab] = useState<string>('Statistics');
@@ -15,7 +16,7 @@ const TabContainer = () => {
     },
     {
       tab: 'BlacklistedSites',
-      content: 'Blacklisted Sites Content Here',
+      content: <BlacklistedSitesContent />,
     },
   ];
 

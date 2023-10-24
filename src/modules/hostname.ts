@@ -38,7 +38,7 @@ export async function isHostnameDisabled(hostname: string): Promise<boolean> {
   return blacklist.includes(hostname);
 }
 
-async function getHostnameBlacklist(): Promise<string[]> {
+export async function getHostnameBlacklist(): Promise<string[]> {
   return getStorageKey(siteBlacklistKey);
 }
 
