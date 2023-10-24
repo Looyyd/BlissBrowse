@@ -21,5 +21,11 @@ const Popup: React.FC = () => {
 
 const root = document.getElementById('root');
 if (root) {
-  createRoot(root).render(<Popup/>);
+  createRoot(root).render(
+    <>
+      <React.StrictMode>
+        <Popup/>
+      </React.StrictMode>
+    </>
+  );
 }

@@ -7,16 +7,26 @@ const StatisticsContent = () => {
   const [statistics, setStatistics] = useState<{ [word: string]: number }>({});
 
   useEffect(() => {
-    // Assume getLists() returns a Promise<string[]>
-    getLists().then(setLists);
-  }, []);
+  // Define an async function
+  const fetchData = async () => {
+    const lists = await getLists();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!selectedList) return;
+    setLists(lists);
+    if (lists.length > 0) {
+      setSelectedList(lists[0]);
+      fetchStatistics(lists[0]);
+    }
+  };
+  fetchData();
+}, []);
+
+
+
+  const fetchStatistics = async (list: string | null) => {
+    if (!list) return;
 
     const statisticsDiv: { [word: string]: number } = {};
-    const words = await getSavedWordsFromList(selectedList);
+    const words = await getSavedWordsFromList(list);
 
     for (const word of words) {
       statisticsDiv[word] = await getWordStatistics(word);
@@ -25,33 +35,39 @@ const StatisticsContent = () => {
     setStatistics(statisticsDiv);
   };
 
+  const handleListChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newList = e.target.value;
+    setSelectedList(newList);
+    fetchStatistics(newList);
+  };
+
   return (
     <div>
-      <form id="ListSelectionForm" onSubmit={handleSubmit}>
-        <select
-          id="ListSelectionSelect"
-          onChange={(e) => setSelectedList(e.target.value)}
-        >
-          {lists.map((listName) => (
-            <option key={listName} value={listName}>
-              {listName}
-            </option>
-          ))}
-        </select>
-        <button type="submit">Show Statistics</button>
-      </form>
+      <select
+        id="ListSelectionSelect"
+        onChange={handleListChange}
+      >
+        {lists.map((listName) => (
+          <option key={listName} value={listName}>
+            {listName}
+          </option>
+        ))}
+      </select>
       <div id="ListStatistics">
         <table>
-          {Object.entries(statistics).map(([word, stat]) => (
-            <tr key={word}>
-              <td>{word}</td>
-              <td>{stat}</td>
-            </tr>
-          ))}
+          <tbody>
+            {Object.entries(statistics).map(([word, stat]) => (
+              <tr key={word}>
+                <td>{word}</td>
+                <td>{stat}</td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
     </div>
   );
 };
+
 
 export default StatisticsContent;
