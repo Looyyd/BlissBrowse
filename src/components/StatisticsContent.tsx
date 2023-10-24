@@ -42,12 +42,16 @@ const StatisticsContent = () => {
   const sortedStatistics = React.useMemo(() => {
     const sortableItems = Object.entries(statistics);
     const key = sortConfig.key;
-    if ( key !== null) {
+    if (key !== null) {
       sortableItems.sort((a, b) => {
-        if (a[key] < b[key]) {
+        // Convert to lowercase if sorting by word (index 0)
+        const aValue = key === 0 ? a[key].toLowerCase() : a[key];
+        const bValue = key === 0 ? b[key].toLowerCase() : b[key];
+
+        if (aValue < bValue) {
           return sortConfig.direction === 'asc' ? -1 : 1;
         }
-        if (a[key] > b[key]) {
+        if (aValue > bValue) {
           return sortConfig.direction === 'asc' ? 1 : -1;
         }
         return 0;
@@ -55,6 +59,7 @@ const StatisticsContent = () => {
     }
     return sortableItems;
   }, [statistics, sortConfig]);
+
 
 
 
