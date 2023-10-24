@@ -1,5 +1,7 @@
 import React, { useState, FormEvent } from 'react';
 import {createNewList} from "../modules/wordLists";
+import { Button, TextField, FormControl, InputLabel } from '@mui/material';
+
 
 const NewListForm: React.FC = () => {
   const [listName, setListName] = useState<string>('');
@@ -18,16 +20,21 @@ const NewListForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <label htmlFor="listName">Enter a list name:</label>
-      <input
-        type="text"
-        id="listName"
-        placeholder="Enter a list name"
-        value={listName}
-        onChange={(e) => setListName(e.target.value)}
-        autoComplete="off"
-      />
-      <button type="submit">Add List</button>
+      <FormControl fullWidth margin="normal">
+        <InputLabel htmlFor="listName">Enter a list name:</InputLabel>
+        <TextField
+          id="listName"
+          type="text"
+          placeholder="Enter a list name"
+          value={listName}
+          onChange={(e) => setListName(e.target.value)}
+          autoComplete="off"
+        />
+      </FormControl>
+
+      <Button type="submit" variant="contained" color="primary">
+        Add List
+      </Button>
     </form>
   );
 };

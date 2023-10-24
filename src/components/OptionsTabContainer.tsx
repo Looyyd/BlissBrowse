@@ -2,9 +2,18 @@ import React, { useState } from 'react';
 import StatisticsContent from "./StatisticsContent";
 import BlacklistedSitesContent from "./BlacklistedSitesContent";
 import WordlistsContent from "./WordlistsContent";
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Box from '@mui/material/Box';
 
 const TabContainer = () => {
-  const [activeTab, setActiveTab] = useState<string>('Statistics');
+  const [activeTab, setActiveTab] = useState(0); // Initialize to the first tab
+
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  };
+
+
 
   const tabContentMapping = [
     {
@@ -12,41 +21,36 @@ const TabContainer = () => {
       content: <StatisticsContent />,
     },
     {
-      tab: 'WordLists',
+      tab: 'Filter Lists',
       content: <WordlistsContent />,
     },
     {
-      tab: 'BlacklistedSites',
+      tab: 'Blacklisted Websites',
       content: <BlacklistedSitesContent />,
     },
   ];
 
   return (
     <div>
-      <div>
+      <Tabs value={activeTab} onChange={handleChange}>
         {tabContentMapping.map(({ tab }) => (
-          <button
-            key={tab}
-            id={`${tab}Tab`}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab}
-          </button>
+          <Tab key={tab} id={`${tab}Tab`} label={tab} />
         ))}
-      </div>
-      <div>
-        {tabContentMapping.map(({ tab, content }) => (
-          <div
+      </Tabs>
+      <Box sx={{ marginTop: 2 }} >
+        {tabContentMapping.map(({ tab, content }, index) => (
+          <Box
             key={tab}
             id={tab}
-            style={{ display: activeTab === tab ? 'block' : 'none' }}
+            sx={{ display: activeTab === index ? 'block' : 'none' }}
           >
             {content}
-          </div>
+        </Box>
         ))}
-      </div>
+      </Box>
     </div>
   );
+
 };
 
 export default TabContainer;

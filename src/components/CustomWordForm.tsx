@@ -1,5 +1,7 @@
 import React, { useState, useEffect, FormEvent } from 'react';
 import {getLists, getSavedWordsFromList, saveNewWordToList} from "../modules/wordLists";
+import { Button, TextField, FormControl, InputLabel, Select, MenuItem, FormHelperText } from '@mui/material';
+
 
 const CustomWordForm: React.FC = () => {
   const [userDefinedWords, setUserDefinedWords] = useState<string[]>([]);
@@ -42,28 +44,37 @@ const CustomWordForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <label htmlFor="customWord">Enter a custom word:</label>
-      <input
-        type="text"
-        id="customWord"
-        placeholder="Enter a custom word"
-        value={newWord}
-        onChange={(e) => setNewWord(e.target.value)}
-        autoComplete="off"
-      />
-      <label htmlFor="customWordListSelect">Select a list:</label>
-      <select
-        id="customWordListSelect"
-        value={list}
-        onChange={(e) => setList(e.target.value)}
-      >
-        {lists.map((listName) => (
-          <option key={listName} value={listName}>
-            {listName}
-          </option>
-        ))}
-      </select>
-      <button type="submit">Add Word</button>
+      <FormControl fullWidth margin="normal">
+        <InputLabel htmlFor="customWord">Enter a custom word:</InputLabel>
+        <TextField
+          id="customWord"
+          type="text"
+          value={newWord}
+          onChange={(e) => setNewWord(e.target.value)}
+          autoComplete="off"
+        />
+      </FormControl>
+
+      <FormControl fullWidth margin="normal">
+        <InputLabel id="customWordListSelect-label">Select a list:</InputLabel>
+        <Select
+          labelId="customWordListSelect-label"
+          id="customWordListSelect"
+          value={list}
+          onChange={(e) => setList(e.target.value)}
+        >
+          {lists.map((listName) => (
+            <MenuItem key={listName} value={listName}>
+              {listName}
+            </MenuItem>
+          ))}
+        </Select>
+        <FormHelperText>Select a list to add the word to</FormHelperText>
+      </FormControl>
+
+      <Button type="submit" variant="contained" color="primary">
+        Add Word
+      </Button>
     </form>
   );
 };

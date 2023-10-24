@@ -1,6 +1,8 @@
 // FilteredWords.tsx
 import React, {useEffect, useState} from 'react';
 import {getSavedWordsFromList} from "../modules/wordLists";
+import { List, ListItem, ListItemText } from '@mui/material';
+
 
 interface FilteredWordsProps {
   listName: string,
@@ -19,12 +21,15 @@ const FilteredWords: React.FC<FilteredWordsProps> = ({listName}) => {
   }, []);
 
   return (
-    <ul id={`${listName}FilteredWords`}>
+    <List id={`${listName}FilteredWords`}>
       {words.map((word, index) => (
-        <li key={index}>{word}</li>
+        <ListItem key={index}>
+          <ListItemText primary={word} />
+        </ListItem>
       ))}
-    </ul>
+    </List>
   );
+
 };
 
 export default FilteredWords;

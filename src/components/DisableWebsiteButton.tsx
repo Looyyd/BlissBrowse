@@ -5,6 +5,7 @@ import {
   isHostnameDisabled,
   removeHostnameFromBlacklist
 } from "../modules/hostname";
+import Button from "@mui/material/Button"
 
 //TODO: pass context as a prop to DisableWebsiteButton?
 const DisableWebsiteButton: React.FC = () => {
@@ -38,9 +39,13 @@ const DisableWebsiteButton: React.FC = () => {
   };
 
   return (
-    <button onClick={handleClick}>
+    <Button
+      variant="contained"
+      color={isDisabled ? "warning" : "secondary"}
+      onClick={handleClick}
+    >
       {isDisabled ? 'Enable on This Site' : 'Disable on This Site'}
-    </button>
+    </Button>
   );
 };
 

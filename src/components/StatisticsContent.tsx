@@ -1,5 +1,16 @@
 import React, {useEffect, useState} from 'react';
 import {getLists, getSavedWordsFromList, getWordStatistics} from "../modules/wordLists";
+import {
+  Select,
+  MenuItem,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  FormControl,
+  InputLabel, SelectChangeEvent,
+} from '@mui/material';
 
 
 const ALL_LISTS = 'All_LISTS_3213546516541';
@@ -9,7 +20,7 @@ const StatisticsContent = () => {
   const [sortConfig, setSortConfig] = useState<{ key: null | number, direction: string }>({ key: null, direction: 'asc' });
   const [selectedList, setSelectedList] = useState<string | null>(null);
   const [statistics, setStatistics] = useState<{ [word: string]: number }>({});
-  const columnNames = ["Word", "Stat"];
+  const columnNames = ["Word", "Times Seen"];
 
   useEffect(() => {
     // Define an async function
@@ -72,8 +83,8 @@ const StatisticsContent = () => {
     setStatistics(statisticsDiv);
   };
 
-  const handleListChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newList = e.target.value;
+  const handleListChange = (e: SelectChangeEvent<unknown>) => {
+    const newList = e.target.value as string; // Type cast value to string
     setSelectedList(newList);
     fetchStatistics(newList);
   };
@@ -95,39 +106,47 @@ const StatisticsContent = () => {
 
   return (
     <div>
-      <select
-        id="ListSelectionSelect"
-        onChange={handleListChange}
-      >
-        <option key={ALL_LISTS} value={ALL_LISTS}>
-          All Lists
-        </option>
-        {lists.map((listName) => (
-          <option key={listName} value={listName}>
-            {listName}
-          </option>
-        ))}
-      </select>
+      <FormControl variant="outlined" fullWidth>
+        <InputLabel
+          id="ListSelectionSelectLabel"
+        >
+          Select List</InputLabel>
+        <Select
+          labelId="ListSelectionSelectLabel"
+          id="ListSelectionSelect"
+          onChange={handleListChange}
+          value={selectedList || ""}
+        >
+          <MenuItem key={ALL_LISTS} value={ALL_LISTS}>
+            All Lists
+          </MenuItem>
+          {lists.map((listName) => (
+            <MenuItem key={listName} value={listName}>
+              {listName}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
       <div id="ListStatistics">
-        <table>
-          <thead>
-          <tr>
-             {columnNames.map((name, index) => (
-            <th key={index} onClick={() => handleSort(index)}>
-              {name} {getSortIndicator(index)}
-            </th>
-          ))}
-          </tr>
-          </thead>
-          <tbody>
-          {sortedStatistics.map(([word, stat]) => (
-            <tr key={word}>
-              <td>{word}</td>
-              <td>{stat}</td>
-            </tr>
-          ))}
-          </tbody>
-        </table>
+        <Table>
+          <TableHead>
+            <TableRow>
+              {columnNames.map((name, index) => (
+                <TableCell key={index} onClick={() => handleSort(index)}>
+                  {name} {getSortIndicator(index)}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {sortedStatistics.map(([word, stat]) => (
+              <TableRow key={word}>
+                <TableCell>{word}</TableCell>
+                <TableCell>{stat}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

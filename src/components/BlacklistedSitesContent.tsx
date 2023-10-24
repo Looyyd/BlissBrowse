@@ -1,5 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {getHostnameBlacklist} from "../modules/hostname";
+import { Typography, List, ListItem } from '@mui/material';
+
 
 
 const BlacklistedSitesContent = () => {
@@ -17,11 +19,15 @@ const BlacklistedSitesContent = () => {
   return (
     <div>
       {blacklist.length === 0 ? (
-        <div>No blacklisted sites</div>
+        <Typography variant="body1">No blacklisted sites</Typography>
       ) : (
-        blacklist.map((hostname) => (
-          <div key={hostname}>{hostname}</div>
-        ))
+        <List>
+          {blacklist.map((hostname) => (
+            <ListItem key={hostname}>
+              <Typography variant="body1">{hostname}</Typography>
+            </ListItem>
+          ))}
+        </List>
       )}
     </div>
   )

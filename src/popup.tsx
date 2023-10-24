@@ -11,7 +11,7 @@ const Popup: React.FC = () => {
   return (
     <>
       <OpenOptionsButton/>
-      <DisableWebsiteButton />
+      <DisableWebsiteButton/>
       <CustomWordForm />
       <NewListForm />
       <ListsDisplay />

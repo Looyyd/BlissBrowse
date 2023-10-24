@@ -1,5 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import {getLists, getSavedWordsFromList, saveList} from "../modules/wordLists";
+import {InputLabel, Select, MenuItem, Button, TextareaAutosize, Container, Box, SelectChangeEvent} from '@mui/material';
+
+
 
 
 const WordlistsContent = () => {
@@ -26,8 +29,8 @@ const WordlistsContent = () => {
     fetchData();
   }, []);
 
-  const handleListChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const list = event.target.value;
+  const handleListChange = async (event: SelectChangeEvent<unknown>) => {
+    const list = event.target.value as string;
     await setNewList(list);
   };
 
@@ -43,23 +46,41 @@ const WordlistsContent = () => {
   };
 
   return (
-    <div>
-      <select
-        id="wordlist"
-        onChange={handleListChange}
-      >
-        {lists.map((list) => (
-          <option key={list} value={list}>{list}</option>
-        ))}
-      </select>
-      <textarea
-        value={textAreaValue}
-        onChange={handleTextAreaChange}
-        rows={10}
-        cols={30}
-      />
-      <button onClick={saveWords}>Save</button>
-    </div>
+    <Container>
+      <Box display="flex" flexDirection="column" alignItems="start" gap={2}>
+        <InputLabel id="wordlist-label">Wordlist</InputLabel>
+        <Select
+          labelId="wordlist-label"
+          id="wordlist"
+          onChange={handleListChange}
+          value={selectedList || ""}
+        >
+          {lists.map((list) => (
+            <MenuItem key={list} value={list}>{list}</MenuItem>
+          ))}
+        </Select>
+        <Button variant="contained" color="primary" onClick={saveWords}>
+          Save
+        </Button>
+        <Box
+          component={TextareaAutosize}
+          value={textAreaValue}
+          onChange={handleTextAreaChange}
+          sx={{
+            width: '100%',
+            minHeight: '100px',
+            padding: '12px',
+            borderRadius: '4px',
+            borderColor: 'rgba(0, 0, 0, 0.23)',
+            '&:focus': {
+              borderColor: 'rgba(0, 0, 0, 0.87)',
+              outline: 'none'
+            }
+          }}
+        />
+      </Box>
+    </Container>
+
   );
 };
 
