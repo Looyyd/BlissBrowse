@@ -11,6 +11,9 @@ import {
   FormControl,
   InputLabel, SelectChangeEvent,
 } from '@mui/material';
+import ArrowUpward from '@mui/icons-material/ArrowUpward';
+import ArrowDownward from '@mui/icons-material/ArrowDownward';
+
 
 
 const ALL_LISTS = 'All_LISTS_3213546516541';
@@ -99,10 +102,13 @@ const StatisticsContent = () => {
   // Function to return sort indicator
   const getSortIndicator = (key: number) => {
     if (sortConfig.key === key) {
-      return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
+      return sortConfig.direction === 'asc' ?
+        <ArrowUpward fontSize="small" style={{ verticalAlign: '2px' }} /> :
+        <ArrowDownward fontSize="small" style={{ verticalAlign: '2px' }} />;
     }
-    return '';
+    return <span style={{ width: '24px', display: 'inline-block' }}></span>;
   };
+
 
   return (
     <div>
@@ -133,7 +139,10 @@ const StatisticsContent = () => {
             <TableRow>
               {columnNames.map((name, index) => (
                 <TableCell key={index} onClick={() => handleSort(index)}>
-                  {name} {getSortIndicator(index)}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
+                    <span>{name}</span>
+                    <span style={{ marginLeft: '8px', width: '24px', display: 'inline-block' }}>{getSortIndicator(index)}</span>
+                  </div>
                 </TableCell>
               ))}
             </TableRow>
