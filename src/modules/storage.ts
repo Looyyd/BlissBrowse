@@ -1,20 +1,38 @@
-//TODO: are the types right here?
-//TODO: do we want more types?
-export async function getStorageKey(key: string): Promise<string[]> {
+import {DEBUG} from "../constants";
+
+export async function getStorageKey(key: string) : Promise<string[]>{
+  if(DEBUG){
+    console.log("In function getStorageKey")
+  }
   return new Promise((resolve, reject) => {
-    chrome.storage.sync.get(key, (data) => {
-      const value = data[key];
-      if (Array.isArray(value) && value.every(item => typeof item === 'string')) {
-        resolve(value);
-      } else if (value === undefined || value === null) {
-        resolve([]);
+    chrome.runtime.sendMessage({ action: 'get', key }, (response) => {
+      if(DEBUG){
+        console.log('getStorageKey response:', response);
+      }
+      if (response.success) {
+        resolve(response.data);
       } else {
-        reject(new Error(`The key "${key}" did not contain a valid array of strings.`));
+        return ([])//TODO: should be able to raise errors maybe don't raise if key not found only
+        //reject(new Error(response.error));
       }
     });
   });
 }
 
-export async function setStorageKey(key: string, value: string[]) {
-  await chrome.storage.sync.set({[key]: value});
+export async function setStorageKey(key:string, value:string[]): Promise<void> {
+  if(DEBUG){
+    console.log("In function setStorageKey")
+  }
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({ action: 'set', key, value }, (response) => {
+      if (response.success) {
+        if(DEBUG){
+          console.log('setStorageKey response:', response);
+        }
+        resolve();
+      } else {
+        reject(new Error(response.error));
+      }
+    });
+  });
 }
