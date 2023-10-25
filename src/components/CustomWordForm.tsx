@@ -1,6 +1,7 @@
 import React, { useState, useEffect, FormEvent } from 'react';
 import {getLists, getSavedWordsFromList, saveNewWordToList} from "../modules/wordLists";
-import {Button, TextField, FormControl, Select, MenuItem, FormHelperText, Typography} from '@mui/material';
+import {Button, TextField, FormControl, FormHelperText, Typography} from '@mui/material';
+import ListSelector from "./ListSelector";
 
 
 const CustomWordForm: React.FC = () => {
@@ -58,18 +59,7 @@ const CustomWordForm: React.FC = () => {
         </FormControl>
 
         <FormControl fullWidth margin="normal">
-          <Select
-            labelId="customWordListSelect-label"
-            id="customWordListSelect"
-            value={list}
-            onChange={(e) => setList(e.target.value)}
-          >
-            {lists.map((listName) => (
-              <MenuItem key={listName} value={listName}>
-                {listName}
-              </MenuItem>
-            ))}
-          </Select>
+          <ListSelector lists={lists} onListChange={(e) => setList(e.target.value)}/>
           <FormHelperText>Select a list to add the word to</FormHelperText>
         </FormControl>
 

@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {getLists, getSavedWordsFromList, saveList} from "../modules/wordLists";
-import {InputLabel, Select, MenuItem, Button, TextareaAutosize, Container, Box, SelectChangeEvent} from '@mui/material';
+import {InputLabel, Button, TextareaAutosize, Container, Box, SelectChangeEvent} from '@mui/material';
+import ListSelector from "./ListSelector";
 
 
 
@@ -49,16 +50,7 @@ const WordlistsContent = () => {
     <Container>
       <Box display="flex" flexDirection="column" alignItems="start" gap={2}>
         <InputLabel id="wordlist-label">Wordlist</InputLabel>
-        <Select
-          labelId="wordlist-label"
-          id="wordlist"
-          onChange={handleListChange}
-          value={selectedList || ""}
-        >
-          {lists.map((list) => (
-            <MenuItem key={list} value={list}>{list}</MenuItem>
-          ))}
-        </Select>
+        <ListSelector lists={lists} onListChange={handleListChange}/>
         <Button variant="contained" color="primary" onClick={saveWords}>
           Save
         </Button>

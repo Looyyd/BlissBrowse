@@ -1,8 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {getLists, getSavedWordsFromList, getWordStatistics} from "../modules/wordLists";
 import {
-  Select,
-  MenuItem,
   Table,
   TableHead,
   TableBody,
@@ -13,6 +11,7 @@ import {
 import TableCell from '@mui/material/TableCell';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import ArrowDownward from '@mui/icons-material/ArrowDownward';
+import ListSelector from "./ListSelector";
 
 
 
@@ -122,21 +121,10 @@ const StatisticsContent = () => {
           id="ListSelectionSelectLabel"
         >
           Select List</InputLabel>
-        <Select
-          labelId="ListSelectionSelectLabel"
-          id="ListSelectionSelect"
-          onChange={handleListChange}
-          value={selectedList || ""}
-        >
-          <MenuItem key={ALL_LISTS} value={ALL_LISTS}>
-            All Lists
-          </MenuItem>
-          {lists.map((listName) => (
-            <MenuItem key={listName} value={listName}>
-              {listName}
-            </MenuItem>
-          ))}
-        </Select>
+        <ListSelector
+          lists={lists.length>0 ? lists.concat(ALL_LISTS): lists}
+          onListChange={handleListChange}
+        />
       </FormControl>
       <div id="ListStatistics">
         <Table>
