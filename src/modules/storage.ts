@@ -1,6 +1,6 @@
 import {DEBUG} from "../constants";
 
-export async function getStorageKey(key: string) : Promise<string[]>{
+export async function getStorageKey<T>(key: string): Promise<T>{
   if(DEBUG){
     console.log("In function getStorageKey")
   }
@@ -10,16 +10,15 @@ export async function getStorageKey(key: string) : Promise<string[]>{
         console.log('getStorageKey response:', response);
       }
       if (response.success) {
-        resolve(response.data);
+        resolve(response.data as T);
       } else {
-        return ([])//TODO: should be able to raise errors maybe don't raise if key not found only
-        //reject(new Error(response.error));
+        reject(new Error(response.error));
       }
     });
   });
 }
 
-export async function setStorageKey(key:string, value:string[]): Promise<void> {
+export async function setStorageKey<T>(key: string, value: T): Promise<void> {
   if(DEBUG){
     console.log("In function setStorageKey")
   }
@@ -36,3 +35,4 @@ export async function setStorageKey(key:string, value:string[]): Promise<void> {
     });
   });
 }
+

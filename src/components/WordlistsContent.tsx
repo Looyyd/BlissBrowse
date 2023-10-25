@@ -8,7 +8,7 @@ import ListSelector from "./ListSelector";
 
 const WordlistsContent = () => {
   const [lists, setLists] = useState<string[]>([]);
-  const [selectedList, setSelectedList] = useState<string | null>(null);
+  const [selectedList, setSelectedList] = useState<string>("");
   const [words, setWords] = useState<string[]>([]);
   const [textAreaValue, setTextAreaValue] = useState<string>("");
 
@@ -50,7 +50,11 @@ const WordlistsContent = () => {
     <Container>
       <Box display="flex" flexDirection="column" alignItems="start" gap={2}>
         <InputLabel id="wordlist-label">Wordlist</InputLabel>
-        <ListSelector lists={lists} onListChange={handleListChange}/>
+        <ListSelector
+          lists={lists}
+          onListChange={handleListChange}
+          value={selectedList}
+        />
         <Button variant="contained" color="primary" onClick={saveWords}>
           Save
         </Button>

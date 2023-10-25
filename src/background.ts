@@ -1,14 +1,11 @@
-import {createNewList} from "./modules/wordLists";
 import {DEBUG} from "./constants";
 
 //TODO: browser agnostic
 
 
-//installation
 chrome.runtime.onInstalled.addListener(async function(details) {
   if (details.reason === 'install') {
     // This block will run when the extension is first installed
-    await createNewList('default');
   } else if (details.reason === 'update') {
     // This block will run when the extension is updated
     // You can also set or update storage values here
@@ -40,13 +37,13 @@ request.onsuccess = (event: Event) => {
 
 
 // Function to get data from IndexedDB
-async function getIndexedDBKey(key: string) : Promise<string[]>{
+async function getIndexedDBKey<T>(key: string) : Promise<T>{
   return new Promise((resolve, reject) => {
     if(db){
       const transaction = db.transaction([storeName], 'readonly');
       const objectStore = transaction.objectStore(storeName);
       const request = objectStore.get(key);
-      request.onsuccess = () => resolve(request.result ? request.result.value : []);
+      request.onsuccess = () => resolve(request.result ? request.result.value : null);
       request.onerror = () => reject(new Error(`Error fetching data for key ${key}`));
     }
     else{
@@ -55,8 +52,9 @@ async function getIndexedDBKey(key: string) : Promise<string[]>{
   });
 }
 
+
 // Function to set data to IndexedDB
-async function setIndexedDBKey(key: string, value: string[]) : Promise<void>{
+async function setIndexedDBKey<T>(key: string, value: T) : Promise<void>{
   return new Promise((resolve, reject) => {
     if(db){
       const transaction = db.transaction([storeName], 'readwrite');
@@ -70,6 +68,8 @@ async function setIndexedDBKey(key: string, value: string[]) : Promise<void>{
     }
   });
 }
+
+
 
 // storage listeners
 /*

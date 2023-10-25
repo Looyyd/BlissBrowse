@@ -1,5 +1,6 @@
 import {getStorageKey, setStorageKey} from "./storage";
 import {DEBUG} from "../constants";
+import {isStringArray} from "./typeguards";
 
 const siteBlacklistKey = 'blacklist';
 
@@ -39,7 +40,15 @@ export async function isHostnameDisabled(hostname: string): Promise<boolean> {
 }
 
 export async function getHostnameBlacklist(): Promise<string[]> {
-  return getStorageKey(siteBlacklistKey);
+  const blacklist = await getStorageKey(siteBlacklistKey);
+  if(!isStringArray(blacklist)){
+    if(blacklist === null){
+      //default value
+      return [];
+    }
+    throw new Error('blacklist is not a string array');
+  }
+  return blacklist;
 }
 
 async function setHostnameBlacklist(blacklist: string[]) {

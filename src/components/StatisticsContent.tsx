@@ -6,16 +6,15 @@ import {
   TableBody,
   TableRow,
   FormControl,
-  InputLabel, SelectChangeEvent,
+  SelectChangeEvent,
 } from '@mui/material';
 import TableCell from '@mui/material/TableCell';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import ArrowDownward from '@mui/icons-material/ArrowDownward';
 import ListSelector from "./ListSelector";
+import {ALL_LISTS} from "../constants";
 
 
-
-const ALL_LISTS = 'All_LISTS_3213546516541';
 
 const StatisticsContent = () => {
   const [lists, setLists] = useState<string[]>([]);
@@ -77,10 +76,7 @@ const StatisticsContent = () => {
       const words = await getSavedWordsFromList(list);
       words_to_show = words_to_show.concat(words);
     }
-
     words_to_show = [...new Set(words_to_show)];
-
-
 
     const statisticsDiv: { [word: string]: number } = {};
     for (const word of words_to_show) {
@@ -90,8 +86,8 @@ const StatisticsContent = () => {
     setStatistics(statisticsDiv);
   };
 
-  const handleListChange = (e: SelectChangeEvent<unknown>) => {
-    const newList = e.target.value as string; // Type cast value to string
+  const handleListChange = (e: SelectChangeEvent<string>) => {
+    const newList = e.target.value; // Type cast value to string
     setSelectedList(newList);
     fetchStatistics(newList);
   };
@@ -117,13 +113,10 @@ const StatisticsContent = () => {
   return (
     <div>
       <FormControl variant="outlined" fullWidth>
-        <InputLabel
-          id="ListSelectionSelectLabel"
-        >
-          Select List</InputLabel>
         <ListSelector
           lists={lists.length>0 ? lists.concat(ALL_LISTS): lists}
           onListChange={handleListChange}
+          value={selectedList || ''}
         />
       </FormControl>
       <div id="ListStatistics">

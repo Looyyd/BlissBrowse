@@ -7,7 +7,7 @@ import ListSelector from "./ListSelector";
 const CustomWordForm: React.FC = () => {
   const [userDefinedWords, setUserDefinedWords] = useState<string[]>([]);
   const [newWord, setNewWord] = useState<string>('');
-  const [list, setList] = useState<string>('default');
+  const [list, setList] = useState<string>('');
   const [lists, setLists] = useState<string[]>([]);
 
   useEffect(() => {
@@ -59,7 +59,11 @@ const CustomWordForm: React.FC = () => {
         </FormControl>
 
         <FormControl fullWidth margin="normal">
-          <ListSelector lists={lists} onListChange={(e) => setList(e.target.value)}/>
+          <ListSelector
+            lists={lists}
+            onListChange={(e) => setList(e.target.value)}
+            value={list}
+          />
           <FormHelperText>Select a list to add the word to</FormHelperText>
         </FormControl>
 
