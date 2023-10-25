@@ -1,4 +1,3 @@
-// ListsDisplay.tsx
 import React, { useEffect, useState } from 'react';
 import FilteredWords from './FilteredWords';
 import {getLists} from "../modules/wordLists";

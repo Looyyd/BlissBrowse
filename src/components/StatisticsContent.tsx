@@ -7,10 +7,10 @@ import {
   TableHead,
   TableBody,
   TableRow,
-  TableCell,
   FormControl,
   InputLabel, SelectChangeEvent,
 } from '@mui/material';
+import TableCell from '@mui/material/TableCell';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import ArrowDownward from '@mui/icons-material/ArrowDownward';
 

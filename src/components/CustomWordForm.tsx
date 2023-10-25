@@ -1,6 +1,6 @@
 import React, { useState, useEffect, FormEvent } from 'react';
 import {getLists, getSavedWordsFromList, saveNewWordToList} from "../modules/wordLists";
-import {Button, TextField, FormControl, InputLabel, Select, MenuItem, FormHelperText, Typography} from '@mui/material';
+import {Button, TextField, FormControl, Select, MenuItem, FormHelperText, Typography} from '@mui/material';
 
 
 const CustomWordForm: React.FC = () => {
@@ -47,10 +47,10 @@ const CustomWordForm: React.FC = () => {
       <Typography variant="h6">Add Custom Word</Typography>
       <form onSubmit={handleSubmit}>
         <FormControl fullWidth margin="normal">
-          <InputLabel htmlFor="customWord">Enter a custom word:</InputLabel>
           <TextField
             id="customWord"
             type="text"
+            placeholder="Enter a list name"
             value={newWord}
             onChange={(e) => setNewWord(e.target.value)}
             autoComplete="off"
@@ -58,7 +58,6 @@ const CustomWordForm: React.FC = () => {
         </FormControl>
 
         <FormControl fullWidth margin="normal">
-          <InputLabel id="customWordListSelect-label">Select a list:</InputLabel>
           <Select
             labelId="customWordListSelect-label"
             id="customWordListSelect"

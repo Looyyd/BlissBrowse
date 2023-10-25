@@ -22,6 +22,9 @@ module.exports = {
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
+    alias: {
+      '@emotion/react': path.resolve(__dirname, 'node_modules/@emotion/react'),
+    },
   },
   output: {
     filename: '[name].js',
@@ -39,5 +42,6 @@ module.exports = {
       chunks: ['options']
     }),
   ],
-  devtool: 'cheap-module-source-map',
+  devtool: isDevelopment ? 'cheap-module-source-map' : false,
 };
+

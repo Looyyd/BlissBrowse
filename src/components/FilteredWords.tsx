@@ -1,7 +1,9 @@
 // FilteredWords.tsx
 import React, {useEffect, useState} from 'react';
 import {getSavedWordsFromList} from "../modules/wordLists";
-import { List, ListItem, ListItemText } from '@mui/material';
+import { List, ListItem} from '@mui/material';
+import ListItemText from '@mui/material/ListItemText';
+
 
 
 interface FilteredWordsProps {
