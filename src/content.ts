@@ -9,10 +9,10 @@ import {
   scriptName,
   wordStatisticsKeyPrefix,
   BATCH_STAT_UPDATE_INTERVAL,
-  DEFAULT_FILTER_ACTION
 } from "./constants";
 import {isCurrentSiteDisabled} from "./modules/hostname";
 import {Action} from "./modules/types";
+import {getFilterAction} from "./modules/settings";
 
 /*
 some logic taken from:
@@ -196,6 +196,7 @@ async function checkAndProcessElements() {
     await unprocessElements([])//unhide all
     return;
   }
+  const action = await getFilterAction();
   // Create a TreeWalker to traverse text nodes
   const walker = document.createTreeWalker(
     document.body,
@@ -233,7 +234,7 @@ async function checkAndProcessElements() {
       if (filterResult.shouldFilter && filterResult.triggeringWord) {
         const ancestor = getFeedlikeAncestor(node);
         if (ancestor instanceof HTMLElement) {
-          await processElement(ancestor, filterResult.triggeringWord, DEFAULT_FILTER_ACTION)
+          await processElement(ancestor, filterResult.triggeringWord, action)
         }
       }
     }

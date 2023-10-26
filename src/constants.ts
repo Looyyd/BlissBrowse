@@ -17,7 +17,7 @@ export const DEFAULT_LISTNAMES_ARRAY = [];
 export const DEFAULT_WORDLIST = [];
 export const DEFAULT_HOSTNAME_BLACKLIST = [];
 
-export const  DEFAULT_FILTER_ACTION = Action.HIDE;
+export const  DEFAULT_FILTER_ACTION = Action.BLUR;
 
 //TODO: cleaner way to represent all lists
 export const ALL_LISTS = 'All_LISTS_3213546516541';
