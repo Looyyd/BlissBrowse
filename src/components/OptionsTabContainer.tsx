@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import StatisticsContent from "./StatisticsContent";
 import BlacklistedSitesContent from "./BlacklistedSitesContent";
 import WordlistsContent from "./WordlistsContent";
@@ -8,12 +8,20 @@ import Box from '@mui/material/Box';
 import GlobalSettingsContent from "./GlobalSettingsContent";
 
 const TabContainer = () => {
-  const [activeTab, setActiveTab] = useState(0); // Initialize to the first tab
+  const [activeTab, setActiveTab] = useState(() => {
+    // Try to read from localStorage, to keep same tab active on refresh
+    const storedValue = localStorage.getItem('activeTab');
+    return storedValue !== null ? Number(storedValue) : 0;
+  });
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
 
+  useEffect(() => {
+    // Store the active tab index whenever it changes
+    localStorage.setItem('activeTab', activeTab.toString());
+  }, [activeTab]);
 
 
   const tabContentMapping = [
