@@ -86,39 +86,50 @@ Solution: Promise-based structure:
 Instead of using async/await, we explicitly handle the asynchronous logic using Promises. By chaining .then() and .catch(), we maintain control within the listener's scope and prevent it from prematurely exiting. This ensures that the sendResponse callback remains valid and can be called after our asynchronous operation completes.
 In other words, by directly using Promises, we have a more explicit control flow. The listener understands that it should wait for the promise resolution or rejection, and only then should it execute the sendResponse callback. This maintains the message channel's open state correctly.
  */
+
+type SendResponseFunc = (response: unknown) => void;
+const handleGet = (key: string, sendResponse: SendResponseFunc): void => {
+  getIndexedDBKey(key)
+    .then(data => {
+      if (DEBUG) {
+        console.log('Sending data from background listener data:', data);
+      }
+      sendResponse({ success: true, data });
+    })
+    .catch((error: unknown) => {
+      if (error instanceof Error) {
+        sendResponse({ success: false, error: error.message });
+      } else {
+        sendResponse({ success: false, error: 'An unknown error occurred.' });
+      }
+    });
+};
+
+const handleSet = (key: string, value: unknown, sendResponse: SendResponseFunc): void => {
+  setIndexedDBKey(key, value)
+    .then(() => {
+      sendResponse({ success: true });
+    })
+    .catch((error: unknown) => {
+      if (error instanceof Error) {
+        sendResponse({ success: false, error: error.message });
+      } else {
+        sendResponse({ success: false, error: 'An unknown error occurred.' });
+      }
+    });
+};
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (DEBUG) {
     console.log('request:', request);
   }
 
   if (request.action === 'get') {
-    getIndexedDBKey(request.key)
-      .then(data => {
-        if (DEBUG) {
-          console.log('Sending data from background listener data:', data);
-        }
-        sendResponse({ success: true, data });
-      })
-      .catch((error: unknown) => {
-        if (error instanceof Error) {
-          sendResponse({ success: false, error: error.message });
-        } else {
-          sendResponse({ success: false, error: 'An unknown error occurred.' });
-        }
-      });
+    handleGet(request.key, sendResponse);
   } else if (request.action === 'set') {
-    setIndexedDBKey(request.key, request.value)
-      .then(() => {
-        sendResponse({ success: true });
-      })
-      .catch((error: unknown) => {
-        if (error instanceof Error) {
-          sendResponse({ success: false, error: error.message });
-        } else {
-          sendResponse({ success: false, error: 'An unknown error occurred.' });
-        }
-      });
+    handleSet(request.key, request.value, sendResponse);
   }
+
   return true;  // This is necessary to handle the asynchronous response
 });
 
