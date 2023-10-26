@@ -1,4 +1,4 @@
-import {DEBUG, wordStatisticsKeyPrefix} from "../constants";
+import {DEBUG, DEFAULT_LISTNAMES_ARRAY, DEFAULT_WORD_STATISTICS, DEFAULT_WORDLIST, wordStatisticsKeyPrefix} from "../constants";
 import {getStorageKey, setStorageKey} from "./storage";
 import {isNumber, isStringArray} from "./typeguards";
 
@@ -12,8 +12,7 @@ export async function getSavedWordsFromList(list: string): Promise<string[]> {
   const words = await getStorageKey(key);
   if(!isStringArray(words)){
     if(words === null){
-      //default value
-      return [];
+      return DEFAULT_WORDLIST;
     }
     throw new Error('words is not a string array');
   }
@@ -23,7 +22,7 @@ export async function getSavedWordsFromList(list: string): Promise<string[]> {
 export async function createNewList(listName: string): Promise<void> {
   const listNames = await getLists();
   if (!listNames.includes(listName)) {
-    await setStorageKey(listName, []);
+    await setStorageKey(listName, DEFAULT_WORDLIST);
     await setStorageKey(listNamesKey, listNames.concat(listName));
   }
 }
@@ -37,8 +36,7 @@ export async function getWordStatistics(word: string): Promise<number> {
 
   if(!isNumber(n)){
     if(n === null){
-      //default value
-      return 0;
+      return DEFAULT_WORD_STATISTICS;
     }
     throw new Error('n is not a number');
   }
@@ -67,8 +65,7 @@ export async function getLists(): Promise<string[]> {
   const listNames = await getStorageKey(listNamesKey);
   if(!isStringArray(listNames)){
     if(listNames === null){
-      //default value
-      return [];
+      return DEFAULT_LISTNAMES_ARRAY;
     }
     throw new Error('listNames is not a string array');
   }
@@ -91,7 +88,8 @@ export async function deleteList(listName: string): Promise<void> {
     const key = listName;
     listNames.splice(index, 1);
     await setStorageKey(listNamesKey, listNames);
-    await setStorageKey(key, []);
+    //TODO: remove list from storage instead of default value
+    await setStorageKey(key, DEFAULT_WORDLIST);
   }
 }
 
@@ -106,19 +104,18 @@ export async function saveNewWordToList(newWord: string, existingWords: string[]
 
 export async function saveList(words: string[], list:string): Promise<void> {
   const key = wordBlacklistKeyPrefix + list;
-  //filter out duplicates
   const uniqueWords = [...new Set(words)];
-  await removeWordFromList('', list);//TODO: how to handle whitepace after words? maybe make it obvious in editing
-  await setStorageKey(key, uniqueWords);
+  const uniqueWordsWithoutEmptyString = uniqueWords.filter(word => word !== '');
+  await setStorageKey(key, uniqueWordsWithoutEmptyString);
 }
 
 export async function removeWordFromList(wordToRemove: string, list: string): Promise<void> {
   const existingWords = await getSavedWordsFromList(list);
-  const index = existingWords.indexOf(wordToRemove);
-  if (index > -1) {
+  const filteredWords = existingWords.filter(word => word !== wordToRemove);
+
+  if (filteredWords.length !== existingWords.length) {
     const key = wordBlacklistKeyPrefix + list;
-    existingWords.splice(index, 1);
-    await setStorageKey(key, existingWords);
+    await setStorageKey(key, filteredWords);
   }
 }
 
