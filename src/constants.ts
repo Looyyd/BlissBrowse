@@ -1,4 +1,4 @@
-import {Action} from "./modules/types";
+import {Action, ColorTheme} from "./modules/types";
 
 export const devWords: string[] = ["c++", "requiem", "elon musk"];
 
@@ -18,6 +18,8 @@ export const DEFAULT_WORDLIST = [];
 export const DEFAULT_HOSTNAME_BLACKLIST = [];
 
 export const  DEFAULT_FILTER_ACTION = Action.BLUR;
+
+export const DEFAULT_COLOR_THEME = ColorTheme.LIGHT;
 
 //TODO: cleaner way to represent all lists
 export const ALL_LISTS = 'All_LISTS_3213546516541';
