@@ -6,12 +6,13 @@ import CustomWordForm from "./components/CustomWordForm";
 import NewListForm from "./components/NewListForm";
 import OpenOptionsButton from "./components/OpenOptionsButton";
 import {ColorTheme} from "./modules/types";
-import {getColorTheme} from "./modules/settings";
 import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
+import {ColorThemeStore} from "./modules/settings";
 
 
 const Popup: React.FC = () => {
-  const colorTheme = getColorTheme();
+  const colorThemeStore = new ColorThemeStore();
+  const colorTheme = colorThemeStore.get();
 
   const darkMode = colorTheme === ColorTheme.DARK;
   const theme = createTheme({

@@ -1,13 +1,14 @@
 import React from "react";
 import {createRoot} from 'react-dom/client';
 import TabContainer from "./components/OptionsTabContainer";
-import {getColorTheme} from "./modules/settings";
+import {ColorThemeStore} from "./modules/settings";
 import {ColorTheme} from "./modules/types";
 import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
 
 
 const App: React.FC = () => {
-  const colorTheme = getColorTheme();
+  const colorThemeStore = new ColorThemeStore();
+  const colorTheme = colorThemeStore.get();
 
 
   const darkMode = colorTheme === ColorTheme.DARK;

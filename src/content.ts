@@ -12,7 +12,7 @@ import {
 } from "./constants";
 import {isCurrentSiteDisabled} from "./modules/hostname";
 import {Action} from "./modules/types";
-import {getFilterAction} from "./modules/settings";
+import {FilterActionStore} from "./modules/settings";
 
 /*
 some logic taken from:
@@ -196,7 +196,8 @@ async function checkAndProcessElements() {
     await unprocessElements([])//unhide all
     return;
   }
-  const action = await getFilterAction();
+  const actionStore = new FilterActionStore();
+  const action = await actionStore.get();
   // Create a TreeWalker to traverse text nodes
   const walker = document.createTreeWalker(
     document.body,
