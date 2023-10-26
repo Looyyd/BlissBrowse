@@ -5,7 +5,6 @@ import {Action, ColorTheme} from "./types";
 
 
 const actionToApplyOnFilterKey = 'actionToApplyOnFilter';
-const colorThemeKey = 'colorTheme';
 
 export async function getFilterAction(): Promise<Action> {
   const action = await getStorageKey<Action>(actionToApplyOnFilterKey);
@@ -23,12 +22,17 @@ export async function setFilterAction(action: Action) {
 }
 
 
-export async function setColorTheme(theme: ColorTheme){
-  await setStorageKey(colorThemeKey, theme);
+export function setColorTheme(theme: ColorTheme){
+  localStorage.setItem('colorTheme', JSON.stringify(theme));
 }
 
-export async function getColorTheme(): Promise<ColorTheme> {
-  const theme = await getStorageKey<ColorTheme>(colorThemeKey);
+export function getColorTheme(): ColorTheme {
+  //not async to avoid flash when loading dark theme
+  const themeString = localStorage.getItem('colorTheme');
+  if(themeString === null){
+    return DEFAULT_COLOR_THEME;
+  }
+  const theme = JSON.parse(themeString);
   if(!isColorTheme(theme)){
     if(theme === null){
       return DEFAULT_COLOR_THEME;
