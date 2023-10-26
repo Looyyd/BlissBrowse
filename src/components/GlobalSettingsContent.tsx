@@ -1,6 +1,6 @@
 import {Action, ColorTheme} from "../modules/types"
 import {MenuItem, Select} from "@mui/material";
-import {DEFAULT_COLOR_THEME, DEFAULT_FILTER_ACTION} from "../constants";
+import {DEFAULT_FILTER_ACTION} from "../constants";
 import React from "react";
 import {
   ColorThemeStore,
@@ -10,20 +10,18 @@ import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 import { useEffect, useState } from 'react';
 
 const GlobalSettingsContent = () => {
+  const colorThemeStore = new ColorThemeStore();
+  const filterActionstore = new FilterActionStore();
   const [selectedAction, setSelectedAction] = useState<Action>(DEFAULT_FILTER_ACTION);
-  const [selectedColorTheme, setSelectedColorTheme] = useState<ColorTheme>(DEFAULT_COLOR_THEME);
+  const [selectedColorTheme, setSelectedColorTheme] = useState<ColorTheme>(colorThemeStore.get());
   const actions = Object.values(Action);
   const colorThemes = Object.values(ColorTheme);
 
-  const filterActionstore = new FilterActionStore();
-  const colorThemeStore = new ColorThemeStore();
 
   useEffect(() => {
     const fetchData = async () => {
       const previous_action = await filterActionstore.get();
       setSelectedAction(previous_action);
-      const previous_color_theme = await colorThemeStore.get();
-      setSelectedColorTheme(previous_color_theme);
     };
     fetchData();
   }, []);
@@ -37,7 +35,7 @@ const GlobalSettingsContent = () => {
   async function onColorThemeChange(event: SelectChangeEvent<ColorTheme>) {
     const colorTheme = event.target.value as ColorTheme;
     setSelectedColorTheme(colorTheme);
-    await colorThemeStore.set(colorTheme);
+    colorThemeStore.set(colorTheme);
   }
 
   return (
