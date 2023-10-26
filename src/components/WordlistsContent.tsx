@@ -9,7 +9,7 @@ import ListSelector from "./ListSelector";
 const WordlistsContent = () => {
   const [lists, setLists] = useState<string[]>([]);
   const [selectedList, setSelectedList] = useState<string>("");
-  const [words, setWords] = useState<string[]>([]);
+  const [, setWords] = useState<string[]>([]);
   const [textAreaValue, setTextAreaValue] = useState<string>("");
 
   const setNewList = async (list: string) => {
@@ -62,17 +62,19 @@ const WordlistsContent = () => {
           component={TextareaAutosize}
           value={textAreaValue}
           onChange={handleTextAreaChange}
-          sx={{
+          sx={(theme) => ({
             width: '100%',
             minHeight: '100px',
             padding: '12px',
             borderRadius: '4px',
-            borderColor: 'rgba(0, 0, 0, 0.23)',
+            borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.23)',
+            background: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
+            color: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.87)' : 'rgba(0, 0, 0, 0.87)',
             '&:focus': {
-              borderColor: 'rgba(0, 0, 0, 0.87)',
+              borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.87)' : 'rgba(0, 0, 0, 0.87)',
               outline: 'none'
             }
-          }}
+          })}
         />
       </Box>
     </Container>
