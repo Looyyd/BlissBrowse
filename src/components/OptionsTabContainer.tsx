@@ -5,6 +5,7 @@ import WordlistsContent from "./WordlistsContent";
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
+import GlobalSettingsContent from "./GlobalSettingsContent";
 
 const TabContainer = () => {
   const [activeTab, setActiveTab] = useState(0); // Initialize to the first tab
@@ -28,6 +29,10 @@ const TabContainer = () => {
       tab: 'Blacklisted Websites',
       content: <BlacklistedSitesContent />,
     },
+    {
+      tab: 'Settings',
+      content: <GlobalSettingsContent />,
+    }
   ];
 
   return (
