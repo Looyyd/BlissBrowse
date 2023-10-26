@@ -4,8 +4,15 @@ import {
   getSavedWordsFromList
 } from "./modules/wordLists";
 import {getLists} from "./modules/wordLists";
-import {DEBUG, scriptName, wordStatisticsKeyPrefix, BATCH_STAT_UPDATE_INTERVAL} from "./constants";
+import {
+  DEBUG,
+  scriptName,
+  wordStatisticsKeyPrefix,
+  BATCH_STAT_UPDATE_INTERVAL,
+  DEFAULT_FILTER_ACTION
+} from "./constants";
 import {isCurrentSiteDisabled} from "./modules/hostname";
+import {Action} from "./modules/types";
 
 /*
 some logic taken from:
@@ -119,10 +126,6 @@ function shouldFilterTextContent(textContent: string, wordsToFilter: string[], i
 
 
 
-enum Action {
-  BLUR = "blur",
-  HIDE = "hide"
-}
 
 /*
 TODO: add a visual indicator using react, something like this:
@@ -230,7 +233,7 @@ async function checkAndProcessElements() {
       if (filterResult.shouldFilter && filterResult.triggeringWord) {
         const ancestor = getFeedlikeAncestor(node);
         if (ancestor instanceof HTMLElement) {
-          await processElement(ancestor, filterResult.triggeringWord, Action.BLUR)
+          await processElement(ancestor, filterResult.triggeringWord, DEFAULT_FILTER_ACTION)
         }
       }
     }
@@ -258,6 +261,7 @@ const observer = new MutationObserver(async () => {
 
 observer.observe(document.body, { childList: true, subtree: true });
 
+//TODO: change now that indexedDB is used
 chrome.storage.onChanged.addListener(async (changes) => {
   let shouldRunDebounce = false;
   for (const key in changes) {
