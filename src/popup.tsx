@@ -8,7 +8,7 @@ import OpenOptionsButton from "./components/OpenOptionsButton";
 import {ColorTheme} from "./modules/types";
 import {DEFAULT_COLOR_THEME} from "./constants";
 import {getColorTheme} from "./modules/settings";
-import {createTheme, ThemeProvider} from "@mui/material";
+import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
 
 
 const Popup: React.FC = () => {
@@ -30,6 +30,7 @@ const Popup: React.FC = () => {
 
   return (
     <ThemeProvider theme={theme}>
+      <CssBaseline />
       <OpenOptionsButton/>
       <DisableWebsiteButton />
       <CustomWordForm />

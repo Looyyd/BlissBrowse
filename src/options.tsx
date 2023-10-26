@@ -4,7 +4,7 @@ import TabContainer from "./components/OptionsTabContainer";
 import {getColorTheme} from "./modules/settings";
 import {ColorTheme} from "./modules/types";
 import {DEFAULT_COLOR_THEME} from "./constants";
-import {createTheme, ThemeProvider} from "@mui/material";
+import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
 
 
 const App: React.FC = () => {
@@ -26,6 +26,7 @@ const App: React.FC = () => {
 
   return (
     <ThemeProvider theme={theme}>
+      <CssBaseline />
       <TabContainer />
     </ThemeProvider>
   );
