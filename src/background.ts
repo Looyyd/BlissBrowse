@@ -108,6 +108,16 @@ const handleGet = (key: string, sendResponse: SendResponseFunc): void => {
 const handleSet = (key: string, value: unknown, sendResponse: SendResponseFunc): void => {
   setIndexedDBKey(key, value)
     .then(() => {
+      /*
+      //TODO: trying to remove this, this will cause all sets to be synced,
+         with this removed we just sync the ones that use syncedSet
+      const message = { action: 'dataChanged', key: key, value: value };
+      chrome.runtime.sendMessage(message, () => {
+        if(DEBUG){
+          console.log('message sent from handleSet', message);
+        }
+      });
+       */
       sendResponse({ success: true });
     })
     .catch((error: unknown) => {
@@ -121,13 +131,24 @@ const handleSet = (key: string, value: unknown, sendResponse: SendResponseFunc):
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (DEBUG) {
-    console.log('request:', request);
+    console.log('request in background listener:', request);
   }
 
   if (request.action === 'get') {
     handleGet(request.key, sendResponse);
   } else if (request.action === 'set') {
     handleSet(request.key, request.value, sendResponse);
+  } else if(request.action === 'dataChanged'){
+    //TODO: this is to propagate local.storage changes to options.html otherwise the message is not received, should it bed removed for something cleaner?
+      chrome.runtime.sendMessage(request, () => {
+        if(DEBUG){
+          console.log('message sent from background listener', request);
+        }
+      });
+      sendResponse({ success: true });
+  } else {
+    console.log("Unknown action in background listener: ", request.action);
+    sendResponse({ success: false, error: 'Unknown action.' });
   }
 
   return true;  // This is necessary to handle the asynchronous response

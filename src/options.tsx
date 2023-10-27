@@ -8,7 +8,7 @@ import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
 
 const App: React.FC = () => {
   const colorThemeStore = new ColorThemeStore();
-  const colorTheme = colorThemeStore.get();
+  const [colorTheme,] = colorThemeStore.useData(colorThemeStore.get());
 
 
   const darkMode = colorTheme === ColorTheme.DARK;

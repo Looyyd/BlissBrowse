@@ -1,19 +1,18 @@
 import {Action, ColorTheme} from "../modules/types"
 import {MenuItem, Select} from "@mui/material";
-import {DEFAULT_FILTER_ACTION} from "../constants";
 import React from "react";
 import {
   ColorThemeStore,
   FilterActionStore,
 } from "../modules/settings";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
-import { useEffect, useState } from 'react';
+import { useEffect} from 'react';
 
 const GlobalSettingsContent = () => {
   const colorThemeStore = new ColorThemeStore();
   const filterActionstore = new FilterActionStore();
-  const [selectedAction, setSelectedAction] = useState<Action>(DEFAULT_FILTER_ACTION);
-  const [selectedColorTheme, setSelectedColorTheme] = useState<ColorTheme>(colorThemeStore.get());
+  const [selectedAction, setSelectedAction] = filterActionstore.useData();
+  const [selectedColorTheme, setSelectedColorTheme] = colorThemeStore.useData();
   const actions = Object.values(Action);
   const colorThemes = Object.values(ColorTheme);
 
@@ -21,21 +20,19 @@ const GlobalSettingsContent = () => {
   useEffect(() => {
     const fetchData = async () => {
       const previous_action = await filterActionstore.get();
-      setSelectedAction(previous_action);
+      await setSelectedAction(previous_action);
     };
     fetchData();
   }, []);
 
   async function onActionChange(event: SelectChangeEvent<Action>) {
     const action = event.target.value as Action;
-    setSelectedAction(action);
-    await filterActionstore.set(action);
+    await setSelectedAction(action);
   }
 
   async function onColorThemeChange(event: SelectChangeEvent<ColorTheme>) {
     const colorTheme = event.target.value as ColorTheme;
-    setSelectedColorTheme(colorTheme);
-    colorThemeStore.set(colorTheme);
+    await setSelectedColorTheme(colorTheme);
   }
 
   return (
@@ -43,7 +40,7 @@ const GlobalSettingsContent = () => {
       <Select
         labelId="filterActionSelect-label"
         id="filterActionSelect"
-        value={selectedAction}
+        value={selectedAction !== null ? selectedAction : ""}
         onChange={onActionChange}
         disabled={actions.length === 0}
       >
@@ -56,7 +53,7 @@ const GlobalSettingsContent = () => {
       <Select
         labelId="colorThemeSelect-label"
         id="colorThemeSelect"
-        value={selectedColorTheme}
+        value={selectedColorTheme !== null ? selectedColorTheme : ""}
         onChange={onColorThemeChange}
         disabled={colorThemes.length === 0}
       >

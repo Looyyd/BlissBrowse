@@ -1,5 +1,20 @@
 import {getStorageKey, setStorageKey} from "./storage";
-import React from "react";
+import {useEffect, useState} from "react";
+import {DEBUG} from "../constants";
+
+
+interface DataChangeMessage<T> {
+  action: 'dataChanged';
+  key: string;
+  value: T;
+}
+
+//TODO: not sure if should use these types? maybe use them to standardize message format
+type Message<T> = DataChangeMessage<T>;
+
+// Global counter variable
+let listenerCount = 0;
+
 
 abstract class DataStore<T> {
   protected abstract key: string;
@@ -10,24 +25,77 @@ abstract class DataStore<T> {
   abstract defaultValue: T;
 
 
-  useData() {
-    const [data, setData] = React.useState<T | null>(null);
 
-    React.useEffect(() => {
+  useData(initialState: T | null = null) {
+    const [data, setData] = useState<T | null>(initialState);
+
+    useEffect(() => {
       const fetchData = async () => {
-        const value = await this.get();
-        setData(value);
+        try {
+          const value = await this.get();
+          setData(value);
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
       };
 
+
       fetchData();
+
+      const listener = (request: Message<T>, sender: chrome.runtime.MessageSender, sendResponse: Function) => {
+        if(DEBUG){
+          console.log('message received in custom hook', request);
+        }
+        if (request.action === 'dataChanged' && request.key === this.key) {
+          setData(request.value);
+          sendResponse({ success: true });
+        }
+        else{
+          sendResponse({ success: false });
+        }
+        return true; // This is necessary to handle the asynchronous response
+      };
+
+      // Add message listener
+      if(DEBUG){
+        listenerCount++;
+        console.log('listener added in custom hook', this.key);
+        console.log('listener count', listenerCount);
+      }
+      chrome.runtime.onMessage.addListener(listener);
+
+      return () => {
+        // Remove message listener
+        chrome.runtime.onMessage.removeListener(listener);
+        if(DEBUG){
+          listenerCount--;
+          console.log('listener removed in custom hook', this.key);
+          console.log('listener count', listenerCount);
+        }
+      };
     }, []);
 
     const setSyncedData = async (newValue: T) => {
-      await this.set(newValue);
+      await this.syncedSet(newValue);
       setData(newValue);
     };
 
-    return [data, setSyncedData];
+    return [data, setSyncedData] as const;
+  }
+
+  // There should no be a need for syncedSet, since the data is synced automatically through background script
+  async syncedSet(value: T) :Promise<void>{
+    await this.set(value);
+    //TODO: standardize message format
+    const message = { action: 'dataChanged', key: this.key, value: value };
+    if(DEBUG){
+      console.log('sending message from syncedSet', message);
+    }
+    chrome.runtime.sendMessage(message, () => {
+      if(DEBUG){
+        console.log('message sent from syncedSet', message);
+      }
+    });
   }
 }
 

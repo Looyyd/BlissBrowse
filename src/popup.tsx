@@ -12,7 +12,7 @@ import {ColorThemeStore} from "./modules/settings";
 
 const Popup: React.FC = () => {
   const colorThemeStore = new ColorThemeStore();
-  const colorTheme = colorThemeStore.get();
+  const [colorTheme,] = colorThemeStore.useData(colorThemeStore.get());
 
   const darkMode = colorTheme === ColorTheme.DARK;
   const theme = createTheme({
