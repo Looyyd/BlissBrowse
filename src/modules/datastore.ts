@@ -38,8 +38,6 @@ abstract class DataStore<T> {
           console.error('Error fetching data:', error);
         }
       };
-
-
       fetchData();
 
       const listener = (request: Message<T>,) => {

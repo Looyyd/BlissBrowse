@@ -1,9 +1,10 @@
 import React, { useState, FormEvent } from 'react';
-import {createNewList} from "../modules/wordLists";
 import {Button, TextField, FormControl, Typography} from '@mui/material';
+import {ListNamesDataStore} from "../modules/wordLists";
 
 
 const NewListForm: React.FC = () => {
+  const listNamesDataStore = new ListNamesDataStore();
   const [listName, setListName] = useState<string>('');
 
   const handleSubmit = async (event: FormEvent) => {
@@ -11,7 +12,7 @@ const NewListForm: React.FC = () => {
 
     if (listName) {
       try {
-        await createNewList(listName);
+        await listNamesDataStore.createNewList(listName);
       } catch (error) {
         console.error('Error saving new list:', error);
       }

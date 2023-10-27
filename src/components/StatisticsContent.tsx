@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {getLists, getSavedWordsFromList, getWordStatistics} from "../modules/wordLists";
+import {getSavedWordsFromList, getWordStatistics, ListNamesDataStore} from "../modules/wordLists";
 import {
   Table,
   TableHead,
@@ -17,31 +17,25 @@ import {ALL_LISTS} from "../constants";
 
 
 const StatisticsContent = () => {
-  const [lists, setLists] = useState<string[]>([]);
+  const listNamesDataStore = new ListNamesDataStore();
+  const [lists, setLists] = listNamesDataStore.useData([]);
   const [sortConfig, setSortConfig] = useState<{ key: null | number, direction: string }>({ key: null, direction: 'asc' });
   const [selectedList, setSelectedList] = useState<string | null>(null);
   const [statistics, setStatistics] = useState<{ [word: string]: number }>({});
   const columnNames = ["Word", "Times Seen"];
 
   useEffect(() => {
-    const fetchData = async () => {
-      const fetchedLists = await getLists();
-
-      if(fetchedLists.length === 0) {
-        return;
-      }
-      const newLists = [ALL_LISTS].concat(fetchedLists);
+    if(lists !==null && lists.length > 0 && !lists.includes(ALL_LISTS)){
+      const newLists = [ALL_LISTS].concat(lists);
       setLists(newLists);
-      setSelectedList(newLists[0]);
-    };
-    fetchData();
-  }, []);
+    }
+  }, [lists]);
 
   useEffect(() => {
-    if (lists.length > 0 && selectedList) {
+    if (lists !== null && lists.length > 0 && selectedList !== null) {
       fetchStatistics(selectedList);
     }
-  }, [lists, selectedList]);
+  }, [selectedList]);
 
   const sortedStatistics = React.useMemo(() => {
     const sortableItems = Object.entries(statistics);
@@ -65,13 +59,12 @@ const StatisticsContent = () => {
   }, [statistics, sortConfig]);
 
 
-
-
   const fetchStatistics = async (list: string | null) => {
     if (!list) return;
     let lists_to_show: string[];
     console.log('fetching statistics for list:', list);
     if (list === ALL_LISTS) {
+      if (lists === null) return;
       lists_to_show = lists;
     }
     else {

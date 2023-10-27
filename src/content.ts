@@ -1,9 +1,8 @@
 import $ from 'jquery';
 import {
   addToWordStatistics,
-  getSavedWordsFromList
+  getSavedWordsFromList, ListNamesDataStore
 } from "./modules/wordLists";
-import {getLists} from "./modules/wordLists";
 import {
   DEBUG,
   scriptName,
@@ -207,7 +206,8 @@ async function checkAndProcessElements() {
 
   let wordsToFilter: string[] = [];
   try {
-    const lists = await getLists();
+    const listsStore = new ListNamesDataStore;
+    const lists = await listsStore.get();
     for (const list of lists) {
       const savedWords = await getSavedWordsFromList(list);
       wordsToFilter = wordsToFilter.concat(savedWords);

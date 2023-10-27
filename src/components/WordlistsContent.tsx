@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {getLists, getSavedWordsFromList, saveList} from "../modules/wordLists";
+import {getSavedWordsFromList, ListNamesDataStore, saveList} from "../modules/wordLists";
 import {InputLabel, Button, TextareaAutosize, Container, Box, SelectChangeEvent} from '@mui/material';
 import ListSelector from "./ListSelector";
 
@@ -7,32 +7,26 @@ import ListSelector from "./ListSelector";
 
 
 const WordlistsContent = () => {
-  const [lists, setLists] = useState<string[]>([]);
+  const listNamesDataStore = new ListNamesDataStore();
+  const [lists, setLists] = listNamesDataStore.useData([]);
   const [selectedList, setSelectedList] = useState<string>("");
   const [, setWords] = useState<string[]>([]);
   const [textAreaValue, setTextAreaValue] = useState<string>("");
 
-  const setNewList = async (list: string) => {
-    setSelectedList(list);
-    const fetchedWords = await getSavedWordsFromList(list);
-    setWords(fetchedWords);
-    setTextAreaValue(fetchedWords.join('\n'));
-  }
 
   useEffect(() => {
-    async function fetchData() {
-      const lists = await getLists();
-      setLists(lists);
-      if (lists.length > 0) {
-        await setNewList(lists[0]);
-      }
+    const fetchListContent = async (list: string) => {
+      const fetchedWords = await getSavedWordsFromList(list);
+      setWords(fetchedWords);
+      setTextAreaValue(fetchedWords.join('\n'));
     }
-    fetchData();
-  }, []);
+    fetchListContent(selectedList);
+
+  }, [selectedList]);
 
   const handleListChange = async (event: SelectChangeEvent<unknown>) => {
     const list = event.target.value as string;
-    await setNewList(list);
+    setSelectedList(list);
   };
 
   const handleTextAreaChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
