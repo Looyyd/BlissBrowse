@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   BlacklistDatastore,
   currentTabHostname,
-  isHostnameDisabled,
 } from "../modules/hostname";
 import Button from "@mui/material/Button"
 
