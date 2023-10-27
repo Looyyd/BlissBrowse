@@ -24,18 +24,24 @@ const StatisticsContent = () => {
   const columnNames = ["Word", "Times Seen"];
 
   useEffect(() => {
-    // Define an async function
     const fetchData = async () => {
-      const lists = await getLists();
+      const fetchedLists = await getLists();
 
-      setLists(lists);
-      if (lists.length > 0) {
-        setSelectedList(lists[0]);
-        fetchStatistics(lists[0]);
+      if(fetchedLists.length === 0) {
+        return;
       }
+      const newLists = [ALL_LISTS].concat(fetchedLists);
+      setLists(newLists);
+      setSelectedList(newLists[0]);
     };
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (lists.length > 0 && selectedList) {
+      fetchStatistics(selectedList);
+    }
+  }, [lists, selectedList]);
 
   const sortedStatistics = React.useMemo(() => {
     const sortableItems = Object.entries(statistics);
@@ -64,6 +70,7 @@ const StatisticsContent = () => {
   const fetchStatistics = async (list: string | null) => {
     if (!list) return;
     let lists_to_show: string[];
+    console.log('fetching statistics for list:', list);
     if (list === ALL_LISTS) {
       lists_to_show = lists;
     }
@@ -72,8 +79,8 @@ const StatisticsContent = () => {
     }
 
     let words_to_show: string[] = [];
-    for (const list of lists_to_show) {
-      const words = await getSavedWordsFromList(list);
+    for (const list_to_show of lists_to_show) {
+      const words = await getSavedWordsFromList(list_to_show);
       words_to_show = words_to_show.concat(words);
     }
     words_to_show = [...new Set(words_to_show)];
@@ -86,10 +93,9 @@ const StatisticsContent = () => {
     setStatistics(statisticsDiv);
   };
 
-  const handleListChange = (e: SelectChangeEvent<string>) => {
-    const newList = e.target.value; // Type cast value to string
+  const handleListChange = async (e: SelectChangeEvent<string>) => {
+    const newList = e.target.value;
     setSelectedList(newList);
-    fetchStatistics(newList);
   };
 
   const handleSort = (key: number) => {
@@ -114,7 +120,7 @@ const StatisticsContent = () => {
     <div>
       <FormControl variant="outlined" fullWidth>
         <ListSelector
-          lists={lists.length>0 ? lists.concat(ALL_LISTS): lists}
+          lists={lists}
           onListChange={handleListChange}
           value={selectedList || ''}
         />
