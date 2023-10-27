@@ -1,5 +1,5 @@
-import {getStorageKey, setStorageKey} from "./storage";
 import {DEBUG, DEFAULT_HOSTNAME_BLACKLIST} from "../constants";
+import {DatabaseStorage} from "./datastore";
 import {isStringArray} from "./typeguards";
 
 const siteBlacklistKey = 'blacklist';
@@ -35,36 +35,29 @@ export async function isCurrentSiteDisabled(context: "popup" | "content"): Promi
 }
 
 export async function isHostnameDisabled(hostname: string): Promise<boolean> {
-  const blacklist = await getHostnameBlacklist();
+  const datastore = new BlacklistDatastore();
+  const blacklist = await datastore.get();
   return blacklist.includes(hostname);
 }
 
-export async function getHostnameBlacklist(): Promise<string[]> {
-  const blacklist = await getStorageKey(siteBlacklistKey);
-  if(!isStringArray(blacklist)){
-    if(blacklist === null){
-      return DEFAULT_HOSTNAME_BLACKLIST;
+
+export class BlacklistDatastore extends DatabaseStorage<string[]> {
+  key = siteBlacklistKey;
+  defaultValue = DEFAULT_HOSTNAME_BLACKLIST;
+  isType = isStringArray;
+
+  async addHostnameToBlacklist(hostname: string) {
+    const blacklist = await this.get();
+    blacklist.push(hostname);
+    await this.syncedSet(blacklist);
+  }
+
+  async removeHostnameFromBlacklist(hostname: string) {
+    const blacklist = await this.get();
+    const index = blacklist.indexOf(hostname);
+    if (index > -1) {
+      blacklist.splice(index, 1);
     }
-    throw new Error('blacklist is not a string array');
+    await this.syncedSet(blacklist);
   }
-  return blacklist;
-}
-
-async function setHostnameBlacklist(blacklist: string[]) {
-  await setStorageKey(siteBlacklistKey, blacklist);
-}
-
-export async function addHostnameToBlacklist(hostname: string) {
-  const blacklist = await getHostnameBlacklist();
-  blacklist.push(hostname);
-  await setHostnameBlacklist(blacklist);
-}
-
-export async function removeHostnameFromBlacklist(hostname: string) {
-  const blacklist = await getHostnameBlacklist();
-  const index = blacklist.indexOf(hostname);
-  if (index > -1) {
-    blacklist.splice(index, 1);
-  }
-  await setHostnameBlacklist(blacklist);
 }

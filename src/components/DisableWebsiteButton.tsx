@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import {
-  addHostnameToBlacklist,
+  BlacklistDatastore,
   currentTabHostname,
   isHostnameDisabled,
-  removeHostnameFromBlacklist
 } from "../modules/hostname";
 import Button from "@mui/material/Button"
 
-//TODO: pass context as a prop to DisableWebsiteButton?
 const DisableWebsiteButton: React.FC = () => {
+  const blacklistDataStore = new BlacklistDatastore();
+  const [blacklist,] = blacklistDataStore.useData();
   const [isDisabled, setIsDisabled] = useState(false);
   const [hostname, setHostname] = useState('');
 
@@ -16,13 +16,19 @@ const DisableWebsiteButton: React.FC = () => {
     const fetchHostname = async () => {
       const host = await currentTabHostname("popup");
       setHostname(host);
-
-      const disabled = await isHostnameDisabled(host);
-      setIsDisabled(disabled);
     };
-
     fetchHostname();
   }, []);
+
+  useEffect(() => {
+    const fetchIsDisabled = async () => {
+      const isDisabled = blacklist && blacklist.includes(hostname);
+      if(isDisabled !== null){
+        setIsDisabled(isDisabled);
+      }
+    };
+    fetchIsDisabled();
+  }, [blacklist, hostname]);
 
   const updateDisableButtonText = (disableStatus: boolean) => {
     setIsDisabled(disableStatus);
@@ -30,10 +36,10 @@ const DisableWebsiteButton: React.FC = () => {
 
   const handleClick = async () => {
     if (isDisabled) {
-      await removeHostnameFromBlacklist(hostname);
+      await blacklistDataStore.removeHostnameFromBlacklist(hostname);
       updateDisableButtonText(false);
     } else {
-      await addHostnameToBlacklist(hostname);
+      await blacklistDataStore.addHostnameToBlacklist(hostname);
       updateDisableButtonText(true);
     }
   };

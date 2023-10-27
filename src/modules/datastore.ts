@@ -42,18 +42,13 @@ abstract class DataStore<T> {
 
       fetchData();
 
-      const listener = (request: Message<T>, sender: chrome.runtime.MessageSender, sendResponse: Function) => {
+      const listener = (request: Message<T>,) => {
         if(DEBUG){
           console.log('message received in custom hook', request);
         }
         if (request.action === 'dataChanged' && request.key === this.key) {
           setData(request.value);
-          sendResponse({ success: true });
         }
-        else{
-          sendResponse({ success: false });
-        }
-        return true; // This is necessary to handle the asynchronous response
       };
 
       // Add message listener

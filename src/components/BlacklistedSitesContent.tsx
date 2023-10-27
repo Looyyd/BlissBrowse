@@ -1,24 +1,19 @@
-import React, {useEffect, useState} from 'react';
-import {getHostnameBlacklist} from "../modules/hostname";
+import React from 'react';
 import { Typography, List, ListItem } from '@mui/material';
+import {BlacklistDatastore} from "../modules/hostname";
 
 
 
 const BlacklistedSitesContent = () => {
-  const [blacklist, setBlacklist] = useState<string[]>([]);
+  const blacklistDataStore = new BlacklistDatastore();
+  const [blacklist,] = blacklistDataStore.useData();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const blacklist = await getHostnameBlacklist();
-      setBlacklist(blacklist);
-    };
-    fetchData();
-  });
-
-
+  //TODO: proper loading screen
   return (
     <div>
-      {blacklist.length === 0 ? (
+      {!blacklist ? (
+        <Typography variant="body1">Loading...</Typography>
+      ) : blacklist.length === 0 ? (
         <Typography variant="body1">No blacklisted sites</Typography>
       ) : (
         <List>
@@ -30,8 +25,7 @@ const BlacklistedSitesContent = () => {
         </List>
       )}
     </div>
-  )
+  );
 };
-
 
 export default BlacklistedSitesContent;

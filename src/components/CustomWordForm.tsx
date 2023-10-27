@@ -19,7 +19,6 @@ const CustomWordForm: React.FC = () => {
         console.error('Error fetching lists:', error);
       }
     };
-
     fetchLists();
   }, []);
 
