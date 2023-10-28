@@ -140,12 +140,25 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     handleSet(request.key, request.value, sendResponse);
   } else if(request.action === 'dataChanged'){
     //TODO: this is to propagate local.storage changes to options.html otherwise the message is not received, should it bed removed for something cleaner?
-      chrome.runtime.sendMessage(request, () => {
-        if(DEBUG){
-          console.log('message sent from background listener', request);
-        }
-      });
-      sendResponse({ success: true });
+    //add source as background
+    request.source = 'background';
+    request.destination = 'runtime';
+    chrome.runtime.sendMessage(request, () => {
+      if(DEBUG){
+        console.log('message sent from background listener', request);
+      }
+    });
+    request.destination = 'tabs';
+    chrome.tabs.query({}, (tabs) => {
+      for (const tab of tabs) {
+        chrome.tabs.sendMessage(tab.id!, request, () => {
+          if(DEBUG){
+            console.log('message sent from background listener', request);
+          }
+        });
+      }
+    });
+    sendResponse({ success: true });
   } else {
     console.log("Unknown action in background listener: ", request.action);
     sendResponse({ success: false, error: 'Unknown action.' });

@@ -10,7 +10,9 @@ const CustomWordForm: React.FC = () => {
   const [list, setList] = useState<string>('');
   const [lists,] = listNamesDataStore.useData([]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    //TODO: feedback to user
     const dataStore = new WordListDataStore(list);
     await dataStore.addWord(newWord);
   };
@@ -23,7 +25,7 @@ const CustomWordForm: React.FC = () => {
           <TextField
             id="customWord"
             type="text"
-            placeholder="Enter a list name"
+            placeholder="Enter a word to filter"
             value={newWord}
             onChange={(e) => setNewWord(e.target.value)}
             autoComplete="off"

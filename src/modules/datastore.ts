@@ -81,7 +81,7 @@ abstract class DataStore<T> {
   async syncedSet(value: T) :Promise<void>{
     await this.set(value);
     //TODO: standardize message format
-    const message = { action: 'dataChanged', key: this.key, value: value };
+    const message = { action: 'dataChanged', key: this.key, value: value, source: 'datastore'};
     if(DEBUG){
       console.log('sending message from syncedSet', message);
     }
