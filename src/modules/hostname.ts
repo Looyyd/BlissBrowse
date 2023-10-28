@@ -17,10 +17,6 @@ export async function currentTabHostname(context: "popup" | "content"): Promise<
     throw new Error("Invalid context specified");
   }
 
-  if (DEBUG) {
-    console.log(`Hostname in ${context}:`, hostname);
-  }
-
   if (hostname.startsWith('www.')) {
     return hostname.slice(4);
   }
