@@ -13,7 +13,7 @@ import {
 import ListSelector from "../ListSelector";
 
 
-const CustomWordForm: React.FC = () => {
+const NewFilterWordForm: React.FC = () => {
   const listNamesDataStore = new ListNamesDataStore();
   const [newWord, setNewWord] = useState<string>('');
   const [list, setList] = useState<string>('');
@@ -78,5 +78,5 @@ const CustomWordForm: React.FC = () => {
   );
 };
 
-export default CustomWordForm;
+export default NewFilterWordForm;
 

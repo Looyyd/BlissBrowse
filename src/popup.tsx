@@ -2,7 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import ListsDisplay from "./components/popup/ListsDisplay";
 import DisableWebsiteButton from "./components/popup/DisableWebsiteButton";
-import CustomWordForm from "./components/popup/CustomWordForm";
+import NewFilterWordForm from "./components/popup/NewFilterWordForm";
 import NewListForm from "./components/popup/NewListForm";
 import OpenOptionsButton from "./components/popup/OpenOptionsButton";
 import {ColorTheme} from "./modules/types";
@@ -26,7 +26,7 @@ const Popup: React.FC = () => {
       <CssBaseline />
       <OpenOptionsButton/>
       <DisableWebsiteButton />
-      <CustomWordForm />
+      <NewFilterWordForm />
       <NewListForm />
       <ListsDisplay />
     </ThemeProvider>

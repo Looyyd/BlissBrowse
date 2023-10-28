@@ -1,5 +1,5 @@
 import {FilterAction, ColorTheme} from "../../modules/types"
-import {MenuItem, Select} from "@mui/material";
+import {MenuItem, Select, Tooltip} from "@mui/material";
 import React from "react";
 import {
   ColorThemeStore,
@@ -7,6 +7,7 @@ import {
 } from "../../modules/settings";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 import { useEffect} from 'react';
+import Box from "@mui/material/Box";
 
 const GlobalSettings = () => {
   const colorThemeStore = new ColorThemeStore();
@@ -36,35 +37,51 @@ const GlobalSettings = () => {
   }
 
   return (
-    <>
-      <Select
-        labelId="filterActionSelect-label"
-        id="filterActionSelect"
-        value={selectedAction !== null ? selectedAction : ""}
-        onChange={onActionChange}
-        disabled={filterActions.length === 0}
-      >
-        {filterActions.map((actionName) => (
-          <MenuItem key={actionName} value={actionName}>
-            {actionName}
-          </MenuItem>
-        ))}
-      </Select>
-      <Select
-        labelId="colorThemeSelect-label"
-        id="colorThemeSelect"
-        value={selectedColorTheme !== null ? selectedColorTheme : ""}
-        onChange={onColorThemeChange}
-        disabled={colorThemes.length === 0}
-      >
-        {colorThemes.map((colorThemeName) => (
-          <MenuItem key={colorThemeName} value={colorThemeName}>
-            {colorThemeName}
-          </MenuItem>
-        ))}
-      </Select>
-    </>
-  )
-}
+    <Box display="flex" flexDirection="column" alignItems="flex-start">
+      <Box mb={2}>
+        <Tooltip title="Choose the default filter action, this will impact how filtered elements are modified">
+          <Box mr={1}>
+          <label id="filterActionSelect-label">Change Default Filter Action</label>
+          </Box>
+        </Tooltip>
+        <Select
+          labelId="filterActionSelect-label"
+          id="filterActionSelect"
+          value={selectedAction !== null ? selectedAction : ""}
+          onChange={onActionChange}
+          disabled={filterActions.length === 0}
+        >
+          {filterActions.map((actionName) => (
+            <MenuItem key={actionName} value={actionName}>
+              {actionName}
+            </MenuItem>
+          ))}
+        </Select>
+      </Box>
+
+      <Box mb={2}>
+        <Tooltip title="Select the color theme for the extension option pages">
+          <Box mr={1}>
+          <label id="colorThemeSelect-label">Change Color Theme</label>
+          </Box>
+        </Tooltip>
+        <Select
+          labelId="colorThemeSelect-label"
+          id="colorThemeSelect"
+          value={selectedColorTheme !== null ? selectedColorTheme : ""}
+          onChange={onColorThemeChange}
+          disabled={colorThemes.length === 0}
+        >
+          {colorThemes.map((colorThemeName) => (
+            <MenuItem key={colorThemeName} value={colorThemeName}>
+              {colorThemeName}
+            </MenuItem>
+          ))}
+        </Select>
+      </Box>
+    </Box>
+  );
+};
+
 
 export default GlobalSettings;
