@@ -132,9 +132,6 @@ function shouldFilterTextContent(textContent: string, wordsToFilter: string[], i
 }
 
 
-
-
-
 /*
 TODO: add a visual indicator using react, something like this:
   // Create a DOM element to host the React component

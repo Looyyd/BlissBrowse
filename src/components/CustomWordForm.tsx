@@ -1,6 +1,15 @@
-import React, { useState } from 'react';
+import React, {SyntheticEvent, useState} from 'react';
 import {ListNamesDataStore, WordListDataStore} from "../modules/wordLists";
-import {Button, TextField, FormControl, FormHelperText, Typography} from '@mui/material';
+import {
+  Button,
+  TextField,
+  FormControl,
+  FormHelperText,
+  Typography,
+  Snackbar,
+  SnackbarCloseReason,
+  Alert
+} from '@mui/material';
 import ListSelector from "./ListSelector";
 
 
@@ -9,16 +18,36 @@ const CustomWordForm: React.FC = () => {
   const [newWord, setNewWord] = useState<string>('');
   const [list, setList] = useState<string>('');
   const [lists,] = listNamesDataStore.useData([]);
+  const [openFeedbackAlert, setOpenFeedbackAlert] = useState(false);
+
+  const handleClose = (event: Event | SyntheticEvent<Element, Event>, reason: SnackbarCloseReason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpenFeedbackAlert(false);
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    //TODO: feedback to user
+    setNewWord('');
     const dataStore = new WordListDataStore(list);
     await dataStore.addWord(newWord);
+
+    //TODO: add more precise feedback(word already exists, etc)
+    setOpenFeedbackAlert(true);
   };
 
   return (
     <>
+      <Snackbar
+        open={openFeedbackAlert}
+        autoHideDuration={3000}
+        onClose={handleClose}
+        >
+        <Alert severity="success" sx={{ width: '100%' }}>
+          Word added successfully!
+        </Alert>
+      </Snackbar>
       <Typography variant="h6">Add Custom Word</Typography>
       <form onSubmit={handleSubmit}>
         <FormControl fullWidth margin="normal">
