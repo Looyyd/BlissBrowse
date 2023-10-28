@@ -9,19 +9,6 @@ const listNamesKey = "listNames"
 
 
 
-export async function getSavedWordsFromList(list: string): Promise<string[]> {
-  const key =  wordBlacklistKeyPrefix + list;
-  const words = await getStorageKey(key);
-  if(!isStringArray(words)){
-    if(words === null){
-      return DEFAULT_WORDLIST;
-    }
-    throw new Error('words is not a string array');
-  }
-  return words;
-}
-
-
 /*
 * @throws Error if n is not a number
  */
@@ -81,6 +68,35 @@ export class ListNamesDataStore extends DatabaseStorage<string[]> {
 
 
 
+export class WordListDataStore extends DatabaseStorage<string[]> {
+  key: string;
+  defaultValue = DEFAULT_WORDLIST;
+  isType = isStringArray;
+  setPreprocessor = (value: string[]) => [...new Set(value)];
+
+  constructor(listName: string) {
+    super();
+    this.key = wordBlacklistKeyPrefix + listName;
+  }
+
+  async addWord(word: string): Promise<void> {
+    const words = await this.get();
+    if (!words.includes(word)) {
+      await this.syncedSet(words.concat(word));
+    }
+  }
+
+  async removeWord(word: string): Promise<void> {
+    const words = await this.get();
+    const index = words.indexOf(word);
+    if (index > -1) {
+      words.splice(index, 1);
+      await this.syncedSet(words);
+    }
+  }
+}
+
+/*
 export async function saveNewWordToList(newWord: string, existingWords: string[], list:string): Promise<void> {
   const key = wordBlacklistKeyPrefix + list;
   if (existingWords.includes(newWord)) {
@@ -88,7 +104,9 @@ export async function saveNewWordToList(newWord: string, existingWords: string[]
   }
   await setStorageKey(key, existingWords.concat(newWord));
 }
+ */
 
+/*
 export async function saveList(words: string[], list:string): Promise<void> {
   const key = wordBlacklistKeyPrefix + list;
   const uniqueWords = [...new Set(words)];
@@ -96,14 +114,7 @@ export async function saveList(words: string[], list:string): Promise<void> {
   await setStorageKey(key, uniqueWordsWithoutEmptyString);
 }
 
-export async function removeWordFromList(wordToRemove: string, list: string): Promise<void> {
-  const existingWords = await getSavedWordsFromList(list);
-  const filteredWords = existingWords.filter(word => word !== wordToRemove);
+ */
 
-  if (filteredWords.length !== existingWords.length) {
-    const key = wordBlacklistKeyPrefix + list;
-    await setStorageKey(key, filteredWords);
-  }
-}
 
 

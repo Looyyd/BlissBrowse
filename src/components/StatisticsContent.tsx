@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {getSavedWordsFromList, getWordStatistics, ListNamesDataStore} from "../modules/wordLists";
+import {getWordStatistics, ListNamesDataStore, WordListDataStore} from "../modules/wordLists";
 import {
   Table,
   TableHead,
@@ -19,7 +19,7 @@ import {ALL_LISTS} from "../constants";
 const StatisticsContent = () => {
   const listNamesDataStore = new ListNamesDataStore();
   //fetched lists are not showed
-  const [fetchedLists,] = listNamesDataStore.useData([]);
+  const [syncedLists,] = listNamesDataStore.useData([]);
   //lists are showed
   const [lists, setLists] = useState<string[] | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: null | number, direction: string }>({ key: null, direction: 'asc' });
@@ -29,11 +29,11 @@ const StatisticsContent = () => {
 
   useEffect(() => {
     //add "ALL LISTS" to the shown lists
-    if(fetchedLists !==null && fetchedLists.length > 0 ){
-      const newLists = [ALL_LISTS].concat(fetchedLists);
+    if(syncedLists !==null && syncedLists.length > 0 ){
+      const newLists = [ALL_LISTS].concat(syncedLists);
       setLists(newLists);
     }
-  }, [fetchedLists]);
+  }, [syncedLists]);
 
   //set the first list as selectedList by default
   useEffect(() => {
@@ -86,7 +86,8 @@ const StatisticsContent = () => {
 
     let words_to_show: string[] = [];
     for (const list_to_show of lists_to_show) {
-      const words = await getSavedWordsFromList(list_to_show);
+      const dataStore = new WordListDataStore(list_to_show);
+      const words = await dataStore.get();
       words_to_show = words_to_show.concat(words);
     }
     words_to_show = [...new Set(words_to_show)];

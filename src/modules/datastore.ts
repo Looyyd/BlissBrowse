@@ -23,8 +23,9 @@ abstract class DataStore<T> {
   abstract set(value: T): Promise<void> | void;
   abstract isType: (data: unknown) => data is T;
   abstract defaultValue: T;
-
-
+  setPreprocessor(value: T): T {
+    return value;
+  }
 
   useData(initialState: T | null = null) {
     const [data, setData] = useState<T | null>(initialState);
@@ -106,7 +107,8 @@ export abstract class LocalStorageStore<T> extends DataStore<T> {
   }
 
   set(value: T): void {
-    localStorage.setItem(this.key, JSON.stringify(value));
+    const processedValue = this.setPreprocessor(value);
+    localStorage.setItem(this.key, JSON.stringify(processedValue));
   }
 }
 
@@ -124,7 +126,8 @@ export abstract class DatabaseStorage<T> extends DataStore<T> {
   }
 
   async set(value: T): Promise<void> {
-    await setStorageKey(this.key, value);
+    const processedValue = this.setPreprocessor(value);
+    await setStorageKey(this.key, processedValue);
   }
 }
 

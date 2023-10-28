@@ -1,34 +1,18 @@
-import React, { useState, FormEvent } from 'react';
-import { getSavedWordsFromList, ListNamesDataStore, saveNewWordToList} from "../modules/wordLists";
+import React, { useState } from 'react';
+import {ListNamesDataStore, WordListDataStore} from "../modules/wordLists";
 import {Button, TextField, FormControl, FormHelperText, Typography} from '@mui/material';
 import ListSelector from "./ListSelector";
 
 
 const CustomWordForm: React.FC = () => {
   const listNamesDataStore = new ListNamesDataStore();
-  const [userDefinedWords, setUserDefinedWords] = useState<string[]>([]);
   const [newWord, setNewWord] = useState<string>('');
   const [list, setList] = useState<string>('');
   const [lists,] = listNamesDataStore.useData([]);
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
-
-    try {
-      const words = await getSavedWordsFromList(list);
-      setUserDefinedWords(words);
-    } catch (error) {
-      console.error('Error fetching saved words:', error);
-      return;
-    }
-
-    if (newWord) {
-      try {
-        await saveNewWordToList(newWord, userDefinedWords, list);
-      } catch (error) {
-        console.error('Error saving new word:', error);
-      }
-    }
+  const handleSubmit = async () => {
+    const dataStore = new WordListDataStore(list);
+    await dataStore.addWord(newWord);
   };
 
   return (

@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {getSavedWordsFromList, ListNamesDataStore, saveList} from "../modules/wordLists";
+import {ListNamesDataStore, WordListDataStore} from "../modules/wordLists";
 import {InputLabel, Button, TextareaAutosize, Container, Box, SelectChangeEvent} from '@mui/material';
 import ListSelector from "./ListSelector";
 
@@ -8,7 +8,7 @@ import ListSelector from "./ListSelector";
 
 const WordlistsContent = () => {
   const listNamesDataStore = new ListNamesDataStore();
-  const [lists, setLists] = listNamesDataStore.useData([]);
+  const [lists,] = listNamesDataStore.useData([]);
   const [selectedList, setSelectedList] = useState<string>("");
   const [, setWords] = useState<string[]>([]);
   const [textAreaValue, setTextAreaValue] = useState<string>("");
@@ -16,7 +16,8 @@ const WordlistsContent = () => {
 
   useEffect(() => {
     const fetchListContent = async (list: string) => {
-      const fetchedWords = await getSavedWordsFromList(list);
+      const dataStore = new WordListDataStore(list)
+      const fetchedWords = await dataStore.get();
       setWords(fetchedWords);
       setTextAreaValue(fetchedWords.join('\n'));
     }
@@ -37,7 +38,8 @@ const WordlistsContent = () => {
     const newWords = textAreaValue.split('\n');
     const list = selectedList;
     if (!list) return;
-    saveList(newWords, list);
+    const dataStore = new WordListDataStore(list);
+    dataStore.syncedSet(newWords);
   };
 
   return (
