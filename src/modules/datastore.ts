@@ -77,7 +77,9 @@ abstract class DataStore<T> {
     return [data, setSyncedData] as const;
   }
 
-  // There should no be a need for syncedSet, since the data is synced automatically through background script
+  // TODO: There should no be a need for syncedSet, since the data is synced automatically through background script
+  // rn it's not synced automatically but maybe should be?
+  // also maybe all sync messages should be sent from background byt using a message SyncedSet to the background
   async syncedSet(value: T) :Promise<void>{
     await this.set(value);
     //TODO: standardize message format
