@@ -5,8 +5,8 @@ import {
 } from "./modules/wordLists";
 import {
   DEBUG,
-  scriptName,
-  BATCH_STAT_UPDATE_INTERVAL, siteBlacklistKey, wordBlacklistKeyPrefix,
+  EXTENSION_NAME,
+  BATCH_STAT_UPDATE_INTERVAL, BLACKLISTED_WEBSITES_KEY_PREFIX, FILTER_LIST_KEY_PREFIX,
 } from "./constants";
 import {isCurrentSiteDisabled} from "./modules/hostname";
 import {Action} from "./modules/types";
@@ -150,7 +150,7 @@ const TRIGGERING_WORD = 'triggering-word';
 const APPLIED_ACTION = 'applied-action';
 const ORIGINAL_FILTER_PREFIX = 'original-filter-';
 const ORIGINAL_DISPLAY_PREFIX = 'original-display-';
-const SCRIPT_NAME = scriptName;
+const SCRIPT_NAME = EXTENSION_NAME;
 
 async function processElement(element: HTMLElement, triggeringWord: string, action: Action) {
   if (element.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true') {
@@ -330,10 +330,10 @@ observer.observe(document.body, { childList: true, subtree: true });
 
 const listener = async (request: Message) => {
   function keyImpactsFilter(key: string) {
-    if(key.startsWith(siteBlacklistKey)){
+    if(key.startsWith(BLACKLISTED_WEBSITES_KEY_PREFIX)){
       return true;
     }
-    if(key.startsWith(wordBlacklistKeyPrefix)){
+    if(key.startsWith(FILTER_LIST_KEY_PREFIX)){
       return true;
     }
     return false;

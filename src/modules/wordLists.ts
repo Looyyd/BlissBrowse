@@ -3,19 +3,20 @@ import {
   DEFAULT_LISTNAMES_ARRAY,
   DEFAULT_WORD_STATISTICS,
   DEFAULT_WORDLIST,
-  listNamesKey,
-  wordBlacklistKeyPrefix,
-  wordStatisticsKeyPrefix
+  LIST_OF_LIST_NAMES_KEY_PREFIX,
+  FILTER_LIST_KEY_PREFIX,
+  WORD_STATISTICS_KEY_PREFIX
 } from "../constants";
 import {getStorageKey, setStorageKey} from "./storage";
-import {isNumber, isStringArray} from "./typeguards";
 import {DatabaseStorage} from "./datastore";
+import {isNumber, isStringArray} from "./types";
 
 /*
 * @throws Error if n is not a number
  */
+//TODO: use datastore
 export async function getWordStatistics(word: string): Promise<number> {
-  const key = wordStatisticsKeyPrefix + word;
+  const key = WORD_STATISTICS_KEY_PREFIX + word;
   const n = await getStorageKey(key);
 
   if(!isNumber(n)){
@@ -27,7 +28,6 @@ export async function getWordStatistics(word: string): Promise<number> {
   return n;
 }
 
-
 /*
 * @throws Error if n is not a number
  */
@@ -35,14 +35,14 @@ export async function addToWordStatistics(word: string, countToAdd: number){
   if(DEBUG){
     console.log('addWordStatistics:', word, countToAdd);
   }
-  const key = wordStatisticsKeyPrefix + word;
+  const key = WORD_STATISTICS_KEY_PREFIX + word;
   const currentCount = await getWordStatistics(key);
   const value = currentCount + countToAdd;
   await setStorageKey(key, value);
 }
 
 export class ListNamesDataStore extends DatabaseStorage<string[]> {
-  key = listNamesKey;
+  key = LIST_OF_LIST_NAMES_KEY_PREFIX;
   defaultValue = DEFAULT_LISTNAMES_ARRAY;
   isType = isStringArray;
 
@@ -78,7 +78,7 @@ export class WordListDataStore extends DatabaseStorage<string[]> {
 
   constructor(listName: string) {
     super();
-    this.key = wordBlacklistKeyPrefix + listName;
+    this.key = FILTER_LIST_KEY_PREFIX + listName;
   }
 
   async addWord(word: string): Promise<void> {
@@ -97,26 +97,4 @@ export class WordListDataStore extends DatabaseStorage<string[]> {
     }
   }
 }
-
-/*
-export async function saveNewWordToList(newWord: string, existingWords: string[], list:string): Promise<void> {
-  const key = wordBlacklistKeyPrefix + list;
-  if (existingWords.includes(newWord)) {
-    return;
-  }
-  await setStorageKey(key, existingWords.concat(newWord));
-}
- */
-
-/*
-export async function saveList(words: string[], list:string): Promise<void> {
-  const key = wordBlacklistKeyPrefix + list;
-  const uniqueWords = [...new Set(words)];
-  const uniqueWordsWithoutEmptyString = uniqueWords.filter(word => word !== '');
-  await setStorageKey(key, uniqueWordsWithoutEmptyString);
-}
-
- */
-
-
 

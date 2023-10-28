@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {getWordStatistics, ListNamesDataStore, WordListDataStore} from "../modules/wordLists";
+import {getWordStatistics, ListNamesDataStore, WordListDataStore} from "../../modules/wordLists";
 import {
   Table,
   TableHead,
@@ -11,12 +11,12 @@ import {
 import TableCell from '@mui/material/TableCell';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import ArrowDownward from '@mui/icons-material/ArrowDownward';
-import ListSelector from "./ListSelector";
-import {ALL_LISTS} from "../constants";
+import ListSelector from "../ListSelector";
+import {ALL_LISTS_SYMBOL} from "../../constants";
 
 
 
-const StatisticsContent = () => {
+const WordStatistics = () => {
   const listNamesDataStore = new ListNamesDataStore();
   //fetched lists are not showed
   const [syncedLists,] = listNamesDataStore.useData([]);
@@ -30,15 +30,15 @@ const StatisticsContent = () => {
   useEffect(() => {
     //add "ALL LISTS" to the shown lists
     if(syncedLists !==null && syncedLists.length > 0 ){
-      const newLists = [ALL_LISTS].concat(syncedLists);
+      const newLists = [ALL_LISTS_SYMBOL].concat(syncedLists);
       setLists(newLists);
     }
   }, [syncedLists]);
 
   //set the first list as selectedList by default
   useEffect(() => {
-    if (selectedList === null && lists !== null && lists.includes(ALL_LISTS)) {
-      setSelectedList(ALL_LISTS);
+    if (selectedList === null && lists !== null && lists.includes(ALL_LISTS_SYMBOL)) {
+      setSelectedList(ALL_LISTS_SYMBOL);
     }
   }, [lists]);
 
@@ -76,7 +76,7 @@ const StatisticsContent = () => {
     if (!list) return;
     let lists_to_show: string[];
     console.log('fetching statistics for list:', list);
-    if (list === ALL_LISTS) {
+    if (list === ALL_LISTS_SYMBOL) {
       if (lists === null) return;
       lists_to_show = lists;
     }
@@ -161,4 +161,4 @@ const StatisticsContent = () => {
 };
 
 
-export default StatisticsContent;
+export default WordStatistics;

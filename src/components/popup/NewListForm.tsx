@@ -1,6 +1,6 @@
 import React, {useState, FormEvent, SyntheticEvent} from 'react';
 import {Button, TextField, FormControl, Typography, Snackbar, Alert, SnackbarCloseReason} from '@mui/material';
-import {ListNamesDataStore} from "../modules/wordLists";
+import {ListNamesDataStore} from "../../modules/wordLists";
 
 
 const NewListForm: React.FC = () => {

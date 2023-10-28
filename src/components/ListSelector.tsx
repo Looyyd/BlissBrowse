@@ -1,6 +1,6 @@
 import React from 'react';
 import {Select, MenuItem, FormControl, FormHelperText, SelectChangeEvent} from '@mui/material';
-import {ALL_LISTS} from "../constants";
+import {ALL_LISTS_SYMBOL} from "../constants";
 
 type ListSelectorProps = {
   lists: string[] | null;
@@ -22,7 +22,7 @@ const ListSelector: React.FC<ListSelectorProps> = ({ lists, onListChange, value 
       >
         {!disabled && lists?.map((listName) => (
           <MenuItem key={listName} value={listName}>
-            {listName === ALL_LISTS ? 'All Lists' : listName}
+            {listName === ALL_LISTS_SYMBOL ? 'All Lists' : listName}
           </MenuItem>
         ))}
       </Select>

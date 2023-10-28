@@ -1,6 +1,6 @@
 import React from 'react';
 import {List, ListItem, ListItemText, Typography} from '@mui/material';
-import {ListNamesDataStore} from "../modules/wordLists";
+import {ListNamesDataStore} from "../../modules/wordLists";
 
 
 

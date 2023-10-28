@@ -1,5 +1,5 @@
 import React, {SyntheticEvent, useEffect, useState} from 'react';
-import {ListNamesDataStore, WordListDataStore} from "../modules/wordLists";
+import {ListNamesDataStore, WordListDataStore} from "../../modules/wordLists";
 import {
   InputLabel,
   Button,
@@ -9,12 +9,12 @@ import {
   SelectChangeEvent,
   SnackbarCloseReason, Snackbar, Alert
 } from '@mui/material';
-import ListSelector from "./ListSelector";
+import ListSelector from "../ListSelector";
 
 
 
 
-const WordlistsContent = () => {
+const WordlistsEditor = () => {
   const listNamesDataStore = new ListNamesDataStore();
   const [lists,] = listNamesDataStore.useData([]);
   const [selectedList, setSelectedList] = useState<string>("");
@@ -109,5 +109,5 @@ const WordlistsContent = () => {
 
 
 
-export default WordlistsContent;
+export default WordlistsEditor;
 

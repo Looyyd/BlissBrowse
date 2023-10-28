@@ -1,5 +1,5 @@
 import React, {SyntheticEvent, useState} from 'react';
-import {ListNamesDataStore, WordListDataStore} from "../modules/wordLists";
+import {ListNamesDataStore, WordListDataStore} from "../../modules/wordLists";
 import {
   Button,
   TextField,
@@ -10,7 +10,7 @@ import {
   SnackbarCloseReason,
   Alert
 } from '@mui/material';
-import ListSelector from "./ListSelector";
+import ListSelector from "../ListSelector";
 
 
 const CustomWordForm: React.FC = () => {

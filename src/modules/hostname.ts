@@ -1,6 +1,7 @@
-import {DEBUG, DEFAULT_HOSTNAME_BLACKLIST, siteBlacklistKey} from "../constants";
+import {DEFAULT_HOSTNAME_BLACKLIST, BLACKLISTED_WEBSITES_KEY_PREFIX} from "../constants";
 import {DatabaseStorage} from "./datastore";
-import {isStringArray} from "./typeguards";
+
+import {isStringArray} from "./types";
 
 
 export async function currentTabHostname(context: "popup" | "content"): Promise<string> {
@@ -37,7 +38,7 @@ export async function isHostnameDisabled(hostname: string): Promise<boolean> {
 
 
 export class BlacklistDatastore extends DatabaseStorage<string[]> {
-  key = siteBlacklistKey;
+  key = BLACKLISTED_WEBSITES_KEY_PREFIX;
   defaultValue = DEFAULT_HOSTNAME_BLACKLIST;
   isType = isStringArray;
 

@@ -1,10 +1,10 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import ListsDisplay from "./components/ListsDisplay";
-import DisableWebsiteButton from "./components/DisableWebsiteButton";
-import CustomWordForm from "./components/CustomWordForm";
-import NewListForm from "./components/NewListForm";
-import OpenOptionsButton from "./components/OpenOptionsButton";
+import ListsDisplay from "./components/popup/ListsDisplay";
+import DisableWebsiteButton from "./components/popup/DisableWebsiteButton";
+import CustomWordForm from "./components/popup/CustomWordForm";
+import NewListForm from "./components/popup/NewListForm";
+import OpenOptionsButton from "./components/popup/OpenOptionsButton";
 import {ColorTheme} from "./modules/types";
 import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
 import {ColorThemeStore} from "./modules/settings";

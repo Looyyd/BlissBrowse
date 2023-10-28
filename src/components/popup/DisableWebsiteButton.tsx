@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   BlacklistDatastore,
   currentTabHostname,
-} from "../modules/hostname";
+} from "../../modules/hostname";
 import Button from "@mui/material/Button"
 
 const DisableWebsiteButton: React.FC = () => {

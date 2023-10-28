@@ -1,11 +1,11 @@
 import React, {useEffect, useState} from 'react';
-import StatisticsContent from "./StatisticsContent";
-import BlacklistedSitesContent from "./BlacklistedSitesContent";
-import WordlistsContent from "./WordlistsContent";
+import WordStatistics from "./WordStatistics";
+import BlacklistedSites from "./BlacklistedSites";
+import WordlistsEditor from "./WordlistsEditor";
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
-import GlobalSettingsContent from "./GlobalSettingsContent";
+import GlobalSettings from "./GlobalSettings";
 
 const TabContainer = () => {
   const [activeTab, setActiveTab] = useState(() => {
@@ -27,19 +27,19 @@ const TabContainer = () => {
   const tabContentMapping = [
     {
       tab: 'Statistics',
-      content: <StatisticsContent />,
+      content: <WordStatistics />,
     },
     {
       tab: 'Filter Lists',
-      content: <WordlistsContent />,
+      content: <WordlistsEditor />,
     },
     {
       tab: 'Blacklisted Websites',
-      content: <BlacklistedSitesContent />,
+      content: <BlacklistedSites />,
     },
     {
       tab: 'Settings',
-      content: <GlobalSettingsContent />,
+      content: <GlobalSettings />,
     }
   ];
 

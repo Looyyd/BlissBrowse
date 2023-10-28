@@ -1,14 +1,14 @@
-import {Action, ColorTheme} from "../modules/types"
+import {Action, ColorTheme} from "../../modules/types"
 import {MenuItem, Select} from "@mui/material";
 import React from "react";
 import {
   ColorThemeStore,
   FilterActionStore,
-} from "../modules/settings";
+} from "../../modules/settings";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 import { useEffect} from 'react';
 
-const GlobalSettingsContent = () => {
+const GlobalSettings = () => {
   const colorThemeStore = new ColorThemeStore();
   const filterActionstore = new FilterActionStore();
   const [selectedAction, setSelectedAction] = filterActionstore.useData();
@@ -67,4 +67,4 @@ const GlobalSettingsContent = () => {
   )
 }
 
-export default GlobalSettingsContent;
+export default GlobalSettings;

@@ -1,6 +1,5 @@
-import {isAction, isColorTheme} from "./typeguards";
 import {DEFAULT_COLOR_THEME, DEFAULT_FILTER_ACTION} from "../constants";
-import {Action, ColorTheme} from "./types";
+import {Action, ColorTheme, isAction, isColorTheme} from "./types";
 import {DatabaseStorage, LocalStorageStore} from "./datastore";
 
 

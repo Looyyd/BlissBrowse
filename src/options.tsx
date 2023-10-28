@@ -1,6 +1,6 @@
 import React from "react";
 import {createRoot} from 'react-dom/client';
-import TabContainer from "./components/OptionsTabContainer";
+import TabContainer from "./components/option/OptionsTabContainer";
 import {ColorThemeStore} from "./modules/settings";
 import {ColorTheme} from "./modules/types";
 import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";

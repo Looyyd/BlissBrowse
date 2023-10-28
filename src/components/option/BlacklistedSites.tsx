@@ -1,10 +1,10 @@
 import React from 'react';
 import { Typography, List, ListItem } from '@mui/material';
-import {BlacklistDatastore} from "../modules/hostname";
+import {BlacklistDatastore} from "../../modules/hostname";
 
 
 
-const BlacklistedSitesContent = () => {
+const BlacklistedSites = () => {
   const blacklistDataStore = new BlacklistDatastore();
   const [blacklist,] = blacklistDataStore.useData();
 
@@ -28,4 +28,4 @@ const BlacklistedSitesContent = () => {
   );
 };
 
-export default BlacklistedSitesContent;
+export default BlacklistedSites;
