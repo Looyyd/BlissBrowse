@@ -146,42 +146,51 @@ TODO: add a visual indicator using react, something like this:
   // Your existing logic here...
 
  */
+const PROCESSED_BY_PREFIX = 'processed-by-';
+const TRIGGERING_WORD = 'triggering-word';
+const APPLIED_ACTION = 'applied-action';
+const ORIGINAL_FILTER_PREFIX = 'original-filter-';
+const ORIGINAL_DISPLAY_PREFIX = 'original-display-';
+const SCRIPT_NAME = scriptName;
+
 async function processElement(element: HTMLElement, triggeringWord: string, action: Action) {
-  //TODO: hardcoded strings should be constants
-  element.setAttribute('processed-by-' + scriptName, 'true');
-  element.setAttribute('triggering-word', triggeringWord);
-  element.setAttribute('applied-action', action);
+  element.setAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`, 'true');
+  element.setAttribute(TRIGGERING_WORD, triggeringWord);
+  element.setAttribute(APPLIED_ACTION, action);
 
   inMemoryStatistics[triggeringWord] = (inMemoryStatistics[triggeringWord] || 0) + 1;
 
   if (action === Action.BLUR) {
     const originalFilter = element.style.filter;
-    element.setAttribute('original-filter-' + scriptName, originalFilter);
+    element.setAttribute(`${ORIGINAL_FILTER_PREFIX}${SCRIPT_NAME}`, originalFilter);
     element.style.filter = 'blur(8px)';
   } else if (action === Action.HIDE) {
     const originalDisplay = element.style.display;
-    element.setAttribute('original-display-' + scriptName, originalDisplay);
+    element.setAttribute(`${ORIGINAL_DISPLAY_PREFIX}${SCRIPT_NAME}`, originalDisplay);
     element.style.display = 'none';
   }
 }
 
 async function unprocessElement(element: HTMLElement) {
-  const action = element.getAttribute('applied-action') || Action.HIDE;
-  element.removeAttribute('processed-by' + scriptName);
-  const triggeringWord = element.getAttribute('triggering-word') || '';
-  element.removeAttribute('triggering-words');
+  const action = element.getAttribute(APPLIED_ACTION) || Action.HIDE;
+  element.removeAttribute(APPLIED_ACTION);
+  element.removeAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`);
+  const triggeringWord = element.getAttribute(TRIGGERING_WORD) || '';
+  element.removeAttribute(TRIGGERING_WORD);
 
   inMemoryStatistics[triggeringWord] = (inMemoryStatistics[triggeringWord] || 0) - 1;
 
   if (action === Action.BLUR) {
-    element.style.filter = element.getAttribute('original-filter-' + scriptName) || '';
-    element.removeAttribute('original-filter-' + scriptName);
+    element.style.filter = element.getAttribute(`${ORIGINAL_FILTER_PREFIX}${SCRIPT_NAME}`) || '';
+    element.removeAttribute(`${ORIGINAL_FILTER_PREFIX}${SCRIPT_NAME}`);
   }
   else if (action === Action.HIDE) {
-    element.style.display = element.getAttribute('original-display-' + scriptName) || '';
-    element.removeAttribute('original-display-' + scriptName);
+    element.style.display = element.getAttribute(`${ORIGINAL_DISPLAY_PREFIX}${SCRIPT_NAME}`) || '';
+    element.removeAttribute(`${ORIGINAL_DISPLAY_PREFIX}${SCRIPT_NAME}`);
   }
 }
+
+
 
 async function unprocessElements(currentWords: string[]) {
   // Function to unprocess elements based on a list of current words
@@ -235,6 +244,16 @@ async function checkAndProcessElements() {
   while (node) {
     const parentElement = node.parentElement;
     const parentTagName = parentElement ? parentElement.tagName.toLowerCase() : '';
+    const ancestor = getFeedlikeAncestor(node);
+
+    //if already processed, skip
+    //TODO: is the ancestor always the same?
+    //TODO: what if ancestor was processed with wrong effect?
+    //TODO: now disable in to enable doesn't work
+    if (ancestor instanceof HTMLElement && ancestor.getAttribute('processed-by-' + scriptName) === 'true') {
+      node = walker.nextNode();
+      continue;
+    }
 
     if (node.nodeType === Node.TEXT_NODE &&
       node.textContent &&
@@ -243,7 +262,6 @@ async function checkAndProcessElements() {
       const filterResult = shouldFilterTextContent(node.textContent!, wordsToFilter, false);
 
       if (filterResult.shouldFilter && filterResult.triggeringWord) {
-        const ancestor = getFeedlikeAncestor(node);
         if (ancestor instanceof HTMLElement) {
           await processElement(ancestor, filterResult.triggeringWord, action)
         }
