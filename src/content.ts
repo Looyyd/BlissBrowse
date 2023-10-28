@@ -6,8 +6,7 @@ import {
 import {
   DEBUG,
   scriptName,
-  wordStatisticsKeyPrefix,
-  BATCH_STAT_UPDATE_INTERVAL,
+  BATCH_STAT_UPDATE_INTERVAL, siteBlacklistKey, wordBlacklistKeyPrefix,
 } from "./constants";
 import {isCurrentSiteDisabled} from "./modules/hostname";
 import {Action} from "./modules/types";
@@ -17,6 +16,16 @@ import {FilterActionStore} from "./modules/settings";
 some logic taken from:
 https://github.com/yeahpython/filter-anything-everywhere/blob/main/extension/content.ts
  */
+
+interface DataChangeMessage {
+  action: 'dataChanged';
+  key: string;
+}
+
+//TODO: not sure if should use these types? maybe use them to standardize message format
+// TODO: could use value to refresh only what is needed
+type Message = DataChangeMessage;
+
 
 interface MyStats {
   [key: string]: number;
@@ -240,7 +249,6 @@ async function checkAndProcessElements() {
         }
       }
     }
-
     node = walker.nextNode();
   }//end node traversal
 }
@@ -264,20 +272,28 @@ const observer = new MutationObserver(async () => {
 
 observer.observe(document.body, { childList: true, subtree: true });
 
-//TODO: change now that indexedDB is used
-chrome.storage.onChanged.addListener(async (changes) => {
-  let shouldRunDebounce = false;
-  for (const key in changes) {
-    if (!key.startsWith(wordStatisticsKeyPrefix)) {
-      shouldRunDebounce = true;
-      break;
+
+const listener = async (request: Message) => {
+  function keyImpactsFilter(key: string) {
+    if(key.startsWith(siteBlacklistKey)){
+      return true;
     }
+    if(key.startsWith(wordBlacklistKeyPrefix)){
+      return true;
+    }
+    return false;
   }
-  if (shouldRunDebounce) {
+  //TODO: need to make this work, not sending data to tabs rn
+  if(DEBUG) {
+    console.log('message received in content listener', request);
+  }
+  if (request.action === 'dataChanged' && keyImpactsFilter(request.key)) {
     await debouncedCheckAndFilter();
   }
-});
+};
 
+// Add message listener
+chrome.runtime.onMessage.addListener(listener);
 
 (async () => {
   await debouncedCheckAndFilter();

@@ -1,8 +1,7 @@
-import {DEBUG, DEFAULT_HOSTNAME_BLACKLIST} from "../constants";
+import {DEBUG, DEFAULT_HOSTNAME_BLACKLIST, siteBlacklistKey} from "../constants";
 import {DatabaseStorage} from "./datastore";
 import {isStringArray} from "./typeguards";
 
-const siteBlacklistKey = 'blacklist';
 
 export async function currentTabHostname(context: "popup" | "content"): Promise<string> {
   let hostname;

@@ -1,13 +1,15 @@
-import {DEBUG, DEFAULT_LISTNAMES_ARRAY, DEFAULT_WORD_STATISTICS, DEFAULT_WORDLIST, wordStatisticsKeyPrefix} from "../constants";
+import {
+  DEBUG,
+  DEFAULT_LISTNAMES_ARRAY,
+  DEFAULT_WORD_STATISTICS,
+  DEFAULT_WORDLIST,
+  listNamesKey,
+  wordBlacklistKeyPrefix,
+  wordStatisticsKeyPrefix
+} from "../constants";
 import {getStorageKey, setStorageKey} from "./storage";
 import {isNumber, isStringArray} from "./typeguards";
 import {DatabaseStorage} from "./datastore";
-
-const wordBlacklistKeyPrefix = 'list-';
-const listNamesKey = "listNames"
-
-
-
 
 /*
 * @throws Error if n is not a number

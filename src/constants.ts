@@ -27,3 +27,6 @@ export const ALL_LISTS = 'All_LISTS_3213546516541';
 //storage keys
 export const wordStatisticsKeyPrefix = 'statistics-word-';
 
+export const wordBlacklistKeyPrefix = 'list-';
+export const listNamesKey = "listNames"
+export const siteBlacklistKey = 'blacklist';
