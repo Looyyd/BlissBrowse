@@ -255,6 +255,7 @@ async function checkAndProcessElements() {
   let node = walker.nextNode();
   while (node) {
     //if any parent is already processed, skip this node
+    //TODO: test if checking for text content first is not faster
     const parents = $(node).add($(node).parents());
     let skip = false;
     parents.each(function(index, elem) {
