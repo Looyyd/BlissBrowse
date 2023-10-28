@@ -1,4 +1,4 @@
-import {DEBUG} from "./constants";
+import {DEBUG, DEBUG_MESSAGES} from "./constants";
 
 //TODO: browser agnostic
 
@@ -91,7 +91,7 @@ type SendResponseFunc = (response: unknown) => void;
 const handleGet = (key: string, sendResponse: SendResponseFunc): void => {
   getIndexedDBKey(key)
     .then(data => {
-      if (DEBUG) {
+      if (DEBUG_MESSAGES) {
         console.log('Sending data from background listener data:', data);
       }
       sendResponse({ success: true, data });
@@ -130,7 +130,7 @@ const handleSet = (key: string, value: unknown, sendResponse: SendResponseFunc):
 };
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (DEBUG) {
+  if (DEBUG_MESSAGES) {
     console.log('request in background listener:', request);
   }
 
@@ -144,7 +144,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     request.source = 'background';
     request.destination = 'runtime';
     chrome.runtime.sendMessage(request, () => {
-      if(DEBUG){
+      if(DEBUG_MESSAGES){
         console.log('message sent from background listener', request);
       }
     });
@@ -152,7 +152,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     chrome.tabs.query({}, (tabs) => {
       for (const tab of tabs) {
         chrome.tabs.sendMessage(tab.id!, request, () => {
-          if(DEBUG){
+          if(DEBUG_MESSAGES){
             console.log('message sent from background listener', request);
           }
         });

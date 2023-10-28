@@ -1,6 +1,6 @@
 import {getStorageKey, setStorageKey} from "./storage";
 import {useEffect, useState} from "react";
-import {DEBUG} from "../constants";
+import {DEBUG, DEBUG_MESSAGES} from "../constants";
 
 
 interface DataChangeMessage<T> {
@@ -42,7 +42,7 @@ abstract class DataStore<T> {
       fetchData();
 
       const listener = (request: Message<T>,) => {
-        if(DEBUG){
+        if(DEBUG_MESSAGES){
           console.log('message received in custom hook', request);
         }
         if (request.action === 'dataChanged' && request.key === this.key) {
@@ -51,7 +51,7 @@ abstract class DataStore<T> {
       };
 
       // Add message listener
-      if(DEBUG){
+      if(DEBUG_MESSAGES){
         listenerCount++;
         console.log('listener added in custom hook', this.key);
         console.log('listener count', listenerCount);
@@ -61,7 +61,7 @@ abstract class DataStore<T> {
       return () => {
         // Remove message listener
         chrome.runtime.onMessage.removeListener(listener);
-        if(DEBUG){
+        if(DEBUG_MESSAGES){
           listenerCount--;
           console.log('listener removed in custom hook', this.key);
           console.log('listener count', listenerCount);
@@ -84,11 +84,11 @@ abstract class DataStore<T> {
     await this.set(value);
     //TODO: standardize message format
     const message = { action: 'dataChanged', key: this.key, value: value, source: 'datastore'};
-    if(DEBUG){
+    if(DEBUG_MESSAGES){
       console.log('sending message from syncedSet', message);
     }
     chrome.runtime.sendMessage(message, () => {
-      if(DEBUG){
+      if(DEBUG_MESSAGES){
         console.log('message sent from syncedSet', message);
       }
     });
