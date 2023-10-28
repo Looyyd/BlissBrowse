@@ -154,6 +154,13 @@ const ORIGINAL_DISPLAY_PREFIX = 'original-display-';
 const SCRIPT_NAME = scriptName;
 
 async function processElement(element: HTMLElement, triggeringWord: string, action: Action) {
+  if (element.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true') {
+    if(DEBUG){
+      console.log('Element already processed', element, triggeringWord, action);
+      throw new Error('Element already processed');
+    }
+    return
+  }
   element.setAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`, 'true');
   element.setAttribute(TRIGGERING_WORD, triggeringWord);
   element.setAttribute(APPLIED_ACTION, action);
@@ -246,13 +253,16 @@ async function checkAndProcessElements() {
     const parentTagName = parentElement ? parentElement.tagName.toLowerCase() : '';
     const ancestor = getFeedlikeAncestor(node);
 
-    //if already processed, skip
     //TODO: is the ancestor always the same?
-    //TODO: what if ancestor was processed with wrong effect?
-    //TODO: now disable in to enable doesn't work
-    if (ancestor instanceof HTMLElement && ancestor.getAttribute('processed-by-' + scriptName) === 'true') {
-      node = walker.nextNode();
-      continue;
+    // if alreday processed and same action, skip
+    if (ancestor instanceof HTMLElement && ancestor.getAttribute(PROCESSED_BY_PREFIX + scriptName) === 'true') {
+      if (ancestor.getAttribute(APPLIED_ACTION) === action){
+        node = walker.nextNode();
+        continue;
+      }
+      else{
+        await unprocessElement(ancestor);
+      }
     }
 
     if (node.nodeType === Node.TEXT_NODE &&
