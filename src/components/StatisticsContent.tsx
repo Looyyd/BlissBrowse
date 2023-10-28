@@ -18,21 +18,34 @@ import {ALL_LISTS} from "../constants";
 
 const StatisticsContent = () => {
   const listNamesDataStore = new ListNamesDataStore();
-  const [lists, setLists] = listNamesDataStore.useData([]);
+  //fetched lists are not showed
+  const [fetchedLists,] = listNamesDataStore.useData([]);
+  //lists are showed
+  const [lists, setLists] = useState<string[] | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: null | number, direction: string }>({ key: null, direction: 'asc' });
   const [selectedList, setSelectedList] = useState<string | null>(null);
   const [statistics, setStatistics] = useState<{ [word: string]: number }>({});
   const columnNames = ["Word", "Times Seen"];
 
   useEffect(() => {
-    if(lists !==null && lists.length > 0 && !lists.includes(ALL_LISTS)){
-      const newLists = [ALL_LISTS].concat(lists);
+    //add "ALL LISTS" to the shown lists
+    if(fetchedLists !==null && fetchedLists.length > 0 ){
+      const newLists = [ALL_LISTS].concat(fetchedLists);
       setLists(newLists);
+    }
+  }, [fetchedLists]);
+
+  //set the first list as selectedList by default
+  useEffect(() => {
+    if (selectedList === null && lists !== null && lists.includes(ALL_LISTS)) {
+      setSelectedList(ALL_LISTS);
     }
   }, [lists]);
 
   useEffect(() => {
+    console.log('selectedList changed:', selectedList);
     if (lists !== null && lists.length > 0 && selectedList !== null) {
+      console.log('fetching statistics');
       fetchStatistics(selectedList);
     }
   }, [selectedList]);
