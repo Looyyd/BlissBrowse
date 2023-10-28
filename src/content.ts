@@ -88,7 +88,7 @@ function getFeedlikeAncestor(node:Node): Node{
   }
   if (best_index < 0 || best_index === 0) {
     if (DEBUG){
-      console.log('Uh oh: best_index < 0 or best_index is the node itself', node);
+      console.log('Uh oh: best_index < 0 or best_index is the node itself');
     }
     chosen_dom_element = node;
   } else {
@@ -219,6 +219,17 @@ async function unprocessElementsIfWrongAction(currentAction: Action) {
   });
 }
 
+function hasScriptOrStyleAncestor(node: Node) {
+  let current = node;
+  while (current.parentElement) {
+    const tagName = current.parentElement.tagName.toLowerCase();
+    if (['script', 'style', 'noscript'].includes(tagName)) {
+      return true;
+    }
+    current = current.parentElement;
+  }
+  return false;
+}
 
 async function checkAndProcessElements() {
   const isDisabled = await isCurrentSiteDisabled(context);
@@ -272,14 +283,11 @@ async function checkAndProcessElements() {
       continue;
     }
 
-    const parentElement = node.parentElement;
-    const parentTagName = parentElement ? parentElement.tagName.toLowerCase() : '';
-    const ancestor = getFeedlikeAncestor(node);
-
     if (node.nodeType === Node.TEXT_NODE &&
       node.textContent &&
-      !['script', 'style'].includes(parentTagName)) {  // Skip script and style tags
+      !hasScriptOrStyleAncestor(node)) {  // Skip script and style tags
 
+      const ancestor = getFeedlikeAncestor(node);
       const filterResult = shouldFilterTextContent(node.textContent!, wordsToFilter, false);
 
       if (filterResult.shouldFilter && filterResult.triggeringWord) {
