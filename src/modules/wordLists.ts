@@ -15,7 +15,7 @@ import {isNumber, isStringArray} from "./types";
 * @throws Error if n is not a number
  */
 //TODO: use datastore
-export async function getWordStatistics(word: string): Promise<number> {
+export async function getFilterWordStatistics(word: string): Promise<number> {
   const key = WORD_STATISTICS_KEY_PREFIX + word;
   const n = await getStorageKey(key);
 
@@ -31,12 +31,12 @@ export async function getWordStatistics(word: string): Promise<number> {
 /*
 * @throws Error if n is not a number
  */
-export async function addToWordStatistics(word: string, countToAdd: number){
+export async function addToFilterWordStatistics(word: string, countToAdd: number){
   if(DEBUG){
     console.log('addWordStatistics:', word, countToAdd);
   }
   const key = WORD_STATISTICS_KEY_PREFIX + word;
-  const currentCount = await getWordStatistics(key);
+  const currentCount = await getFilterWordStatistics(key);
   const value = currentCount + countToAdd;
   await setStorageKey(key, value);
 }
@@ -70,7 +70,7 @@ export class ListNamesDataStore extends DatabaseStorage<string[]> {
 
 
 
-export class WordListDataStore extends DatabaseStorage<string[]> {
+export class FilterListDataStore extends DatabaseStorage<string[]> {
   key: string;
   defaultValue = DEFAULT_WORDLIST;
   isType = isStringArray;

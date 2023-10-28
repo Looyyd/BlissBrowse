@@ -1,9 +1,9 @@
-export enum Action {
+export enum FilterAction {
   BLUR = "blur",
   HIDE = "hide"
 }
-export function isAction(value: unknown): value is Action {
-  return typeof value === 'string' && Object.values(Action).includes(value as Action);
+export function isFilterAction(value: unknown): value is FilterAction {
+  return typeof value === 'string' && Object.values(FilterAction).includes(value as FilterAction);
 }
 
 export enum ColorTheme {

@@ -1,4 +1,4 @@
-import {DEBUG, DEBUG_MESSAGES} from "./constants";
+import {DEBUG_MESSAGES} from "./constants";
 
 //TODO: browser agnostic
 

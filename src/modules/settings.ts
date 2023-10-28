@@ -1,18 +1,16 @@
-import {DEFAULT_COLOR_THEME, DEFAULT_FILTER_ACTION} from "../constants";
-import {Action, ColorTheme, isAction, isColorTheme} from "./types";
+import {COLOR_THEME_KEY, DEFAULT_COLOR_THEME, DEFAULT_FILTER_ACTION, FILTER_ACTION_KEY} from "../constants";
+import {ColorTheme, FilterAction, isColorTheme, isFilterAction} from "./types";
 import {DatabaseStorage, LocalStorageStore} from "./datastore";
 
 
-const actionToApplyOnFilterKey = 'actionToApplyOnFilter';
-
-export class FilterActionStore extends DatabaseStorage<Action>{
-  key = actionToApplyOnFilterKey;
+export class FilterActionStore extends DatabaseStorage<FilterAction>{
+  key = FILTER_ACTION_KEY;
   defaultValue = DEFAULT_FILTER_ACTION;
-  isType = isAction;
+  isType = isFilterAction;
 }
 
 export class ColorThemeStore extends LocalStorageStore<ColorTheme>{
-  key = 'colorTheme';
+  key = COLOR_THEME_KEY;
   defaultValue = DEFAULT_COLOR_THEME;
   isType = isColorTheme;
 }

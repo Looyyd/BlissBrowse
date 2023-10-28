@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import {
-  addToWordStatistics,
-  ListNamesDataStore, WordListDataStore
+  addToFilterWordStatistics,
+  ListNamesDataStore, FilterListDataStore
 } from "./modules/wordLists";
 import {
   DEBUG,
@@ -9,7 +9,7 @@ import {
   BATCH_STAT_UPDATE_INTERVAL, BLACKLISTED_WEBSITES_KEY_PREFIX, FILTER_LIST_KEY_PREFIX,
 } from "./constants";
 import {isCurrentSiteDisabled} from "./modules/hostname";
-import {Action} from "./modules/types";
+import {FilterAction} from "./modules/types";
 import {FilterActionStore} from "./modules/settings";
 
 /*
@@ -152,32 +152,32 @@ const ORIGINAL_FILTER_PREFIX = 'original-filter-';
 const ORIGINAL_DISPLAY_PREFIX = 'original-display-';
 const SCRIPT_NAME = EXTENSION_NAME;
 
-async function processElement(element: HTMLElement, triggeringWord: string, action: Action) {
+async function filterElement(element: HTMLElement, triggeringWord: string, filterAction: FilterAction) {
   if (element.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true') {
     if(DEBUG){
-      console.log('Element already processed', element, triggeringWord, action);
+      console.log('Element already processed', element, triggeringWord, filterAction);
       throw new Error('Element already processed');
     }
     return
   }
   element.setAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`, 'true');
   element.setAttribute(TRIGGERING_WORD, triggeringWord);
-  element.setAttribute(APPLIED_ACTION, action);
+  element.setAttribute(APPLIED_ACTION, filterAction);
 
   inMemoryStatistics[triggeringWord] = (inMemoryStatistics[triggeringWord] || 0) + 1;
 
-  if (action === Action.BLUR) {
+  if (filterAction === FilterAction.BLUR) {
     const originalFilter = element.style.filter;
     element.setAttribute(`${ORIGINAL_FILTER_PREFIX}${SCRIPT_NAME}`, originalFilter);
     element.style.filter = 'blur(8px)';
-  } else if (action === Action.HIDE) {
+  } else if (filterAction === FilterAction.HIDE) {
     const originalDisplay = element.style.display;
     element.setAttribute(`${ORIGINAL_DISPLAY_PREFIX}${SCRIPT_NAME}`, originalDisplay);
     element.style.display = 'none';
   }
 }
 
-async function unprocessElement(element: HTMLElement) {
+async function unfilterElement(element: HTMLElement) {
   const action = element.getAttribute(APPLIED_ACTION);
   element.removeAttribute(APPLIED_ACTION);
   element.removeAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`);
@@ -186,11 +186,11 @@ async function unprocessElement(element: HTMLElement) {
 
   inMemoryStatistics[triggeringWord] = (inMemoryStatistics[triggeringWord] || 0) - 1;
 
-  if (action === Action.BLUR) {
+  if (action === FilterAction.BLUR) {
     element.style.filter = element.getAttribute(`${ORIGINAL_FILTER_PREFIX}${SCRIPT_NAME}`) || '';
     element.removeAttribute(`${ORIGINAL_FILTER_PREFIX}${SCRIPT_NAME}`);
   }
-  else if (action === Action.HIDE) {
+  else if (action === FilterAction.HIDE) {
     element.style.display = element.getAttribute(`${ORIGINAL_DISPLAY_PREFIX}${SCRIPT_NAME}`) || '';
     element.removeAttribute(`${ORIGINAL_DISPLAY_PREFIX}${SCRIPT_NAME}`);
   }
@@ -198,23 +198,23 @@ async function unprocessElement(element: HTMLElement) {
 
 
 
-async function unprocessElementsIfNotInList(currentWords: string[]) {
+async function unfilterElementsIfNotInList(currentWords: string[]) {
   //TODO: can this be more efficient?
   const hiddenElements = document.querySelectorAll(`[${PROCESSED_BY_PREFIX}${SCRIPT_NAME}="true"]`);
   hiddenElements.forEach(element => {
     const triggeringWord = element.getAttribute(TRIGGERING_WORD) || '';
     if (!currentWords.includes(triggeringWord) && element instanceof HTMLElement) {
-      unprocessElement(element);
+      unfilterElement(element);
     }
   });
 }
 
-async function unprocessElementsIfWrongAction(currentAction: Action) {
+async function unfilterElementsIfWrongAction(currentAction: FilterAction) {
   const hiddenElements = document.querySelectorAll(`[${PROCESSED_BY_PREFIX}${SCRIPT_NAME}="true"]`);
   hiddenElements.forEach(element => {
     const action = element.getAttribute(APPLIED_ACTION);
     if (action !== currentAction && element instanceof HTMLElement) {
-      unprocessElement(element);
+      unfilterElement(element);
     }
   });
 }
@@ -232,23 +232,23 @@ function hasScriptOrStyleAncestor(node: Node) {
 }
 
 // Function to retrieve the words to be filtered
-async function getWordsToFilter() {
-  let wordsToFilter: string[] = [];
+async function getFilterWords() {
+  let filterWords: string[] = [];
   try {
     const listsStore = new ListNamesDataStore();
     const lists = await listsStore.get();
     for (const list of lists) {
-      const listStore = new WordListDataStore(list);
+      const listStore = new FilterListDataStore(list);
       const savedWords = await listStore.get();
-      wordsToFilter = wordsToFilter.concat(savedWords);
+      filterWords = filterWords.concat(savedWords);
     }
   } catch (e) {
     console.error("Error retrieving saved words.", e);
   }
   if (DEBUG) {
-    console.log('wordsToFilter:', wordsToFilter);
+    console.log('filterWords:', filterWords);
   }
-  return wordsToFilter;
+  return filterWords;
 }
 
 // Function to check if a node should be skipped
@@ -265,24 +265,24 @@ function nodeHasAProcessedParent(node: Node) {
   return skip;
 }
 
-async function checkAndProcessElements() {
+async function checkAndFilterElements() {
   const isDisabled = await isCurrentSiteDisabled(context);
   if (isDisabled) {
-    await unprocessElementsIfNotInList([]);  // Unhide all
+    await unfilterElementsIfNotInList([]);  // Unhide all
     return;
   }
 
   const actionStore = new FilterActionStore();
-  const action = await actionStore.get();
+  const filterAction = await actionStore.get();
   const walker = document.createTreeWalker(
     document.body,
     NodeFilter.SHOW_TEXT,
     null,
   );
 
-  const wordsToFilter = await getWordsToFilter();
-  await unprocessElementsIfNotInList(wordsToFilter);
-  await unprocessElementsIfWrongAction(action);
+  const filterWords = await getFilterWords();
+  await unfilterElementsIfNotInList(filterWords);
+  await unfilterElementsIfWrongAction(filterAction);
 
   let node = walker.nextNode();
   while (node) {
@@ -295,11 +295,11 @@ async function checkAndProcessElements() {
         node.textContent &&
         !hasScriptOrStyleAncestor(node)) {  // Skip script and style tags
       const ancestor = getFeedlikeAncestor(node);
-      const filterResult = shouldFilterTextContent(node.textContent!, wordsToFilter, false);
+      const filterResult = shouldFilterTextContent(node.textContent!, filterWords, false);
 
       if (filterResult.shouldFilter && filterResult.triggeringWord) {
         if (ancestor instanceof HTMLElement) {
-          await processElement(ancestor, filterResult.triggeringWord, action);
+          await filterElement(ancestor, filterResult.triggeringWord, filterAction);
         }
       }
     }
@@ -313,7 +313,7 @@ let debounceTimeout: NodeJS.Timeout;
 async function debouncedCheckAndFilter() {
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
-    checkAndProcessElements()
+    checkAndFilterElements()
   }, 100);//TODO: what value should this be?
 }
 
@@ -361,7 +361,7 @@ async function writeInMemoryStatisticsToStorage() {
   for (const key in inMemoryStatistics) {
     if (Object.prototype.hasOwnProperty.call(inMemoryStatistics, key)) {
       const value = inMemoryStatistics[key];
-      await addToWordStatistics(key, value);
+      await addToFilterWordStatistics(key, value);
     }
   }
   inMemoryStatistics = {};

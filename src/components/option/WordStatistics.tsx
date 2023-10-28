@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {getWordStatistics, ListNamesDataStore, WordListDataStore} from "../../modules/wordLists";
+import {getFilterWordStatistics, ListNamesDataStore, FilterListDataStore} from "../../modules/wordLists";
 import {
   Table,
   TableHead,
@@ -86,7 +86,7 @@ const WordStatistics = () => {
 
     let words_to_show: string[] = [];
     for (const list_to_show of lists_to_show) {
-      const dataStore = new WordListDataStore(list_to_show);
+      const dataStore = new FilterListDataStore(list_to_show);
       const words = await dataStore.get();
       words_to_show = words_to_show.concat(words);
     }
@@ -94,7 +94,7 @@ const WordStatistics = () => {
 
     const statisticsDiv: { [word: string]: number } = {};
     for (const word of words_to_show) {
-      statisticsDiv[word] = await getWordStatistics(word);
+      statisticsDiv[word] = await getFilterWordStatistics(word);
     }
 
     setStatistics(statisticsDiv);

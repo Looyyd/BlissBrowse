@@ -1,5 +1,5 @@
 import React, {SyntheticEvent, useEffect, useState} from 'react';
-import {ListNamesDataStore, WordListDataStore} from "../../modules/wordLists";
+import {ListNamesDataStore, FilterListDataStore} from "../../modules/wordLists";
 import {
   InputLabel,
   Button,
@@ -22,7 +22,7 @@ const WordlistsEditor = () => {
   const [textAreaValue, setTextAreaValue] = useState<string>("");
   const [openFeedbackAlert, setOpenFeedbackAlert] = useState(false);
 
-  const handleClose = (event: Event | SyntheticEvent<Element, Event>, reason: SnackbarCloseReason) => {
+  const handleFeedbackAlertClose = (event: Event | SyntheticEvent<Element, Event>, reason: SnackbarCloseReason) => {
     if (reason === 'clickaway') {
       return;
     }
@@ -31,7 +31,7 @@ const WordlistsEditor = () => {
 
   useEffect(() => {
     const fetchListContent = async (list: string) => {
-      const dataStore = new WordListDataStore(list)
+      const dataStore = new FilterListDataStore(list)
       const fetchedWords = await dataStore.get();
       setWords(fetchedWords);
       setTextAreaValue(fetchedWords.join('\n'));
@@ -53,7 +53,7 @@ const WordlistsEditor = () => {
     const newWords = textAreaValue.split('\n');
     const list = selectedList;
     if (!list) return;
-    const dataStore = new WordListDataStore(list);
+    const dataStore = new FilterListDataStore(list);
     dataStore.syncedSet(newWords).then(() => {
       //TODO: more precise feedback(failed to save, etc)
       setOpenFeedbackAlert(true);
@@ -65,7 +65,7 @@ const WordlistsEditor = () => {
       <Snackbar
         open={openFeedbackAlert}
         autoHideDuration={3000}
-        onClose={handleClose}
+        onClose={handleFeedbackAlertClose}
       >
         <Alert severity="success" sx={{ width: '100%' }}>
           Words saved successfully!

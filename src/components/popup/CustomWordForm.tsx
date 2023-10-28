@@ -1,5 +1,5 @@
 import React, {SyntheticEvent, useState} from 'react';
-import {ListNamesDataStore, WordListDataStore} from "../../modules/wordLists";
+import {ListNamesDataStore, FilterListDataStore} from "../../modules/wordLists";
 import {
   Button,
   TextField,
@@ -30,7 +30,7 @@ const CustomWordForm: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setNewWord('');
-    const dataStore = new WordListDataStore(list);
+    const dataStore = new FilterListDataStore(list);
     await dataStore.addWord(newWord);
 
     //TODO: add more precise feedback(word already exists, etc)

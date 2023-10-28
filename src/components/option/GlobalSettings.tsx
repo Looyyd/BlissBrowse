@@ -1,4 +1,4 @@
-import {Action, ColorTheme} from "../../modules/types"
+import {FilterAction, ColorTheme} from "../../modules/types"
 import {MenuItem, Select} from "@mui/material";
 import React from "react";
 import {
@@ -10,23 +10,23 @@ import { useEffect} from 'react';
 
 const GlobalSettings = () => {
   const colorThemeStore = new ColorThemeStore();
-  const filterActionstore = new FilterActionStore();
-  const [selectedAction, setSelectedAction] = filterActionstore.useData();
+  const filterActionStore = new FilterActionStore();
+  const [selectedAction, setSelectedAction] = filterActionStore.useData();
   const [selectedColorTheme, setSelectedColorTheme] = colorThemeStore.useData();
-  const actions = Object.values(Action);
+  const filterActions = Object.values(FilterAction);
   const colorThemes = Object.values(ColorTheme);
 
 
   useEffect(() => {
     const fetchData = async () => {
-      const previous_action = await filterActionstore.get();
+      const previous_action = await filterActionStore.get();
       await setSelectedAction(previous_action);
     };
     fetchData();
   }, []);
 
-  async function onActionChange(event: SelectChangeEvent<Action>) {
-    const action = event.target.value as Action;
+  async function onActionChange(event: SelectChangeEvent<FilterAction>) {
+    const action = event.target.value as FilterAction;
     await setSelectedAction(action);
   }
 
@@ -42,9 +42,9 @@ const GlobalSettings = () => {
         id="filterActionSelect"
         value={selectedAction !== null ? selectedAction : ""}
         onChange={onActionChange}
-        disabled={actions.length === 0}
+        disabled={filterActions.length === 0}
       >
-        {actions.map((actionName) => (
+        {filterActions.map((actionName) => (
           <MenuItem key={actionName} value={actionName}>
             {actionName}
           </MenuItem>
