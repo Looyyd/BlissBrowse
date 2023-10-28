@@ -1,16 +1,17 @@
-import $ from 'jquery';
-import {
-  addToFilterWordStatistics,
-  ListNamesDataStore, FilterListDataStore
-} from "./modules/wordLists";
-import {
-  DEBUG,
-  EXTENSION_NAME,
-  BATCH_STAT_UPDATE_INTERVAL, BLACKLISTED_WEBSITES_KEY_PREFIX, FILTER_LIST_KEY_PREFIX,
-} from "./constants";
+import {BATCH_STAT_UPDATE_INTERVAL, BLACKLISTED_WEBSITES_KEY_PREFIX, DEBUG, FILTER_LIST_KEY_PREFIX,} from "./constants";
 import {isCurrentSiteDisabled} from "./modules/hostname";
-import {FilterAction} from "./modules/types";
 import {FilterActionStore} from "./modules/settings";
+import {getFeedlikeAncestor} from "./modules/content/elementSelection";
+import {
+  filterElement,
+  getFilterWords,
+  hasScriptOrStyleAncestor,
+  nodeHasAProcessedParent,
+  shouldFilterTextContent,
+  unfilterElementsIfNotInList,
+  unfilterElementsIfWrongAction,
+  writeInMemoryStatisticsToStorage
+} from "./modules/content/filter";
 
 /*
 some logic taken from:
@@ -27,246 +28,11 @@ interface DataChangeMessage {
 type Message = DataChangeMessage;
 
 
-interface MyStats {
-  [key: string]: number;
-}
-let inMemoryStatistics: MyStats = {};
-const min_feed_neighbors = 3;
-const context = "content";
 
-function isSimilar(my_rect:DOMRect, sib_rect:DOMRect) {
-  //TODO: test if this logic can be improved or another functio nused
-  const my_x = my_rect.left + my_rect.width / 2;
-  const sib_x = sib_rect.left + sib_rect.width / 2;
-
-  const my_y = my_rect.top + my_rect.height / 2;
-  const sib_y = sib_rect.top + sib_rect.height / 2;
-
-  const is_vertically_placed = Math.abs(my_y - sib_y) > Math.abs(my_x - sib_x);
-
-  if (is_vertically_placed) {
-    return sib_rect.height != 0 && my_rect.width == sib_rect.width;
-  } else {
-    return my_rect.height == sib_rect.height;
-  }
-}
-
-function getFeedlikeAncestor(node:Node): Node{
-  let chosen_dom_element;
-  const parents = $(node).add($(node).parents());
-  const sibling_counts = parents.map(function(index, elem) {
-    if (!(elem instanceof Element)) {
-      return 0;
-    }
-    const myRect = elem.getBoundingClientRect();
-
-    // Ignore elements with zero height.
-    if (myRect.height == 0) {
-      return 0;
-    }
-
-    const matching_siblings = $(elem)
-      .siblings()
-      .filter(function(index, sib) {
-        if (sib.nodeType != Node.ELEMENT_NODE) {
-          return false;
-        }
-        const sibRect = sib.getBoundingClientRect();
-        return isSimilar(myRect, sibRect);//is similar helps on youtube to avoir hiding everythin
-      });
-    return matching_siblings.length;
-  });
-
-  let best_index = 0;
-
-  // Note, parents were ordered by document order
-  //TODO: better logic for best index? maybe put into a function?
-  for (let i = 0 ; i<sibling_counts.length -1 ; i++) {
-    if (sibling_counts[i] >= min_feed_neighbors) {
-      best_index = i;
-    }
-  }
-  if (best_index < 0 || best_index === 0) {
-    if (DEBUG){
-      console.log('Uh oh: best_index < 0 or best_index is the node itself');
-    }
-    chosen_dom_element = node;
-  } else {
-    chosen_dom_element = parents[best_index];
-  }
-  return $(chosen_dom_element)[0];
-}
-
-
-
-// Define a new type for the filter result
-type FilterResult = {
-  shouldFilter: boolean;
-  triggeringWord?: string;
-};
-
-function shouldFilterTextContent(textContent: string, wordsToFilter: string[], isRegex: boolean): FilterResult {
-  const cleanedTextContent = textContent.toLowerCase().trim();
-  const result: FilterResult = {
-    shouldFilter: false,
-  };
-
-  if (isRegex) {
-    for (const word of wordsToFilter) {
-      const regex = new RegExp(word, 'i'); // case-insensitive matching
-      const match = cleanedTextContent.match(regex);
-      if (match) {
-        result.shouldFilter = true;
-        result.triggeringWord = word;
-        return result;
-      }
-    }
-  } else {
-    for (const word of wordsToFilter) {
-      if (cleanedTextContent.includes(word.toLowerCase())) {
-        result.shouldFilter = true;
-        result.triggeringWord = word;
-        return result;
-      }
-    }
-  }
-  return result;
-}
-
-
-/*
-TODO: add a visual indicator using react, something like this:
-  // Create a DOM element to host the React component
-  const reactRoot = document.createElement('div');
-  element.appendChild(reactRoot);
-  // Create React root and render the component
-  const rootContainer = ReactDOM.createRoot(reactRoot);
-  rootContainer.render(<VisualIndicator message={`Filtered by: ${triggeringWord}`} />);
-  // Your existing logic here...
-
- */
-const PROCESSED_BY_PREFIX = 'processed-by-';
-const TRIGGERING_WORD = 'triggering-word';
-const APPLIED_ACTION = 'applied-action';
-const ORIGINAL_FILTER_PREFIX = 'original-filter-';
-const ORIGINAL_DISPLAY_PREFIX = 'original-display-';
-const SCRIPT_NAME = EXTENSION_NAME;
-
-async function filterElement(element: HTMLElement, triggeringWord: string, filterAction: FilterAction) {
-  if (element.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true') {
-    if(DEBUG){
-      console.log('Element already processed', element, triggeringWord, filterAction);
-      throw new Error('Element already processed');
-    }
-    return
-  }
-  element.setAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`, 'true');
-  element.setAttribute(TRIGGERING_WORD, triggeringWord);
-  element.setAttribute(APPLIED_ACTION, filterAction);
-
-  inMemoryStatistics[triggeringWord] = (inMemoryStatistics[triggeringWord] || 0) + 1;
-
-  if (filterAction === FilterAction.BLUR) {
-    const originalFilter = element.style.filter;
-    element.setAttribute(`${ORIGINAL_FILTER_PREFIX}${SCRIPT_NAME}`, originalFilter);
-    element.style.filter = 'blur(8px)';
-  } else if (filterAction === FilterAction.HIDE) {
-    const originalDisplay = element.style.display;
-    element.setAttribute(`${ORIGINAL_DISPLAY_PREFIX}${SCRIPT_NAME}`, originalDisplay);
-    element.style.display = 'none';
-  }
-}
-
-async function unfilterElement(element: HTMLElement) {
-  const action = element.getAttribute(APPLIED_ACTION);
-  element.removeAttribute(APPLIED_ACTION);
-  element.removeAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`);
-  const triggeringWord = element.getAttribute(TRIGGERING_WORD) || '';
-  element.removeAttribute(TRIGGERING_WORD);
-
-  inMemoryStatistics[triggeringWord] = (inMemoryStatistics[triggeringWord] || 0) - 1;
-
-  if (action === FilterAction.BLUR) {
-    element.style.filter = element.getAttribute(`${ORIGINAL_FILTER_PREFIX}${SCRIPT_NAME}`) || '';
-    element.removeAttribute(`${ORIGINAL_FILTER_PREFIX}${SCRIPT_NAME}`);
-  }
-  else if (action === FilterAction.HIDE) {
-    element.style.display = element.getAttribute(`${ORIGINAL_DISPLAY_PREFIX}${SCRIPT_NAME}`) || '';
-    element.removeAttribute(`${ORIGINAL_DISPLAY_PREFIX}${SCRIPT_NAME}`);
-  }
-}
-
-
-
-async function unfilterElementsIfNotInList(currentWords: string[]) {
-  //TODO: can this be more efficient?
-  const hiddenElements = document.querySelectorAll(`[${PROCESSED_BY_PREFIX}${SCRIPT_NAME}="true"]`);
-  hiddenElements.forEach(element => {
-    const triggeringWord = element.getAttribute(TRIGGERING_WORD) || '';
-    if (!currentWords.includes(triggeringWord) && element instanceof HTMLElement) {
-      unfilterElement(element);
-    }
-  });
-}
-
-async function unfilterElementsIfWrongAction(currentAction: FilterAction) {
-  const hiddenElements = document.querySelectorAll(`[${PROCESSED_BY_PREFIX}${SCRIPT_NAME}="true"]`);
-  hiddenElements.forEach(element => {
-    const action = element.getAttribute(APPLIED_ACTION);
-    if (action !== currentAction && element instanceof HTMLElement) {
-      unfilterElement(element);
-    }
-  });
-}
-
-function hasScriptOrStyleAncestor(node: Node) {
-  let current = node;
-  while (current.parentElement) {
-    const tagName = current.parentElement.tagName.toLowerCase();
-    if (['script', 'style', 'noscript'].includes(tagName)) {
-      return true;
-    }
-    current = current.parentElement;
-  }
-  return false;
-}
-
-// Function to retrieve the words to be filtered
-async function getFilterWords() {
-  let filterWords: string[] = [];
-  try {
-    const listsStore = new ListNamesDataStore();
-    const lists = await listsStore.get();
-    for (const list of lists) {
-      const listStore = new FilterListDataStore(list);
-      const savedWords = await listStore.get();
-      filterWords = filterWords.concat(savedWords);
-    }
-  } catch (e) {
-    console.error("Error retrieving saved words.", e);
-  }
-  if (DEBUG) {
-    console.log('filterWords:', filterWords);
-  }
-  return filterWords;
-}
-
-// Function to check if a node should be skipped
-function nodeHasAProcessedParent(node: Node) {
-  const parents = $(node).add($(node).parents());
-  let skip = false;
-  parents.each(function(index, elem) {
-    if (elem instanceof HTMLElement) {
-      if (elem.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true') {
-        skip = true;
-      }
-    }
-  });
-  return skip;
-}
+const CONTENT_CONTEXT = "content";
 
 async function checkAndFilterElements() {
-  const isDisabled = await isCurrentSiteDisabled(context);
+  const isDisabled = await isCurrentSiteDisabled(CONTENT_CONTEXT);
   if (isDisabled) {
     await unfilterElementsIfNotInList([]);  // Unhide all
     return;
@@ -338,7 +104,6 @@ const listener = async (request: Message) => {
     }
     return false;
   }
-  //TODO: need to make this work, not sending data to tabs rn
   if(DEBUG) {
     console.log('message received in content listener', request);
   }
@@ -355,24 +120,9 @@ chrome.runtime.onMessage.addListener(listener);
 })();
 
 
-//statistics
-async function writeInMemoryStatisticsToStorage() {
-  // Go over keys
-  for (const key in inMemoryStatistics) {
-    if (Object.prototype.hasOwnProperty.call(inMemoryStatistics, key)) {
-      const value = inMemoryStatistics[key];
-      await addToFilterWordStatistics(key, value);
-    }
-  }
-  inMemoryStatistics = {};
-}
-
 setInterval(async () => {
-  if (Object.keys(inMemoryStatistics).length > 0) {
     await writeInMemoryStatisticsToStorage();
-  }
 }, BATCH_STAT_UPDATE_INTERVAL);
 window.addEventListener('beforeunload', async function() {
-  console.log('Statistics saved at tab close.');
   await writeInMemoryStatisticsToStorage();
 });

@@ -2,7 +2,9 @@ import {DEBUG_MESSAGES} from "./constants";
 import IndexedDBModule from "./modules/IndexedDBModule";
 
 
-IndexedDBModule.init();
+(async () => {
+  await IndexedDBModule.init();
+})();
 
 
 //TODO: browser agnostic
