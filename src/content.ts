@@ -87,7 +87,9 @@ function getFeedlikeAncestor(node:Node): Node{
     }
   }
   if (best_index < 0 || best_index === 0) {
-    console.log('Uh oh: best_index < 0 or best_index is the node itself');
+    if (DEBUG){
+      console.log('Uh oh: best_index < 0 or best_index is the node itself', node);
+    }
     chosen_dom_element = node;
   } else {
     chosen_dom_element = parents[best_index];
