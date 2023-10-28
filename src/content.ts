@@ -176,7 +176,7 @@ async function processElement(element: HTMLElement, triggeringWord: string, acti
 }
 
 async function unprocessElement(element: HTMLElement) {
-  const action = element.getAttribute(APPLIED_ACTION) || Action.HIDE;
+  const action = element.getAttribute(APPLIED_ACTION);
   element.removeAttribute(APPLIED_ACTION);
   element.removeAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`);
   const triggeringWord = element.getAttribute(TRIGGERING_WORD) || '';
@@ -196,25 +196,32 @@ async function unprocessElement(element: HTMLElement) {
 
 
 
-async function unprocessElements(currentWords: string[]) {
-  // Function to unprocess elements based on a list of current words
+async function unprocessElementsIfNotInList(currentWords: string[]) {
   //TODO: can this be more efficient?
-  const hiddenElements = document.querySelectorAll('[processed-by-' + scriptName + '="true"]');
+  const hiddenElements = document.querySelectorAll(`[${PROCESSED_BY_PREFIX}${SCRIPT_NAME}="true"]`);
   hiddenElements.forEach(element => {
-    const triggeringWord = element.getAttribute('triggering-word') || '';
-    const shouldUnhide = !currentWords.includes(triggeringWord);
-    if (shouldUnhide) {
-      if (element instanceof HTMLElement) {
-        unprocessElement(element);
-      }
+    const triggeringWord = element.getAttribute(TRIGGERING_WORD) || '';
+    if (!currentWords.includes(triggeringWord) && element instanceof HTMLElement) {
+      unprocessElement(element);
     }
   });
 }
 
+async function unprocessElementsIfWrongAction(currentAction: Action) {
+  const hiddenElements = document.querySelectorAll(`[${PROCESSED_BY_PREFIX}${SCRIPT_NAME}="true"]`);
+  hiddenElements.forEach(element => {
+    const action = element.getAttribute(APPLIED_ACTION);
+    if (action !== currentAction && element instanceof HTMLElement) {
+      unprocessElement(element);
+    }
+  });
+}
+
+
 async function checkAndProcessElements() {
   const isDisabled = await isCurrentSiteDisabled(context);
   if (isDisabled) {
-    await unprocessElements([])//unhide all
+    await unprocessElementsIfNotInList([])//unhide all
     return;
   }
   const actionStore = new FilterActionStore();
@@ -241,26 +248,30 @@ async function checkAndProcessElements() {
   if(DEBUG){
     console.log('wordsToFilter:', wordsToFilter);
   }
-  await unprocessElements(wordsToFilter);
+  await unprocessElementsIfNotInList(wordsToFilter);
+  await unprocessElementsIfWrongAction(action);
 
   // Traverse through all text nodes
   let node = walker.nextNode();
   while (node) {
+    //if any parent is already processed, skip this node
+    const parents = $(node).add($(node).parents());
+    let skip = false;
+    parents.each(function(index, elem) {
+      if (elem instanceof HTMLElement) {
+        if (elem.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true') {
+          skip = true;
+        }
+      }
+    });
+    if (skip) {
+      node = walker.nextNode();
+      continue;
+    }
+
     const parentElement = node.parentElement;
     const parentTagName = parentElement ? parentElement.tagName.toLowerCase() : '';
     const ancestor = getFeedlikeAncestor(node);
-
-    //TODO: is the ancestor always the same?
-    // if alreday processed and same action, skip
-    if (ancestor instanceof HTMLElement && ancestor.getAttribute(PROCESSED_BY_PREFIX + scriptName) === 'true') {
-      if (ancestor.getAttribute(APPLIED_ACTION) === action){
-        node = walker.nextNode();
-        continue;
-      }
-      else{
-        await unprocessElement(ancestor);
-      }
-    }
 
     if (node.nodeType === Node.TEXT_NODE &&
       node.textContent &&
