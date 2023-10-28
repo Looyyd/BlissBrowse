@@ -231,24 +231,11 @@ function hasScriptOrStyleAncestor(node: Node) {
   return false;
 }
 
-async function checkAndProcessElements() {
-  const isDisabled = await isCurrentSiteDisabled(context);
-  if (isDisabled) {
-    await unprocessElementsIfNotInList([])//unhide all
-    return;
-  }
-  const actionStore = new FilterActionStore();
-  const action = await actionStore.get();
-  // Create a TreeWalker to traverse text nodes
-  const walker = document.createTreeWalker(
-    document.body,
-    NodeFilter.SHOW_TEXT,
-    null,
-  );
-
+// Function to retrieve the words to be filtered
+async function getWordsToFilter() {
   let wordsToFilter: string[] = [];
   try {
-    const listsStore = new ListNamesDataStore;
+    const listsStore = new ListNamesDataStore();
     const lists = await listsStore.get();
     for (const list of lists) {
       const listStore = new WordListDataStore(list);
@@ -258,47 +245,68 @@ async function checkAndProcessElements() {
   } catch (e) {
     console.error("Error retrieving saved words.", e);
   }
-  if(DEBUG){
+  if (DEBUG) {
     console.log('wordsToFilter:', wordsToFilter);
   }
+  return wordsToFilter;
+}
+
+// Function to check if a node should be skipped
+function nodeHasAProcessedParent(node: Node) {
+  const parents = $(node).add($(node).parents());
+  let skip = false;
+  parents.each(function(index, elem) {
+    if (elem instanceof HTMLElement) {
+      if (elem.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true') {
+        skip = true;
+      }
+    }
+  });
+  return skip;
+}
+
+async function checkAndProcessElements() {
+  const isDisabled = await isCurrentSiteDisabled(context);
+  if (isDisabled) {
+    await unprocessElementsIfNotInList([]);  // Unhide all
+    return;
+  }
+
+  const actionStore = new FilterActionStore();
+  const action = await actionStore.get();
+  const walker = document.createTreeWalker(
+    document.body,
+    NodeFilter.SHOW_TEXT,
+    null,
+  );
+
+  const wordsToFilter = await getWordsToFilter();
   await unprocessElementsIfNotInList(wordsToFilter);
   await unprocessElementsIfWrongAction(action);
 
-  // Traverse through all text nodes
   let node = walker.nextNode();
   while (node) {
-    //if any parent is already processed, skip this node
-    //TODO: test if checking for text content first is not faster
-    const parents = $(node).add($(node).parents());
-    let skip = false;
-    parents.each(function(index, elem) {
-      if (elem instanceof HTMLElement) {
-        if (elem.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true') {
-          skip = true;
-        }
-      }
-    });
-    if (skip) {
+    if (nodeHasAProcessedParent(node)) {
       node = walker.nextNode();
       continue;
     }
 
     if (node.nodeType === Node.TEXT_NODE &&
-      node.textContent &&
-      !hasScriptOrStyleAncestor(node)) {  // Skip script and style tags
-
+        node.textContent &&
+        !hasScriptOrStyleAncestor(node)) {  // Skip script and style tags
       const ancestor = getFeedlikeAncestor(node);
       const filterResult = shouldFilterTextContent(node.textContent!, wordsToFilter, false);
 
       if (filterResult.shouldFilter && filterResult.triggeringWord) {
         if (ancestor instanceof HTMLElement) {
-          await processElement(ancestor, filterResult.triggeringWord, action)
+          await processElement(ancestor, filterResult.triggeringWord, action);
         }
       }
     }
     node = walker.nextNode();
-  }//end node traversal
+  }
 }
+
 
 let debounceTimeout: NodeJS.Timeout;
 
