@@ -1,5 +1,6 @@
 import {DEBUG_MESSAGES} from "./constants";
 import IndexedDBModule from "./modules/IndexedDBModule";
+import {Message} from "./modules/types";
 
 
 (async () => {
@@ -7,7 +8,6 @@ import IndexedDBModule from "./modules/IndexedDBModule";
 })();
 
 
-//TODO: browser agnostic
 chrome.runtime.onInstalled.addListener(async function(details) {
   if (details.reason === 'install') {
     // This block will run when the extension is first installed
@@ -61,7 +61,7 @@ const handleSet = (key: string, value: unknown, sendResponse: SendResponseFunc):
     });
 };
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request: Message<unknown>, sender, sendResponse) => {
   if (DEBUG_MESSAGES) {
     console.log('request in background listener:', request);
   }
@@ -72,7 +72,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     handleSet(request.key, request.value, sendResponse);
   } else if(request.action === 'dataChanged'){
     //TODO: this is to propagate local.storage changes to options.html otherwise the message is not received, should it bed removed for something cleaner?
-    //add source as background
     request.source = 'background';
     request.destination = 'runtime';
     chrome.runtime.sendMessage(request, () => {
@@ -92,7 +91,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
     sendResponse({ success: true });
   } else {
-    console.log("Unknown action in background listener: ", request.action);
+    console.log("Unknown action in background listener: ", request);
     sendResponse({ success: false, error: 'Unknown action.' });
   }
 

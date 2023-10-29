@@ -1,16 +1,9 @@
 import {getStorageKey, setStorageKey} from "./storage";
 import {useEffect, useState} from "react";
 import {DEBUG, DEBUG_MESSAGES} from "../constants";
+import { Message} from "./types";
 
 
-interface DataChangeMessage<T> {
-  action: 'dataChanged';
-  key: string;
-  value: T;
-}
-
-//TODO: not sure if should use these types? maybe use them to standardize message format
-type Message<T> = DataChangeMessage<T>;
 
 // Global counter variable
 let listenerCount = 0;

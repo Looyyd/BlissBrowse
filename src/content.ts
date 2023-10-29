@@ -12,20 +12,12 @@ import {
   unfilterElementsIfWrongAction,
   writeInMemoryStatisticsToStorage
 } from "./modules/content/filter";
+import {Message} from "./modules/types";
 
 /*
 some logic taken from:
 https://github.com/yeahpython/filter-anything-everywhere/blob/main/extension/content.ts
  */
-
-interface DataChangeMessage {
-  action: 'dataChanged';
-  key: string;
-}
-
-//TODO: not sure if should use these types? maybe use them to standardize message format
-// TODO: could use value to refresh only what is needed
-type Message = DataChangeMessage;
 
 
 const CONTENT_CONTEXT = "content";
@@ -93,7 +85,7 @@ const observer = new MutationObserver(async () => {
 observer.observe(document.body, { childList: true, subtree: true });
 
 
-const listener = async (request: Message) => {
+const listener = async (request: Message<unknown>) => {
   function keyImpactsFilter(key: string) {
     if(key.startsWith(BLACKLISTED_WEBSITES_KEY_PREFIX)){
       return true;

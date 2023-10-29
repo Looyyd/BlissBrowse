@@ -27,3 +27,30 @@ export function isNumber(value: unknown): value is number {
   return typeof value === 'number';
 }
 
+
+interface BaseMessage {
+  action: string;
+  key: string;
+  destination?: string;
+  source?: string;
+}
+
+// Generic DataChangeMessage type
+export interface DataChangeMessage<T> extends BaseMessage {
+  action: 'dataChanged';
+  value: T;
+}
+
+// setData message type
+export interface SetDataMessage<T> extends BaseMessage {
+  action: 'set';
+  value: T;
+}
+
+// getData message type
+export interface GetDataMessage extends BaseMessage {
+  action: 'get';
+}
+
+// Union type for all possible messages
+export type Message<T> = DataChangeMessage<T> | SetDataMessage<T> | GetDataMessage;
