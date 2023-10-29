@@ -79,7 +79,7 @@ async function debouncedCheckAndFilter() {
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
     checkAndFilterElements()
-  }, 100);//TODO: what value should this be?
+  }, 100);
 }
 
 
