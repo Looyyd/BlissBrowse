@@ -36,7 +36,7 @@ export async function addToFilterWordStatistics(word: string, countToAdd: number
     console.log('addWordStatistics:', word, countToAdd);
   }
   const key = WORD_STATISTICS_KEY_PREFIX + word;
-  const currentCount = await getFilterWordStatistics(key);
+  const currentCount = await getFilterWordStatistics(word);
   const value = currentCount + countToAdd;
   await setStorageKey(key, value);
 }
@@ -49,8 +49,6 @@ export class ListNamesDataStore extends DatabaseStorage<string[]> {
   async createNewList(listName: string): Promise<void> {
     const listNames = await this.get();
     if (!listNames.includes(listName)) {
-      //TODO: use datastore
-      await setStorageKey(listName, DEFAULT_WORDLIST);
       await this.syncedSet(listNames.concat(listName));
     }
   }
@@ -61,8 +59,9 @@ export class ListNamesDataStore extends DatabaseStorage<string[]> {
     if (index > -1) {
       listNames.splice(index, 1);
       await this.syncedSet(listNames);
-      //TODO: remove list from storage instead of default value
-      await setStorageKey(listName, DEFAULT_WORDLIST);
+      //TODO: remove list from storage instead of resetting to default value
+      const listStore = new FilterListDataStore(listName);
+      await listStore.syncedSet(DEFAULT_WORDLIST);
     }
   }
 }

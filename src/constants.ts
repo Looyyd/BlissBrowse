@@ -6,7 +6,7 @@ export const EXTENSION_NAME= "mindguard"
 export const DEBUG = process.env.NODE_ENV === 'development'
 export const DEBUG_MESSAGES = false;
 
-export const BATCH_STAT_UPDATE_INTERVAL = 60000; // 60 seconds
+export const BATCH_STAT_UPDATE_INTERVAL = 10000; // 60 seconds
 
 //Database default values
 export const  DEFAULT_WORD_STATISTICS = 0;
