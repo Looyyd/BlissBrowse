@@ -70,6 +70,22 @@ const handleSet = (key: string, value: unknown, sendResponse: SendResponseFunc):
     });
 };
 
+
+const handleRemove = (key: string, sendResponse: SendResponseFunc): void => {
+  IndexedDBModule.removeIndexedDBKey(key)
+    .then(() => {
+      sendDataChangedMessage(key, null);//TODO: what should be sent here? default value?
+      sendResponse({ success: true });
+    })
+    .catch((error: unknown) => {
+      if (error instanceof Error) {
+        sendResponse({ success: false, error: error.message });
+      } else {
+        sendResponse({ success: false, error: 'An unknown error occurred.' });
+      }
+    });
+}
+
 chrome.runtime.onMessage.addListener((request: Message<unknown>, sender, sendResponse) => {
   if (DEBUG_MESSAGES) {
     console.log('request in background listener:', request);
@@ -83,6 +99,9 @@ chrome.runtime.onMessage.addListener((request: Message<unknown>, sender, sendRes
     //only inform of change, can't set local storage from background so must be done from content script
     sendDataChangedMessage(request.key, request.value);
     sendResponse({ success: true });
+  }
+  else if (request.action === 'remove') {
+    handleRemove(request.key, sendResponse);
   }
   else if(request.action === 'dataChanged'){
     sendResponse({ success: true });

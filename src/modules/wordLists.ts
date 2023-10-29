@@ -1,5 +1,4 @@
 import {
-  DEBUG,
   DEFAULT_LISTNAMES_ARRAY,
   DEFAULT_WORD_STATISTICS,
   DEFAULT_WORDLIST,
@@ -9,6 +8,7 @@ import {
 } from "../constants";
 import {DatabaseStorage} from "./datastore";
 import {isNumber, isStringArray} from "./types";
+import {removeStorageKey} from "./storage";
 
 /*
 * @throws Error if n is not a number
@@ -67,9 +67,8 @@ export class ListNamesDataStore extends DatabaseStorage<string[]> {
     if (index > -1) {
       listNames.splice(index, 1);
       await this.syncedSet(listNames);
-      //TODO: remove list from storage instead of resetting to default value
       const listStore = new FilterListDataStore(listName);
-      await listStore.syncedSet(DEFAULT_WORDLIST);
+      await listStore.clear();
     }
   }
 }
@@ -102,6 +101,10 @@ export class FilterListDataStore extends DatabaseStorage<string[]> {
       words.splice(index, 1);
       await this.syncedSet(words);
     }
+  }
+
+  async clear(): Promise<void> {
+    await removeStorageKey(this.key);
   }
 }
 

@@ -56,6 +56,22 @@ class IndexedDBModule {
       }
     });
   }
+
+  static async removeIndexedDBKey(key: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this.db) {
+        const transaction = this.db.transaction([this.storeName], 'readwrite');
+        const objectStore = transaction.objectStore(this.storeName);
+        const request = objectStore.delete(key);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(new Error(`Error removing data for key ${key}`));
+      } else {
+        reject(new Error(`Database is not initialized`));
+      }
+    });
+  }
 }
+
+
 
 export default IndexedDBModule;

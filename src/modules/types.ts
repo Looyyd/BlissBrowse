@@ -55,8 +55,13 @@ export interface GetDataMessage extends BaseMessage {
   action: 'get';
 }
 
+export interface RemoveDataMessage extends BaseMessage {
+  action: 'remove';
+}
+
 // Union type for all possible messages
 export type Message<T> = DataChangeMessage<T>
   | IndexedDBSetDataMessage<T>
   | LocalStorageSetMessage<T>
+  | RemoveDataMessage
   | GetDataMessage;

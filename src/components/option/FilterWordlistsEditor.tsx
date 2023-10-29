@@ -49,6 +49,14 @@ const FilterWordlistsEditor = () => {
     setTextAreaValue(event.target.value);
   };
 
+  const deleteSelectedList = () => {
+    const list = selectedList;
+    if (!list) return;
+    listNamesDataStore.deleteList(list).then(() => {
+      setSelectedList("");
+    });
+  }
+
   const saveWords = () => {
     const newWords = textAreaValue.split('\n');
     const list = selectedList;
@@ -81,6 +89,9 @@ const FilterWordlistsEditor = () => {
           />
           <Button variant="contained" color="primary" onClick={saveWords}>
             Save
+          </Button>
+          <Button variant="contained" color="error" onClick={deleteSelectedList}>
+            Delete List
           </Button>
           <Box
             component={TextareaAutosize}

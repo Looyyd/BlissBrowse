@@ -1,5 +1,5 @@
 import {DEBUG_MESSAGES} from "../constants";
-import {GetDataMessage, IndexedDBSetDataMessage, LocalStorageSetMessage} from "./types";
+import {GetDataMessage, IndexedDBSetDataMessage, LocalStorageSetMessage, RemoveDataMessage} from "./types";
 
 export async function getStorageKey<T>(key: string): Promise<T>{
   return new Promise((resolve, reject) => {
@@ -53,6 +53,25 @@ export async function setLocalStorageKey<T>(key: string, value: T): Promise<void
       if (response.success) {
         if (DEBUG_MESSAGES) {
           console.log('localStorageSet response:', response);
+        }
+        resolve();
+      } else {
+        reject(new Error(response.error));
+      }
+    });
+  });
+}
+
+export async function removeStorageKey(key: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const message: RemoveDataMessage= {
+      action: 'remove',
+      key: key
+    };
+    chrome.runtime.sendMessage(message, (response) => {
+      if (response.success) {
+        if (DEBUG_MESSAGES) {
+          console.log('removeStorageKey response:', response);
         }
         resolve();
       } else {
