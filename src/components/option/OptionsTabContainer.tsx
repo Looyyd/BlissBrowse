@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import WordStatistics from "./WordStatistics";
 import BlacklistedSites from "./BlacklistedSites";
-import WordlistsEditor from "./WordlistsEditor";
+import FilterWordlistsEditor from "./FilterWordlistsEditor";
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
@@ -11,7 +11,7 @@ const TabContainer = () => {
   const [activeTab, setActiveTab] = useState(() => {
     // Try to read from localStorage, to keep same tab active on refresh
     const storedValue = localStorage.getItem('activeTab');
-    return storedValue !== null ? Number(storedValue) : 0;
+    return storedValue === null ? 0 : Number(storedValue);
   });
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -31,7 +31,7 @@ const TabContainer = () => {
     },
     {
       tab: 'Filter Lists',
-      content: <WordlistsEditor />,
+      content: <FilterWordlistsEditor />,
     },
     {
       tab: 'Blacklisted Websites',

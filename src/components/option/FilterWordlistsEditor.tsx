@@ -14,7 +14,7 @@ import ListSelector from "../ListSelector";
 
 
 
-const WordlistsEditor = () => {
+const FilterWordlistsEditor = () => {
   const listNamesDataStore = new ListNamesDataStore();
   const [lists,] = listNamesDataStore.useData([]);
   const [selectedList, setSelectedList] = useState<string>("");
@@ -109,5 +109,5 @@ const WordlistsEditor = () => {
 
 
 
-export default WordlistsEditor;
+export default FilterWordlistsEditor;
 
