@@ -1,6 +1,7 @@
 .idea/
 dist/
 node_modules/
+safari/
 
 
 package-lock.json
