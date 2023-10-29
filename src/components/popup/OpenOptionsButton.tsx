@@ -3,7 +3,6 @@ import Button from '@mui/material/Button';
 
 const OpenOptionsButton: React.FC = () => {
   const handleClick = () => {
-    // TODO: Make this browser-agnostic
     chrome.runtime.openOptionsPage();
   };
 
