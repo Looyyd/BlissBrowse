@@ -1,7 +1,7 @@
 import {getStorageKey, setStorageKey} from "./storage";
 import {useEffect, useState} from "react";
 import {DEBUG, DEBUG_MESSAGES} from "../constants";
-import { Message} from "./types";
+import {DataChangeMessage, Message} from "./types";
 
 
 
@@ -75,8 +75,7 @@ abstract class DataStore<T> {
   // also maybe all sync messages should be sent from background byt using a message SyncedSet to the background
   async syncedSet(value: T) :Promise<void>{
     await this.set(value);
-    //TODO: standardize message format
-    const message = { action: 'dataChanged', key: this.key, value: value, source: 'datastore'};
+    const message: DataChangeMessage<T> = { action: 'dataChanged', key: this.key, value: value, source: 'datastore'};
     if(DEBUG_MESSAGES){
       console.log('sending message from syncedSet', message);
     }
