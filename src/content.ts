@@ -28,7 +28,6 @@ interface DataChangeMessage {
 type Message = DataChangeMessage;
 
 
-
 const CONTENT_CONTEXT = "content";
 
 async function checkAndFilterElements() {

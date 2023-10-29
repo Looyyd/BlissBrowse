@@ -16,7 +16,6 @@ export const DEFAULT_HOSTNAME_BLACKLIST = [];
 export const  DEFAULT_FILTER_ACTION = FilterAction.BLUR;
 export const DEFAULT_COLOR_THEME = ColorTheme.LIGHT;
 
-//TODO: cleaner way to represent all lists
 export const ALL_LISTS_SYMBOL = 'All_LISTS_3213546516541';
 
 //storage keys
