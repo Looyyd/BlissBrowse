@@ -1,4 +1,10 @@
-import {BATCH_STAT_UPDATE_INTERVAL, BLACKLISTED_WEBSITES_KEY_PREFIX, DEBUG, FILTER_LIST_KEY_PREFIX,} from "./constants";
+import {
+  BATCH_STAT_UPDATE_INTERVAL,
+  BLACKLISTED_WEBSITES_KEY_PREFIX,
+  DEBUG,
+  FILTER_ACTION_KEY,
+  FILTER_LIST_KEY_PREFIX,
+} from "./constants";
 import {isCurrentSiteDisabled} from "./modules/hostname";
 import {FilterActionStore} from "./modules/settings";
 import {getFeedlikeAncestor} from "./modules/content/elementSelection";
@@ -91,6 +97,9 @@ const listener = async (request: Message<unknown>) => {
       return true;
     }
     if(key.startsWith(FILTER_LIST_KEY_PREFIX)){
+      return true;
+    }
+    if(key.startsWith(FILTER_ACTION_KEY)){
       return true;
     }
     return false;
