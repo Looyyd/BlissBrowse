@@ -7,38 +7,46 @@ import {
   FILTER_LIST_KEY_PREFIX,
   WORD_STATISTICS_KEY_PREFIX
 } from "../constants";
-import {getStorageKey, setStorageKey} from "./storage";
 import {DatabaseStorage} from "./datastore";
 import {isNumber, isStringArray} from "./types";
 
 /*
 * @throws Error if n is not a number
  */
-//TODO: use datastore
 export async function getFilterWordStatistics(word: string): Promise<number> {
-  const key = WORD_STATISTICS_KEY_PREFIX + word;
-  const n = await getStorageKey(key);
-
-  if(!isNumber(n)){
-    if(n === null){
-      return DEFAULT_WORD_STATISTICS;
-    }
-    throw new Error('n is not a number');
-  }
-  return n;
+  const dataStore = new StatisticsDataStore(word);
+  return await dataStore.get();
 }
 
 /*
 * @throws Error if n is not a number
  */
 export async function addToFilterWordStatistics(word: string, countToAdd: number){
-  if(DEBUG){
-    console.log('addWordStatistics:', word, countToAdd);
+  const dataStore = new StatisticsDataStore(word);
+  await dataStore.add(countToAdd);
+}
+
+
+export class StatisticsDataStore extends DatabaseStorage<number> {
+  key: string;
+  defaultValue = DEFAULT_WORD_STATISTICS;
+  isType = isNumber;
+
+  constructor(word: string) {
+    super();
+    this.key = WORD_STATISTICS_KEY_PREFIX + word;
   }
-  const key = WORD_STATISTICS_KEY_PREFIX + word;
-  const currentCount = await getFilterWordStatistics(word);
-  const value = currentCount + countToAdd;
-  await setStorageKey(key, value);
+
+  async add(countToAdd: number): Promise<void> {
+    const currentCount = await this.get();
+    const value = currentCount + countToAdd;
+    await this.syncedSet(value);
+  }
+  async subtract(countToSubtract: number): Promise<void> {
+    const currentCount = await this.get();
+    const value = currentCount - countToSubtract;
+    await this.syncedSet(value);
+  }
 }
 
 export class ListNamesDataStore extends DatabaseStorage<string[]> {
