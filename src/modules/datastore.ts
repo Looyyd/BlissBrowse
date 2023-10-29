@@ -34,12 +34,14 @@ abstract class DataStore<T> {
       };
       fetchData();
 
-      const listener = (request: Message<T>,) => {
+      const listener = (request: Message<unknown>,) => {
         if(DEBUG_MESSAGES){
           console.log('message received in custom hook', request);
         }
         if (request.action === 'dataChanged' && request.key === this.key) {
-          setData(request.value);
+          if(this.isType(request.value)){
+            setData(request.value);
+          }
         }
       };
 
