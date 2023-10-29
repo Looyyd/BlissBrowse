@@ -1,6 +1,6 @@
 import {DEBUG_MESSAGES} from "./constants";
 import IndexedDBModule from "./modules/IndexedDBModule";
-import {Message} from "./modules/types";
+import {DataChangeMessage, Message} from "./modules/types";
 
 
 (async () => {
@@ -16,7 +16,6 @@ chrome.runtime.onInstalled.addListener(async function(details) {
     // You can also set or update storage values here
   }
 });
-
 
 
 type SendResponseFunc = (response: unknown) => void;
@@ -37,19 +36,29 @@ const handleGet = (key: string, sendResponse: SendResponseFunc): void => {
     });
 };
 
+function sendDataChangedMessage(key: string, value: unknown) {
+  const message : DataChangeMessage<unknown>= { action: 'dataChanged', key: key, value: value };
+  if(DEBUG_MESSAGES){
+    console.log('message sent from sendDataChangedMessage', message);
+  }
+  message.source = 'background';
+  message.destination = 'runtime';
+  chrome.runtime.sendMessage(message, () => {
+  });
+  message.destination = 'tabs';
+  chrome.tabs.query({}, (tabs) => {
+    for (const tab of tabs) {
+      chrome.tabs.sendMessage(tab.id!,message, () => {
+
+      });
+    }
+  });
+}
+
 const handleSet = (key: string, value: unknown, sendResponse: SendResponseFunc): void => {
   IndexedDBModule.setIndexedDBKey(key, value)
     .then(() => {
-      /*
-      //TODO: trying to remove this, this will cause all sets to be synced,
-         with this removed we just sync the ones that use syncedSet
-      const message = { action: 'dataChanged', key: key, value: value };
-      chrome.runtime.sendMessage(message, () => {
-        if(DEBUG){
-          console.log('message sent from handleSet', message);
-        }
-      });
-       */
+      sendDataChangedMessage(key, value);
       sendResponse({ success: true });
     })
     .catch((error: unknown) => {
@@ -70,25 +79,12 @@ chrome.runtime.onMessage.addListener((request: Message<unknown>, sender, sendRes
     handleGet(request.key, sendResponse);
   } else if (request.action === 'set') {
     handleSet(request.key, request.value, sendResponse);
-  } else if(request.action === 'dataChanged'){
-    //TODO: this is to propagate local.storage changes to options.html otherwise the message is not received, should it bed removed for something cleaner?
-    request.source = 'background';
-    request.destination = 'runtime';
-    chrome.runtime.sendMessage(request, () => {
-      if(DEBUG_MESSAGES){
-        console.log('message sent from background listener', request);
-      }
-    });
-    request.destination = 'tabs';
-    chrome.tabs.query({}, (tabs) => {
-      for (const tab of tabs) {
-        chrome.tabs.sendMessage(tab.id!, request, () => {
-          if(DEBUG_MESSAGES){
-            console.log('message sent from background listener', request);
-          }
-        });
-      }
-    });
+  } else if (request.action === 'localStorageSet') {
+    //only inform of change, can't set local storage from background so must be done from content script
+    sendDataChangedMessage(request.key, request.value);
+    sendResponse({ success: true });
+  }
+  else if(request.action === 'dataChanged'){
     sendResponse({ success: true });
   } else {
     console.log("Unknown action in background listener: ", request);

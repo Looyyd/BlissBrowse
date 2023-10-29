@@ -35,15 +35,18 @@ interface BaseMessage {
   source?: string;
 }
 
-// Generic DataChangeMessage type
 export interface DataChangeMessage<T> extends BaseMessage {
   action: 'dataChanged';
   value: T;
 }
 
-// setData message type
-export interface SetDataMessage<T> extends BaseMessage {
+export interface IndexedDBSetDataMessage<T> extends BaseMessage {
   action: 'set';
+  value: T;
+}
+
+export interface LocalStorageSetMessage<T> extends BaseMessage {
+  action: 'localStorageSet';
   value: T;
 }
 
@@ -53,4 +56,7 @@ export interface GetDataMessage extends BaseMessage {
 }
 
 // Union type for all possible messages
-export type Message<T> = DataChangeMessage<T> | SetDataMessage<T> | GetDataMessage;
+export type Message<T> = DataChangeMessage<T>
+  | IndexedDBSetDataMessage<T>
+  | LocalStorageSetMessage<T>
+  | GetDataMessage;

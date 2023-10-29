@@ -1,7 +1,7 @@
-import {getStorageKey, setStorageKey} from "./storage";
+import {getStorageKey, setLocalStorageKey, setStorageKey} from "./storage";
 import {useEffect, useState} from "react";
-import {DEBUG, DEBUG_MESSAGES} from "../constants";
-import {DataChangeMessage, Message} from "./types";
+import {DEBUG_MESSAGES} from "../constants";
+import {Message} from "./types";
 
 
 
@@ -72,20 +72,9 @@ abstract class DataStore<T> {
     return [data, setSyncedData] as const;
   }
 
-  // TODO: There should no be a need for syncedSet, since the data is synced automatically through background script
-  // rn it's not synced automatically but maybe should be?
-  // also maybe all sync messages should be sent from background byt using a message SyncedSet to the background
   async syncedSet(value: T) :Promise<void>{
+    // all messages are synced now
     await this.set(value);
-    const message: DataChangeMessage<T> = { action: 'dataChanged', key: this.key, value: value, source: 'datastore'};
-    if(DEBUG_MESSAGES){
-      console.log('sending message from syncedSet', message);
-    }
-    chrome.runtime.sendMessage(message, () => {
-      if(DEBUG_MESSAGES){
-        console.log('message sent from syncedSet', message);
-      }
-    });
   }
 }
 
@@ -102,9 +91,10 @@ export abstract class LocalStorageStore<T> extends DataStore<T> {
     return parsedItem;
   }
 
-  set(value: T): void {
+  async set(value: T): Promise<void> {
+    //synced through background script
     const processedValue = this.setPreprocessor(value);
-    localStorage.setItem(this.key, JSON.stringify(processedValue));
+    await setLocalStorageKey(this.key, processedValue)
   }
 }
 
@@ -122,6 +112,7 @@ export abstract class DatabaseStorage<T> extends DataStore<T> {
   }
 
   async set(value: T): Promise<void> {
+    //synced through background script
     const processedValue = this.setPreprocessor(value);
     await setStorageKey(this.key, processedValue);
   }

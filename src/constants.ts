@@ -4,7 +4,7 @@ import {ColorTheme, FilterAction} from "./modules/types";
 export const EXTENSION_NAME= "mindguard"
 
 export const DEBUG = process.env.NODE_ENV === 'development'
-export const DEBUG_MESSAGES = false;
+export const DEBUG_MESSAGES = true;
 
 export const BATCH_STAT_UPDATE_INTERVAL = 10000; // 60 seconds
 
