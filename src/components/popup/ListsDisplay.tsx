@@ -1,5 +1,5 @@
 import React from 'react';
-import {List, ListItem, ListItemText, Typography} from '@mui/material';
+import {Button, List, ListItem, ListItemText, Typography} from '@mui/material';
 import {ListNamesDataStore} from "../../modules/wordLists";
 import LoadingScreen from "../LoadingScreen";
 
@@ -9,6 +9,14 @@ import LoadingScreen from "../LoadingScreen";
 const ListsDisplay: React.FC = () => {
   const listNamesDataStore = new ListNamesDataStore();
   const [lists] = listNamesDataStore.useData([]);
+
+  const openListEditor = (listName: string) => {
+    const tabToOpen = 'specificTab';
+    const listToSelect = listName;
+    const optionsURL = chrome.runtime.getURL('dist/options.html');// hardcoded string TODO: remove
+    const urlWithState = `${optionsURL}?tab=${tabToOpen}&list=${listToSelect}`;
+    chrome.tabs.create({ url: urlWithState });
+  }
 
   return (
     <>
@@ -21,6 +29,7 @@ const ListsDisplay: React.FC = () => {
           <div key={index}>
             <ListItem>
               <ListItemText primary={listName} />
+              <Button onClick={() => openListEditor(listName)}>Edit</Button>
             </ListItem>
           </div>
         )))

@@ -18,6 +18,17 @@ const TabContainer = () => {
     setActiveTab(newValue);
   };
 
+
+  useEffect(() => {
+    // Get query parameters from the URL, if we edit button was clicked
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+
+    if (tab) {
+      setActiveTab(1);
+    }
+  }, );
+
   useEffect(() => {
     // Store the active tab index whenever it changes
     localStorage.setItem('activeTab', activeTab.toString());

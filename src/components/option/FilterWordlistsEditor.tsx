@@ -16,11 +16,38 @@ import ListSelector from "../ListSelector";
 
 const FilterWordlistsEditor = () => {
   const listNamesDataStore = new ListNamesDataStore();
-  const [lists,] = listNamesDataStore.useData([]);
+  const [lists,] = listNamesDataStore.useData();
   const [selectedList, setSelectedList] = useState<string>("");
   const [, setWords] = useState<string[]>([]);
   const [textAreaValue, setTextAreaValue] = useState<string>("");
   const [openFeedbackAlert, setOpenFeedbackAlert] = useState(false);
+
+  const [urlSelectedList, setUrlSelectedList] = useState<string>("");
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const list = urlParams.get('list');
+    if (list) {
+      //TODO: this selected list shit is used because a refresh was causing simpler logic to fail,
+      // still would be nice to make this better
+      // and to remove the url parameters
+      setUrlSelectedList(list);
+    }
+  }, []);
+
+  useEffect(() => {
+  const isListSelectedFromURL = urlSelectedList !== "";
+  const areListsAvailable = lists && lists.length > 0;
+  const isURLListValid = lists && lists.includes(urlSelectedList);
+  const isListNotSelected = selectedList === "";
+
+  if (isListSelectedFromURL && areListsAvailable && isURLListValid && isListNotSelected) {
+    setSelectedList(urlSelectedList);
+  }
+}, [urlSelectedList, lists, selectedList]);
+
+
+
 
   const handleFeedbackAlertClose = (event: Event | SyntheticEvent<Element, Event>, reason: SnackbarCloseReason) => {
     if (reason === 'clickaway') {
@@ -50,6 +77,7 @@ const FilterWordlistsEditor = () => {
   };
 
   const deleteSelectedList = () => {
+    //TODO: confirm dialog
     const list = selectedList;
     if (!list) return;
     listNamesDataStore.deleteList(list).then(() => {
