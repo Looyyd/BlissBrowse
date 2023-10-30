@@ -5,8 +5,9 @@ const fixtures = test.extend({
   context: async ({ }, use) => {
     const pathToExtension = path.join(__dirname, '../');
     const context = await chromium.launchPersistentContext('', {
-      headless: false,
+      headless: true,
       args: [
+        `--headless=new`,
         `--disable-extensions-except=${pathToExtension}`,
         `--load-extension=${pathToExtension}`,
       ],

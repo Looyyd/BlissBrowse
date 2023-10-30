@@ -46,7 +46,7 @@ const NewListForm: React.FC = () => {
       <form onSubmit={handleSubmit}>
         <FormControl fullWidth margin="normal">
           <TextField
-            id="listName"
+            id="listNameInputField"
             type="text"
             placeholder="Enter a list name"
             value={listName}
@@ -55,7 +55,7 @@ const NewListForm: React.FC = () => {
           />
         </FormControl>
 
-        <Button type="submit" variant="contained" color="primary">
+        <Button type="submit" variant="contained" color="primary" id="newListSubmit">
           Add List
         </Button>
       </form>
