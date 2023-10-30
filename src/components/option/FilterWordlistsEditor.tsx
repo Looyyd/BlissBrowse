@@ -125,6 +125,7 @@ const FilterWordlistsEditor = () => {
             component={TextareaAutosize}
             value={textAreaValue}
             onChange={handleTextAreaChange}
+            id={"filterWordlistsEditorTextArea"}
             sx={(theme) => ({
               width: '100%',
               minHeight: '100px',

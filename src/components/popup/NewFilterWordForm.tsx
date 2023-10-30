@@ -52,7 +52,7 @@ const NewFilterWordForm: React.FC = () => {
       <form onSubmit={handleSubmit}>
         <FormControl fullWidth margin="normal">
           <TextField
-            id="customWord"
+            id="addWordTextInput"
             type="text"
             placeholder="Enter a word to filter"
             value={newWord}
@@ -70,7 +70,7 @@ const NewFilterWordForm: React.FC = () => {
           <FormHelperText>Select a list to add the word to</FormHelperText>
         </FormControl>
 
-        <Button type="submit" variant="contained" color="primary">
+        <Button type="submit" variant="contained" color="primary" id="submitNewWordButton">
           Add Word
         </Button>
       </form>
