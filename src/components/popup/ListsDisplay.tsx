@@ -29,7 +29,7 @@ const ListsDisplay: React.FC = () => {
           <div key={index}>
             <ListItem>
               <ListItemText primary={listName} />
-              <Button onClick={() => openListEditor(listName)}>Edit</Button>
+              <Button onClick={() => openListEditor(listName)} id={"edit-"+listName.replace(" ", "_")}>Edit</Button>
             </ListItem>
           </div>
         )))

@@ -1,16 +1,21 @@
 import path from 'path';
 import { chromium, test } from '@playwright/test';
 
+const headless = true;
+
 const fixtures = test.extend({
   context: async ({ }, use) => {
     const pathToExtension = path.join(__dirname, '../');
+    const args = [
+      `--disable-extensions-except=${pathToExtension}`,
+      `--load-extension=${pathToExtension}`,
+    ];
+    if (headless) {
+      args.push('--headless=new');
+    }
     const context = await chromium.launchPersistentContext('', {
-      headless: true,
-      args: [
-        `--headless=new`,
-        `--disable-extensions-except=${pathToExtension}`,
-        `--load-extension=${pathToExtension}`,
-      ],
+      headless: headless,
+      args: args,
     });
     await use(context);
     await context.close();
