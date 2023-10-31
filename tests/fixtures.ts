@@ -1,7 +1,7 @@
 import path from 'path';
 import { chromium, test } from '@playwright/test';
 
-const headless = true;
+const headless = false;
 
 const fixtures = test.extend({
   context: async ({ }, use) => {
