@@ -6,6 +6,7 @@ export interface SiteConfig {
   name: string;
   url: string;
   locators_to_check_filtered: ((page: Page) => Locator)[];
+  locators_to_check_not_filtered: ((page: Page) => Locator)[];
   words_to_filter: string[];
 }
 
@@ -54,7 +55,6 @@ export function testSite(siteConfig: SiteConfig){
       for (const locatorFunction of siteConfig.locators_to_check_filtered) {
         const locator = locatorFunction(page);
 
-        console.log("element: " + await locator.allInnerTexts());
         expect(locator).not.toBe(null);
 
         const hasAttribute = await locator.getAttribute(ATTRIBUTE_FILTER);
@@ -62,7 +62,24 @@ export function testSite(siteConfig: SiteConfig){
 
         expect(hasAttribute === ATTRIBUTE_VALUE || parentHasAttribute).toBe(true);
       }
+    });
 
+    testSpec('words are not filtered' + siteConfig.name, async ({page, extensionId, context}) => {
+
+      const ATTRIBUTE_FILTER = "applied-action";
+      const ATTRIBUTE_VALUE = "blur";
+      await page.waitForTimeout(1000);//TODO: better way to indicate page has been processed,
+                                                // maybe some kind of event done by content script
+      for (const locatorFunction of siteConfig.locators_to_check_not_filtered) {
+        const locator = locatorFunction(page);
+
+        expect(locator).not.toBe(null);
+
+        const hasAttribute = await locator.getAttribute(ATTRIBUTE_FILTER);
+        const parentHasAttribute = await hasAttributeInHierarchy(locator, ATTRIBUTE_FILTER, ATTRIBUTE_VALUE);
+
+        expect(hasAttribute === ATTRIBUTE_VALUE || parentHasAttribute).toBe(false);
+      }
     });
   });
 }
