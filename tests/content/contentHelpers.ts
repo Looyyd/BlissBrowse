@@ -30,6 +30,13 @@ async function hasAttributeInHierarchy(locator: Locator, attribute: string, valu
   return false;
 }
 
+export function selectLocatorHelper(siteConfig: SiteConfig){
+  testSpec("select locator helper " + siteConfig.name, async ({page, extensionId, context}) => {
+      await page.goto(siteConfig.url);
+      await page.pause();
+  });
+}
+
 export function testSite(siteConfig: SiteConfig){
   const listname = "list1";
 
