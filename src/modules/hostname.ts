@@ -44,6 +44,9 @@ export class BlacklistDatastore extends DatabaseStorage<string[]> {
 
   async addHostnameToBlacklist(hostname: string) {
     const blacklist = await this.get();
+    if (blacklist.includes(hostname)) {
+      return;
+    }
     blacklist.push(hostname);
     await this.syncedSet(blacklist);
   }
