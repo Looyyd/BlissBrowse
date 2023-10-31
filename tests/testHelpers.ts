@@ -45,7 +45,7 @@ export async function addWordWithPopup(page: Page, listName: string, word: strin
         //create new word
       const inputField = page.locator('#addWordTextInput');
       await expect(inputField).toBeVisible();
-      const wordToAdd = "SampleWord";
+      const wordToAdd = word;
       await inputField.fill(wordToAdd);
       //await page.locator('#customWordListSelect').selectOption(listName);
       // Click the MUI select dropdown to open the options
@@ -55,7 +55,7 @@ export async function addWordWithPopup(page: Page, listName: string, word: strin
       await page.waitForTimeout(500);
 
       // Choose an option from the dropdown by its text content. For example, to select "list1":
-      await page.locator('li[role="option"]:text("list1")').click();
+      await page.locator('li[role="option"]:text("'+ listName +'")').click();
       //await page.locator('text="list1"').click();
 
       await page.locator('#submitNewWordButton').click();
