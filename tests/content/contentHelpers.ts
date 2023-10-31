@@ -41,6 +41,8 @@ export function selectLocatorHelper(siteConfig: SiteConfig){
 
 export function testSite(siteConfig: SiteConfig){
   const listname = "list1";
+  const ATTRIBUTE_FILTER = "applied-action";
+  const ATTRIBUTE_VALUE = "blur";
 
   testSpec.describe('Content tests ' + siteConfig.name, () => {
     testSpec.beforeEach(async ({page, extensionId}) => {
@@ -56,10 +58,8 @@ export function testSite(siteConfig: SiteConfig){
       await siteConfig.setup_actions?.(page);
     });
 
-    testSpec('words are filtered' + siteConfig.name, async ({page, extensionId, context}) => {
+    testSpec('words are filtered ' + siteConfig.name, async ({page, extensionId, context}) => {
 
-      const ATTRIBUTE_FILTER = "applied-action";
-      const ATTRIBUTE_VALUE = "blur";
       await page.waitForTimeout(1000);//TODO: better way to indicate page has been processed,
                                                 // maybe some kind of event done by content script
       for (const locatorFunction of siteConfig.locators_to_check_filtered) {
@@ -74,15 +74,34 @@ export function testSite(siteConfig: SiteConfig){
       }
     });
 
-    testSpec('words are not filtered' + siteConfig.name, async ({page, extensionId, context}) => {
-
-      const ATTRIBUTE_FILTER = "applied-action";
-      const ATTRIBUTE_VALUE = "blur";
+    testSpec('words are not filtered ' + siteConfig.name, async ({page, extensionId, context}) => {
       await page.waitForTimeout(1000);//TODO: better way to indicate page has been processed,
                                                 // maybe some kind of event done by content script
       for (const locatorFunction of siteConfig.locators_to_check_not_filtered) {
         const locator = locatorFunction(page);
 
+        expect(locator).not.toBe(null);
+
+        const hasAttribute = await locator.getAttribute(ATTRIBUTE_FILTER);
+        const parentHasAttribute = await hasAttributeInHierarchy(locator, ATTRIBUTE_FILTER, ATTRIBUTE_VALUE);
+
+        expect(hasAttribute === ATTRIBUTE_VALUE || parentHasAttribute).toBe(false);
+      }
+    });
+
+
+    testSpec("word unfiltered after disabled on site " + siteConfig.name, async ({page, extensionId, context}) => {
+
+      await page.goto(`chrome-extension://${extensionId}/dist/options.html`);
+      await page.click("#Blacklisted_WebsitesTab");
+      const hostname = new URL(siteConfig.url).hostname;
+      await page.fill("#hostnameBlacklistEditorTextArea", hostname);
+      await page.click("#hostname-save");
+
+      await page.goto(siteConfig.url);
+      await page.waitForTimeout(1000);
+      for (const locatorFunction of siteConfig.locators_to_check_filtered) {
+        const locator = locatorFunction(page);
         expect(locator).not.toBe(null);
 
         const hasAttribute = await locator.getAttribute(ATTRIBUTE_FILTER);

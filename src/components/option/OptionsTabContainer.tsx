@@ -58,7 +58,7 @@ const TabContainer = () => {
     <div>
       <Tabs value={activeTab} onChange={handleChange}>
         {tabContentMapping.map(({ tab }) => (
-          <Tab key={tab} id={`${tab}Tab`} label={tab} />
+          <Tab key={tab} id={`${tab.replace(" ", "_")}Tab`} label={tab} />
         ))}
       </Tabs>
       <Box sx={{ marginTop: 2 }} >

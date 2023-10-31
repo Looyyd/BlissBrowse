@@ -46,9 +46,6 @@ const FilterWordlistsEditor = () => {
   }
 }, [urlSelectedList, lists, selectedList]);
 
-
-
-
   const handleFeedbackAlertClose = (event: Event | SyntheticEvent<Element, Event>, reason: SnackbarCloseReason) => {
     if (reason === 'clickaway') {
       return;
