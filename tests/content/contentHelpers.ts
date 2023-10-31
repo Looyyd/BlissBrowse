@@ -8,6 +8,7 @@ export interface SiteConfig {
   locators_to_check_filtered: ((page: Page) => Locator)[];
   locators_to_check_not_filtered: ((page: Page) => Locator)[];
   words_to_filter: string[];
+  setup_actions?: ((page: Page) => Promise<void>);
 }
 
 async function hasAttributeInHierarchy(locator: Locator, attribute: string, value: string): Promise<boolean> {
@@ -33,6 +34,7 @@ async function hasAttributeInHierarchy(locator: Locator, attribute: string, valu
 export function selectLocatorHelper(siteConfig: SiteConfig){
   testSpec("select locator helper " + siteConfig.name, async ({page, extensionId, context}) => {
       await page.goto(siteConfig.url);
+      await siteConfig.setup_actions?.(page);
       await page.pause();
   });
 }
@@ -51,6 +53,7 @@ export function testSite(siteConfig: SiteConfig){
         await addWordWithPopup(page, listname, word);
       }
       await page.goto(siteConfig.url);
+      await siteConfig.setup_actions?.(page);
     });
 
     testSpec('words are filtered' + siteConfig.name, async ({page, extensionId, context}) => {
