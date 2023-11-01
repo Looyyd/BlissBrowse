@@ -68,10 +68,10 @@ async function checkAndFilterElements() {
     if (node.nodeType === Node.TEXT_NODE &&
         node.textContent &&
         !hasScriptOrStyleAncestor(node)) {  // Skip script and style tags
-      const ancestor = getFeedlikeAncestor(node);
       const filterResult = shouldFilterTextContent(node.textContent!, filterWords, false);
 
       if (filterResult.shouldFilter && filterResult.triggeringWord) {
+        const ancestor = getFeedlikeAncestor(node);
         if (ancestor instanceof HTMLElement) {
           await filterElement(ancestor, filterResult.triggeringWord, filterAction);
         }
