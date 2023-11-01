@@ -13,7 +13,7 @@ import {
   getFilterWords,
   hasScriptOrStyleAncestor,
   nodeHasAProcessedParent,
-  shouldFilterTextContent,
+  Trie,
   unfilterElementsIfNotInList,
   unfilterElementsIfWrongAction,
   writeInMemoryStatisticsToStorage
@@ -55,6 +55,7 @@ async function checkAndFilterElements() {
   );
 
   const filterWords = await getFilterWords().then(words => words.map(word => word.toLowerCase()));
+  const trie = new Trie(filterWords);
   await unfilterElementsIfNotInList(filterWords);
   await unfilterElementsIfWrongAction(filterAction);
 
@@ -68,7 +69,8 @@ async function checkAndFilterElements() {
     if (node.nodeType === Node.TEXT_NODE &&
         node.textContent &&
         !hasScriptOrStyleAncestor(node)) {  // Skip script and style tags
-      const filterResult = shouldFilterTextContent(node.textContent!, filterWords, false);
+
+      const filterResult = trie.shouldFilterTextContent(node.textContent);
 
       if (filterResult.shouldFilter && filterResult.triggeringWord) {
         const ancestor = getFeedlikeAncestor(node);
