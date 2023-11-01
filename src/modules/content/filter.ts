@@ -1,6 +1,5 @@
 import {FilterAction} from "../types";
 import {DEBUG, EXTENSION_NAME} from "../../constants";
-import $ from "jquery";
 import {addToFilterWordStatistics, FilterListDataStore, ListNamesDataStore} from "../wordLists";
 
 interface MyStats {
@@ -162,19 +161,20 @@ export async function getFilterWords() {
   return filterWords;
 }
 
-// Function to check if a node should be skipped
 export function nodeHasAProcessedParent(node: Node) {
-  const parents = $(node).add($(node).parents());
-  let skip = false;
-  parents.each(function (index, elem) {
-    if (elem instanceof HTMLElement) {
-      if (elem.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true') {
-        skip = true;
+  let currentNode:Node | null = node;
+  do {
+    if (currentNode instanceof HTMLElement) {
+      if (currentNode.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true') {
+        return true;
       }
     }
-  });
-  return skip;
+    currentNode = currentNode.parentNode;
+  } while (currentNode !== null);
+  return false;
 }
+
+
 
 export async function writeInMemoryStatisticsToStorage() {
   // Go over keys
