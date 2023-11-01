@@ -1,7 +1,7 @@
 import {
   BATCH_STAT_UPDATE_INTERVAL,
   BLACKLISTED_WEBSITES_KEY_PREFIX,
-  DEBUG,
+  DEBUG, DEBUG_PERFORMANCE,
   FILTER_ACTION_KEY,
   FILTER_LIST_KEY_PREFIX,
 } from "./constants";
@@ -27,8 +27,19 @@ https://github.com/yeahpython/filter-anything-everywhere/blob/main/extension/con
 
 
 const CONTENT_CONTEXT = "content";
+let timePrevious:number;
+
 
 async function checkAndFilterElements() {
+  if(DEBUG) {
+    console.log('ENTERING checkAndFilterElements');
+  }
+  if(DEBUG_PERFORMANCE){
+    if(timePrevious){
+      console.log('time since last checkAndFilterElements', Date.now() - timePrevious);
+    }
+    timePrevious = Date.now();
+  }
   const isDisabled = await isCurrentSiteDisabled(CONTENT_CONTEXT);
   if (isDisabled) {
     await unfilterElementsIfNotInList([]);  // Unhide all
@@ -67,6 +78,10 @@ async function checkAndFilterElements() {
       }
     }
     node = walker.nextNode();
+  }
+
+  if(DEBUG_PERFORMANCE){
+    console.log('time taken to checkandfilter', Date.now() - timePrevious);
   }
 }
 
