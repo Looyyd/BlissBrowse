@@ -5,7 +5,8 @@ import {
   Button,
   SnackbarCloseReason,
   Snackbar,
-  Alert
+  Alert,
+  Container
 } from '@mui/material';
 import {BlacklistDatastore} from "../../modules/hostname";
 
@@ -42,7 +43,8 @@ const BlacklistedSites = () => {
   };
 
   return (
-    <>
+    <Container>
+      <Box display="flex" flexDirection="column" alignItems="start" gap={2}>
       <Snackbar
         open={openFeedbackAlert}
         autoHideDuration={3000}
@@ -74,7 +76,8 @@ const BlacklistedSites = () => {
           }
         })}
       />
-    </>
+      </Box>
+    </Container>
   );
 };
 export default BlacklistedSites;
