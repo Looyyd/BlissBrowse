@@ -20,6 +20,7 @@ export function resetAndReturnStatistics(): MyStats {
 }
 
 export function shouldFilterTextContent(textContent: string, wordsToFilter: string[], isRegex: boolean): FilterResult {
+  //TODO: wordsToFilter lowercase class
   const cleanedTextContent = textContent.toLowerCase().trim();
   const result: FilterResult = {
     shouldFilter: false,
@@ -41,7 +42,7 @@ export function shouldFilterTextContent(textContent: string, wordsToFilter: stri
       if (word === '') {
         continue;
       }
-      if (cleanedTextContent.includes(word.toLowerCase())) {
+      if (cleanedTextContent.includes(word)) {
         result.shouldFilter = true;
         result.triggeringWord = word;
         return result;

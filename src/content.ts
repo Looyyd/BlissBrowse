@@ -54,7 +54,7 @@ async function checkAndFilterElements() {
     null,
   );
 
-  const filterWords = await getFilterWords();
+  const filterWords = await getFilterWords().then(words => words.map(word => word.toLowerCase()));
   await unfilterElementsIfNotInList(filterWords);
   await unfilterElementsIfWrongAction(filterAction);
 
