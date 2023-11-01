@@ -27,6 +27,9 @@ export function shouldFilterTextContent(textContent: string, wordsToFilter: stri
 
   if (isRegex) {
     for (const word of wordsToFilter) {
+      if (word === '') {
+        continue;
+      }
       const regex = new RegExp(word, 'i'); // case-insensitive matching
       const match = cleanedTextContent.match(regex);
       if (match) {
@@ -37,6 +40,9 @@ export function shouldFilterTextContent(textContent: string, wordsToFilter: stri
     }
   } else {
     for (const word of wordsToFilter) {
+      if (word === '') {
+        continue;
+      }
       if (cleanedTextContent.includes(word.toLowerCase())) {
         result.shouldFilter = true;
         result.triggeringWord = word;
