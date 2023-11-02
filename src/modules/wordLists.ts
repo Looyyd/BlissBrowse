@@ -103,7 +103,6 @@ class SerializedTrieListDataStore extends DatabaseStorage<string> {
 }
 
 
-//TODO: should not extend DatabaseStorage because uses trieListDataStore
 export class FilterListDataStore extends DataStore<string[]> {
   key: string;
   defaultValue = DEFAULT_WORDLIST;
