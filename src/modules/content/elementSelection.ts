@@ -18,73 +18,52 @@ function isSimilar(my_rect: DOMRect, sib_rect: DOMRect) {
     return my_rect.height == sib_rect.height;
   }
 }
-
-export function getFeedlikeAncestor(node:Node) {
+export function getFeedlikeAncestor(node: Node): Element | null {
   const isElementNode = (n: Node): n is Element => n.nodeType === Node.ELEMENT_NODE;
-  let chosenDomElement = node;
-  let bestIndex = -1;  // Initialize to -1 to handle edge cases
+  let chosenDomElement: Element | null = null;
   const rects = new Map<Element, DOMRect>();
 
+  // Helper function to check for similar elements
+  // Define isSimilar function or make sure it is defined elsewhere in your code
 
-  // Function to get all ancestors
-  const getAncestors = (n:Node) => {
-    const ancestors: Node[] = [];
-    while (n.parentNode && n.parentNode !== document) {
-      ancestors.push(n.parentNode);
-      n = n.parentNode;
-    }
-    return ancestors;
+  // Function to get immediate parent if it's an element or null
+  const getParentElement = (n: Node) => {
+    return n.parentNode && isElementNode(n.parentNode) ? n.parentNode : null;
   };
 
-  const ancestors = getAncestors(node);
-  const siblingsCount = ancestors.map((ancestor, index) => {
-    if (!isElementNode(ancestor)) {
-      return 0;
-    }
-
-    const myRect = rects.get(ancestor) ||ancestor.getBoundingClientRect();
+  let ancestor = getParentElement(node);
+  while (ancestor) {
+    const myRect = rects.get(ancestor) || ancestor.getBoundingClientRect();
     rects.set(ancestor, myRect);
 
     if (myRect.height === 0) {
-      return 0;
-    }
-    if(ancestor.parentNode === null){
-      return 0;
+      ancestor = getParentElement(ancestor);
+      continue;
     }
 
-    const matchingSiblings = Array.from(ancestor.parentNode.children).filter((sib) => {
+    const matchingSiblings = Array.from(ancestor.parentNode!.children).filter((sib) => {
       if (!isElementNode(sib) || sib === ancestor) {
         return false;
       }
 
       const sibRect = rects.get(sib) || sib.getBoundingClientRect();
       rects.set(sib, sibRect);
-      const ancestorRect = rects.get(ancestor) || ancestor.getBoundingClientRect();
-      rects.set(ancestor, ancestorRect);
-
-      return isSimilar(ancestorRect, sibRect);
+      return isSimilar(myRect, sibRect);
     });
 
-    return matchingSiblings.length;
-  });
-
-  for (let i = 0; i < siblingsCount.length; i++) {
-    if (siblingsCount[i] >= min_feed_neighbors) { // Replace min_feed_neighbors with your actual threshold
-      bestIndex = i;
+    if (matchingSiblings.length >= min_feed_neighbors) { // Replace min_feed_neighbors with your actual threshold
+      chosenDomElement = ancestor;
       break;
     }
+
+    ancestor = getParentElement(ancestor);
   }
 
-  if(DEBUG_PERFORMANCE) {
-    console.log("getFeedLikeAncestor number of ancestors", ancestors.length);
-    console.log("getFeedLikeAncestor chosen ancestor index", bestIndex);
-  }
-
-  if (bestIndex >= 0) {
-    chosenDomElement = ancestors[bestIndex];
+  if (chosenDomElement) {
+    return chosenDomElement;
   } else if (DEBUG) {
     console.log('No suitable ancestor found.');
   }
 
-  return chosenDomElement;
+  return null; // Return null if no suitable ancestor is found
 }
