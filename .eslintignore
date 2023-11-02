@@ -1,5 +1,5 @@
 .eslintrc.js
 webpack.config.js
 /safari/
-/tests/
-/tests/content/pages/
+/tests/e2e/
+/tests/e2e/content/pages/

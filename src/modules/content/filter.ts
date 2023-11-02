@@ -6,7 +6,7 @@ interface MyStats {
   [key: string]: number;
 }
 
-type FilterResult = {
+export type FilterResult = {
   shouldFilter: boolean;
   triggeringWord?: string;
 };
@@ -19,92 +19,6 @@ export function resetAndReturnStatistics(): MyStats {
   return stats;
 }
 
-interface TrieNode {
-  isEndOfWord: boolean;
-  children: Map<string, TrieNode>;
-}
-
-export class Trie {
-  private readonly root: TrieNode;
-
-  constructor(words: string[]) {
-    //TODO: wordsToFilter lowercase class to make sure only lowercase is passed
-    this.root = { isEndOfWord: false, children: new Map() };
-    this.buildTrie(words);
-  }
-
-  private buildTrie(words: string[]): void {
-    for (const word of words) {
-      this.addWord(word);
-    }
-  }
-    // Add a new word to the Trie
-  public addWord(word: string): void {
-    let currentNode = this.root;
-    for (const char of word.toLowerCase()) {
-      if (!currentNode.children.has(char)) {
-        currentNode.children.set(char, { isEndOfWord: false, children: new Map() });
-      }
-      currentNode = currentNode.children.get(char)!;
-    }
-    currentNode.isEndOfWord = true;
-  }
-
-  // Remove a word from the Trie
-  public removeWord(word: string): void {
-    const stack: { node: TrieNode, char: string }[] = [];
-    let currentNode = this.root;
-    for (const char of word.toLowerCase()) {
-      if (!currentNode.children.has(char)) {
-        return;  // Word not found in Trie
-      }
-      stack.push({ node: currentNode, char });
-      currentNode = currentNode.children.get(char)!;
-    }
-
-    if (!currentNode.isEndOfWord) {
-      return;  // Word not found as an exact match
-    }
-
-    // Mark as not the end of a word
-    currentNode.isEndOfWord = false;
-
-    // Remove the nodes that are no longer part of any words
-    while (stack.length > 0) {
-      const { node, char } = stack.pop()!;
-      const childNode = node.children.get(char)!;
-      if (childNode.isEndOfWord || childNode.children.size > 0) {
-        break;
-      }
-      node.children.delete(char);
-    }
-  }
-
-  public shouldFilterTextContent(textContent: string): FilterResult {
-    const cleanedTextContent = textContent.toLowerCase().trim();
-    const result: FilterResult = {
-      shouldFilter: false,
-    };
-    let currentNode = this.root;
-    let triggeringWord = '';
-
-    for (const char of cleanedTextContent) {
-      if (currentNode.children.has(char)) {
-        triggeringWord += char;
-        currentNode = currentNode.children.get(char)!;
-        if (currentNode.isEndOfWord) {
-          result.shouldFilter = true;
-          result.triggeringWord = triggeringWord;
-          return result;
-        }
-      } else {
-        triggeringWord = '';
-        currentNode = this.root;
-      }
-    }
-    return result;
-  }
-}
 
 export function shouldFilterTextContent(textContent: string, wordsToFilter: string[], isRegex: boolean): FilterResult {
   //TODO: wordsToFilter lowercase class

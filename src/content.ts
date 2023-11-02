@@ -13,11 +13,11 @@ import {
   getFilterWords,
   hasScriptOrStyleAncestor,
   nodeHasAProcessedParent,
-  Trie,
   unfilterElementsIfNotInList,
   unfilterElementsIfWrongAction,
   writeInMemoryStatisticsToStorage
 } from "./modules/content/filter";
+import {Trie} from "./modules/trie";
 import {Message} from "./modules/types";
 
 /*

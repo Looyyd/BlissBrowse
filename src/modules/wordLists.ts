@@ -4,11 +4,13 @@ import {
   DEFAULT_WORDLIST,
   LIST_OF_LIST_NAMES_KEY_PREFIX,
   FILTER_LIST_KEY_PREFIX,
-  WORD_STATISTICS_KEY_PREFIX
+  WORD_STATISTICS_KEY_PREFIX, TRIE_KEY_PREFIX
 } from "../constants";
-import {DatabaseStorage} from "./datastore";
-import {isNumber, isStringArray} from "./types";
+import {DatabaseStorage, DataStore} from "./datastore";
+import {isNumber, isString, isStringArray, Message} from "./types";
 import {removeStorageKey} from "./storage";
+import {Trie} from "./trie";
+import {useEffect, useState} from "react";
 
 /*
 * @throws Error if n is not a number
@@ -74,37 +76,114 @@ export class ListNamesDataStore extends DatabaseStorage<string[]> {
 }
 
 
+class SerializedTrieListDataStore extends DatabaseStorage<string> {
+  key: string;
+  defaultValue = new Trie([]).serialize();
+  isType = isString;//TODO: is string that is a serialized trie
+  //TODO: preprocessor no empty strings?
+
+  constructor(listName: string) {
+    super();
+    this.key = TRIE_KEY_PREFIX + listName;
+  }
+
+  async getTrie(): Promise<Trie> {
+    const serializedTrie= await super.get();
+    const trie = Trie.deserialize(serializedTrie);
+    return trie;
+  }
+
+  async addWord(word: string): Promise<void> {
+    const serializedTrie = await this.get();
+    const trie = Trie.deserialize(serializedTrie);
+    trie.addWord(word);
+    const reserializedTrie = trie.serialize();
+    await this.set(reserializedTrie);
+  }
+}
 
 
-export class FilterListDataStore extends DatabaseStorage<string[]> {
+//TODO: should not extend DatabaseStorage because uses trieListDataStore
+export class FilterListDataStore extends DataStore<string[]> {
   key: string;
   defaultValue = DEFAULT_WORDLIST;
   isType = isStringArray;
   setPreprocessor = (value: string[]) => [...new Set(value)];
+  serializedTrieDataStore: SerializedTrieListDataStore;
 
   constructor(listName: string) {
     super();
     this.key = FILTER_LIST_KEY_PREFIX + listName;
+    this.serializedTrieDataStore = new SerializedTrieListDataStore(listName);
+  }
+
+  useData(initialState: string[] | null = null): [string[] | null, (newValue: string[]) => Promise<void>] {
+    const [data, setData] = useState<string[] | null>(initialState);
+
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const value = await this.get();
+          setData(value);
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      };
+      fetchData();
+
+      const listener = (request: Message<unknown>) => {
+
+        // Listen to this.triDataStore.key instead of this.key
+        if (request.action === 'dataChanged' && request.key === this.serializedTrieDataStore.key) {
+          if (this.serializedTrieDataStore.isType(request.value)) {
+            const serializedTrie = request.value;
+            const trie = Trie.deserialize(serializedTrie);
+            setData(trie.generateWordList());
+          }
+        }
+      };
+
+      chrome.runtime.onMessage.addListener(listener);
+
+      return () => {
+        chrome.runtime.onMessage.removeListener(listener);
+
+      };
+    }, []);
+
+    const setNewValue = async (newValue: string[]) => {
+      await this.set(newValue);
+    };
+
+    return [data, setNewValue];
+  }
+
+  async get(): Promise<string[]> {
+    const serializedTrie= await this.serializedTrieDataStore.get();
+    const trie = Trie.deserialize(serializedTrie);
+    return trie.generateWordList();
+  }
+
+  async set(wordlist: string[]): Promise<void> {
+    const Tri = new Trie(wordlist);
+    await this.serializedTrieDataStore.set(Tri.serialize());
+  }
+
+  async getTrie(): Promise<Trie> {
+    const serializedTrie= await this.serializedTrieDataStore.get();
+    return Trie.deserialize(serializedTrie);
+  }
+
+  async setTrie(trie: Trie): Promise<void> {
+    await this.serializedTrieDataStore.set(trie.serialize());
   }
 
   async addWord(word: string): Promise<void> {
-    const words = await this.get();
-    if (!words.includes(word)) {
-      await this.syncedSet(words.concat(word));
-    }
-  }
-
-  async removeWord(word: string): Promise<void> {
-    const words = await this.get();
-    const index = words.indexOf(word);
-    if (index > -1) {
-      words.splice(index, 1);
-      await this.syncedSet(words);
-    }
+    await this.serializedTrieDataStore.addWord(word);
   }
 
   async clear(): Promise<void> {
-    await removeStorageKey(this.key);
+    await removeStorageKey(this.serializedTrieDataStore.key);
   }
 }
 

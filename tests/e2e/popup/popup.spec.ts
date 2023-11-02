@@ -64,10 +64,11 @@ testSpec.describe('Popup Tests', () => {
 
       // Check that the word appears in the text box with ID filterWordlistsEditorTextArea
       //small delay because lists needs to load
-      await newTab.waitForTimeout(500);
+      await newTab.waitForTimeout(500);//TODO: shorter timeout
       const textAreaContent = await newTab.locator('#filterWordlistsEditorTextArea').inputValue();
       console.log("textAreaContent", textAreaContent);
-      expect(textAreaContent.includes(wordToAdd)).toBe(true);
+      //TODO: we should keep casing consistent, withouth lowercasing everything
+      expect(textAreaContent.includes(wordToAdd.toLowerCase())).toBe(true);
     });
 
 });

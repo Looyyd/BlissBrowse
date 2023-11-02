@@ -9,7 +9,7 @@ import {Message} from "./types";
 let listenerCount = 0;
 
 
-abstract class DataStore<T> {
+export abstract class DataStore<T> {
   protected abstract key: string;
 
   abstract get(): Promise<T> | T;
