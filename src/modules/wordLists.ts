@@ -7,9 +7,9 @@ import {
   WORD_STATISTICS_KEY_PREFIX, TRIE_KEY_PREFIX
 } from "../constants";
 import {DatabaseStorage, DataStore} from "./datastore";
-import {isNumber, isString, isStringArray, Message} from "./types";
+import {isNumber, isStringArray, Message} from "./types";
 import {removeStorageKey} from "./storage";
-import {Trie} from "./trie";
+import {isTrieNode, Trie, TrieNode} from "./trie";
 import {useEffect, useState} from "react";
 
 /*
@@ -76,11 +76,10 @@ export class ListNamesDataStore extends DatabaseStorage<string[]> {
 }
 
 
-class SerializedTrieListDataStore extends DatabaseStorage<string> {
+class SerializedTrieListDataStore extends DatabaseStorage<TrieNode> {
   key: string;
-  defaultValue = new Trie([]).serialize();
-  isType = isString;//TODO: is string that is a serialized trie
-  //TODO: preprocessor no empty strings?
+  defaultValue = new Trie([]).getRoot();
+  isType = isTrieNode;
 
   constructor(listName: string) {
     super();
@@ -89,15 +88,15 @@ class SerializedTrieListDataStore extends DatabaseStorage<string> {
 
   async getTrie(): Promise<Trie> {
     const serializedTrie= await super.get();
-    const trie = Trie.deserialize(serializedTrie);
+    const trie = new Trie([]);
+    trie.setRoot(serializedTrie);
     return trie;
   }
 
   async addWord(word: string): Promise<void> {
-    const serializedTrie = await this.get();
-    const trie = Trie.deserialize(serializedTrie);
+    const trie = await this.getTrie();
     trie.addWord(word);
-    const reserializedTrie = trie.serialize();
+    const reserializedTrie = trie.getRoot();
     await this.set(reserializedTrie);
   }
 }
@@ -136,7 +135,8 @@ export class FilterListDataStore extends DataStore<string[]> {
         if (request.action === 'dataChanged' && request.key === this.serializedTrieDataStore.key) {
           if (this.serializedTrieDataStore.isType(request.value)) {
             const serializedTrie = request.value;
-            const trie = Trie.deserialize(serializedTrie);
+            const trie = new Trie([]);
+            trie.setRoot(serializedTrie);
             setData(trie.generateWordList());
           }
         }
@@ -159,22 +159,25 @@ export class FilterListDataStore extends DataStore<string[]> {
 
   async get(): Promise<string[]> {
     const serializedTrie= await this.serializedTrieDataStore.get();
-    const trie = Trie.deserialize(serializedTrie);
+    const trie = new Trie([]);
+    trie.setRoot(serializedTrie);
     return trie.generateWordList();
   }
 
   async set(wordlist: string[]): Promise<void> {
     const Tri = new Trie(wordlist);
-    await this.serializedTrieDataStore.set(Tri.serialize());
+    await this.serializedTrieDataStore.set(Tri.getRoot());
   }
 
   async getTrie(): Promise<Trie> {
     const serializedTrie= await this.serializedTrieDataStore.get();
-    return Trie.deserialize(serializedTrie);
+    const trie = new Trie([]);
+    trie.setRoot(serializedTrie);
+    return trie;
   }
 
   async setTrie(trie: Trie): Promise<void> {
-    await this.serializedTrieDataStore.set(trie.serialize());
+    await this.serializedTrieDataStore.set(trie.getRoot());
   }
 
   async addWord(word: string): Promise<void> {

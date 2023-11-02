@@ -1,3 +1,4 @@
+/*
 import {Trie} from "../../src/modules/trie";
 
 describe('Trie Serialization and Deserialization', () => {
@@ -39,4 +40,5 @@ describe('Trie Serialization and Deserialization', () => {
 
   // Additional tests can be added to cover more scenarios
 });
+ */
 

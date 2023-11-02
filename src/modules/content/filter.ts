@@ -1,6 +1,7 @@
 import {FilterAction} from "../types";
 import {DEBUG, EXTENSION_NAME} from "../../constants";
 import {addToFilterWordStatistics, FilterListDataStore, ListNamesDataStore} from "../wordLists";
+import {Trie} from "../trie";
 
 interface MyStats {
   [key: string]: number;
@@ -125,6 +126,23 @@ export async function unfilterElementsIfNotInList(currentWords: string[]) {
   });
 }
 
+export async function unfilterElementsIfNotInTries(tries: Trie[]) {
+  const hiddenElements = document.querySelectorAll(`[${PROCESSED_BY_PREFIX}${SCRIPT_NAME}="true"]`);
+  hiddenElements.forEach(element => {
+    const triggeringWord = element.getAttribute(TRIGGERING_WORD) || '';
+    let shouldUnfilter = true;
+    for (const trie of tries) {
+      if (trie.wordExists(triggeringWord)) {
+        shouldUnfilter = false;
+        break;
+      }
+    }
+    if (shouldUnfilter && element instanceof HTMLElement) {
+      unfilterElement(element);
+    }
+  });
+}
+
 export async function unfilterElementsIfWrongAction(currentAction: FilterAction) {
   const hiddenElements = document.querySelectorAll(`[${PROCESSED_BY_PREFIX}${SCRIPT_NAME}="true"]`);
   hiddenElements.forEach(element => {
@@ -165,6 +183,22 @@ export async function getFilterWords() {
     console.log('filterWords:', filterWords);
   }
   return filterWords;
+}
+
+export async function getFilterTries() {
+  const tries: Trie[] = [];
+  try {
+    const listsStore = new ListNamesDataStore();
+    const lists = await listsStore.get();
+    for (const list of lists) {
+      const listStore = new FilterListDataStore(list);
+      const tri = await listStore.getTrie();
+      tries.push(tri);
+    }
+  } catch (e) {
+    console.error("Error retrieving saved words.", e);
+  }
+  return tries;
 }
 
 export function nodeHasAProcessedParent(node: Node) {

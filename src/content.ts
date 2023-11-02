@@ -3,21 +3,19 @@ import {
   BLACKLISTED_WEBSITES_KEY_PREFIX,
   DEBUG, DEBUG_PERFORMANCE,
   FILTER_ACTION_KEY,
-  FILTER_LIST_KEY_PREFIX,
+  TRIE_KEY_PREFIX,
 } from "./constants";
 import {isCurrentSiteDisabled} from "./modules/hostname";
 import {FilterActionStore} from "./modules/settings";
 import {getFeedlikeAncestor} from "./modules/content/elementSelection";
 import {
-  filterElement,
-  getFilterWords,
+  filterElement, getFilterTries,
   hasScriptOrStyleAncestor,
   nodeHasAProcessedParent,
-  unfilterElementsIfNotInList,
+  unfilterElementsIfNotInList, unfilterElementsIfNotInTries,
   unfilterElementsIfWrongAction,
   writeInMemoryStatisticsToStorage
 } from "./modules/content/filter";
-import {Trie} from "./modules/trie";
 import {Message} from "./modules/types";
 
 /*
@@ -54,9 +52,8 @@ async function checkAndFilterElements() {
     null,
   );
 
-  const filterWords = await getFilterWords().then(words => words.map(word => word.toLowerCase()));
-  const trie = new Trie(filterWords);
-  await unfilterElementsIfNotInList(filterWords);
+  const tries = await getFilterTries();
+  await unfilterElementsIfNotInTries(tries);
   await unfilterElementsIfWrongAction(filterAction);
 
   let node = walker.nextNode();
@@ -67,20 +64,24 @@ async function checkAndFilterElements() {
     }
 
     if (node.nodeType === Node.TEXT_NODE &&
-        node.textContent &&
-        !hasScriptOrStyleAncestor(node)) {  // Skip script and style tags
+      node.textContent &&
+      !hasScriptOrStyleAncestor(node)) {  // Skip script and style tags
 
-      const filterResult = trie.shouldFilterTextContent(node.textContent);
-
-      if (filterResult.shouldFilter && filterResult.triggeringWord) {
-        const ancestor = getFeedlikeAncestor(node);
-        if (ancestor instanceof HTMLElement) {
-          await filterElement(ancestor, filterResult.triggeringWord, filterAction);
+      for (const trie of tries) {
+        const filterResult = trie.shouldFilterTextContent(node.textContent);
+        if (filterResult.shouldFilter && filterResult.triggeringWord) {
+          const ancestor = getFeedlikeAncestor(node);
+          if (ancestor instanceof HTMLElement) {
+            await filterElement(ancestor, filterResult.triggeringWord, filterAction);
+            break;
+          }
         }
       }
     }
+
+
     node = walker.nextNode();
-  }
+  }//end while node
 
   if(DEBUG_PERFORMANCE){
     console.log('time taken to checkandfilter', Date.now() - timePrevious);
@@ -113,7 +114,7 @@ const listener = async (request: Message<unknown>) => {
     if(key.startsWith(BLACKLISTED_WEBSITES_KEY_PREFIX)){
       return true;
     }
-    if(key.startsWith(FILTER_LIST_KEY_PREFIX)){
+    if(key.startsWith(TRIE_KEY_PREFIX)){
       return true;
     }
     if(key.startsWith(FILTER_ACTION_KEY)){

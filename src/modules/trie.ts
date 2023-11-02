@@ -2,16 +2,23 @@ import {FilterResult} from "./content/filter";
 
 export interface TrieNode {
   isEndOfWord: boolean;
-  children: Map<string, TrieNode>;
+  children: { [key: string]: TrieNode  };
 }
 
 export function isTrieNode(obj: unknown): obj is TrieNode {
   const asTrieNode = obj as Partial<TrieNode>;
-  return (
-    asTrieNode !== null &&
-    typeof asTrieNode === 'object' &&
-    typeof asTrieNode.isEndOfWord === 'boolean' &&
-    asTrieNode.children instanceof Map
+  if (
+    asTrieNode === null ||
+    typeof asTrieNode !== 'object' ||
+    typeof asTrieNode.isEndOfWord !== 'boolean' ||
+    !asTrieNode.children ||
+    typeof asTrieNode.children !== 'object'
+  ) {
+    return false;
+  }
+
+  return Object.values(asTrieNode.children).every(
+    child =>  isTrieNode(child)
   );
 }
 
@@ -24,9 +31,17 @@ export function isTrieInstance(object: unknown): object is Trie {
 export class Trie {
   private root: TrieNode;
 
+  setRoot(root: TrieNode): void {
+    this.root = root;
+  }
+
+  getRoot(): TrieNode {
+    return this.root;
+  }
+
   constructor(words: string[]) {
     //TODO: wordsToFilter lowercase class to make sure only lowercase is passed
-    this.root = { isEndOfWord: false, children: new Map() };
+    this.root = { isEndOfWord: false, children: {} };
     this.buildTrie(words);
   }
 
@@ -37,26 +52,26 @@ export class Trie {
   }
   // Add a new word to the Trie
   public addWord(word: string): void {
-    let currentNode = this.root;
-    for (const char of word.toLowerCase()) {
-      if (!currentNode.children.has(char)) {
-        currentNode.children.set(char, { isEndOfWord: false, children: new Map() });
-      }
-      currentNode = currentNode.children.get(char)!;
+  let currentNode = this.root;
+  for (const char of word.toLowerCase()) {
+    if (!currentNode.children[char]) {
+      currentNode.children[char] = { isEndOfWord: false, children: {} };
     }
-    currentNode.isEndOfWord = true;
+    currentNode = currentNode.children[char];
   }
+  currentNode.isEndOfWord = true;
+}
 
-  // Remove a word from the Trie
+
   public removeWord(word: string): void {
     const stack: { node: TrieNode, char: string }[] = [];
     let currentNode = this.root;
     for (const char of word.toLowerCase()) {
-      if (!currentNode.children.has(char)) {
+      if (!currentNode.children[char]) {
         return;  // Word not found in Trie
       }
       stack.push({ node: currentNode, char });
-      currentNode = currentNode.children.get(char)!;
+      currentNode = currentNode.children[char];
     }
 
     if (!currentNode.isEndOfWord) {
@@ -69,12 +84,23 @@ export class Trie {
     // Remove the nodes that are no longer part of any words
     while (stack.length > 0) {
       const { node, char } = stack.pop()!;
-      const childNode = node.children.get(char)!;
-      if (childNode.isEndOfWord || childNode.children.size > 0) {
+      const childNode = node.children[char];
+      if (childNode.isEndOfWord || Object.keys(childNode.children).length > 0) {
         break;
       }
-      node.children.delete(char);
+      delete node.children[char];
     }
+  }
+
+  public wordExists(word: string): boolean {
+    let currentNode = this.root;
+    for (const char of word.toLowerCase()) {
+      if (!currentNode.children[char]) {
+        return false;
+      }
+      currentNode = currentNode.children[char];
+    }
+    return currentNode.isEndOfWord;
   }
 
   public shouldFilterTextContent(textContent: string): FilterResult {
@@ -86,9 +112,9 @@ export class Trie {
     let triggeringWord = '';
 
     for (const char of cleanedTextContent) {
-      if (currentNode.children.has(char)) {
+      if (currentNode.children[char]) {
         triggeringWord += char;
-        currentNode = currentNode.children.get(char)!;
+        currentNode = currentNode.children[char];
         if (currentNode.isEndOfWord) {
           result.shouldFilter = true;
           result.triggeringWord = triggeringWord;
@@ -102,6 +128,7 @@ export class Trie {
     return result;
   }
 
+
   public generateWordList(): string[] {
     const wordList: string[] = [];
     this.generateWordListHelper(this.root, '', wordList);
@@ -113,11 +140,13 @@ export class Trie {
       wordList.push(currentWord);
     }
 
-    for (const [char, childNode] of node.children) {
+    for (const [char, childNode] of Object.entries(node.children)) {
       this.generateWordListHelper(childNode, currentWord + char, wordList);
     }
   }
 
+  /*
+  //dropped serialization because converting to string was too slow, storing an object is faster
   serialize(): string{
     return this.serializeNode(this.root);
   }
@@ -166,5 +195,6 @@ export class Trie {
     return trie;
   }
 
+   */
 
 }
