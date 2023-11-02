@@ -11,11 +11,39 @@ let listenerCount = 0;
 
 export abstract class DataStore<T> {
   protected abstract key: string;
+  protected _currentData: T | null = null; // New variable
+  abstract defaultValue: T;
 
-  abstract get(): Promise<T> | T;
+  abstract get(): T | Promise<T>;
   abstract set(value: T): Promise<void> | void;
   abstract isType: (data: unknown) => data is T;
-  abstract defaultValue: T;
+  abstract fetchData(): Promise<T> | T;
+
+  messageListener: ((request: Message<unknown>) => void) | null = null;
+
+
+
+  constructor() {
+    // Setup listener in the constructor
+    this.messageListener = (request: Message<unknown>) => {
+      if (request.action === 'dataChanged' && request.key === this.key) {
+        if (this.isType(request.value)) {
+          this._currentData = request.value; // Update the private variable
+        }
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(this.messageListener);
+  }
+
+  //TODO: use dispose method to clean up all listeners
+  dispose() {
+    if (this.messageListener) {
+      chrome.runtime.onMessage.removeListener(this.messageListener);
+      this.messageListener = null;
+    }
+  }
+
   setPreprocessor(value: T): T {
     return value;
   }
@@ -79,7 +107,7 @@ export abstract class DataStore<T> {
 }
 
 export abstract class LocalStorageStore<T> extends DataStore<T> {
-  get(): T {
+  fetchData(): T {
     const item = localStorage.getItem(this.key);
     if (item === null) {
       return this.defaultValue;
@@ -91,6 +119,12 @@ export abstract class LocalStorageStore<T> extends DataStore<T> {
     return parsedItem;
   }
 
+  get(): T {
+    if (this._currentData === null) {
+      this._currentData = this.fetchData(); // Implement fetchData method
+    }
+    return this._currentData;
+  }
   async set(value: T): Promise<void> {
     //synced through background script
     const processedValue = this.setPreprocessor(value);
@@ -100,7 +134,15 @@ export abstract class LocalStorageStore<T> extends DataStore<T> {
 
 
 export abstract class DatabaseStorage<T> extends DataStore<T> {
+
   async get(): Promise<T> {
+    if (this._currentData === null) {
+      this._currentData = await this.fetchData(); // Implement fetchData method
+    }
+    return this._currentData;
+  }
+
+  async fetchData(): Promise<T> {
     const item = await getStorageKey<T>(this.key);
     if(!this.isType(item)){
       if(item === null){

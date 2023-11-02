@@ -9,7 +9,7 @@ import {
 import {DatabaseStorage, DataStore} from "./datastore";
 import {isNumber, isStringArray, Message} from "./types";
 import {removeStorageKey} from "./storage";
-import {isTrieNode, Trie, TrieNode} from "./trie";
+import {Trie, TrieNode} from "./trie";
 import {useEffect, useState} from "react";
 
 /*
@@ -76,6 +76,7 @@ export class ListNamesDataStore extends DatabaseStorage<string[]> {
 }
 
 
+//TODO: rename according to rootNode storage
 class SerializedTrieListDataStore extends DatabaseStorage<TrieNode> {
   key: string;
   defaultValue = new Trie([]).getRoot();
@@ -108,12 +109,40 @@ export class FilterListDataStore extends DataStore<string[]> {
   isType = isStringArray;
   setPreprocessor = (value: string[]) => [...new Set(value)];
   serializedTrieDataStore: SerializedTrieListDataStore;
+  _currentData: string[] | null = null;
+
+  // Store a reference to the listener
+  messageListener: ((request: Message<unknown>) => void) | null = null;
 
   constructor(listName: string) {
     super();
     this.key = FILTER_LIST_KEY_PREFIX + listName;
     this.serializedTrieDataStore = new SerializedTrieListDataStore(listName);
+
+    this.messageListener = (request: Message<unknown>) => {
+      if (request.action === 'dataChanged' && request.key === this.serializedTrieDataStore.key) {
+        if (this.serializedTrieDataStore.isType(request.value)) {
+          const serializedTrie = request.value;
+          const trie = new Trie([]);
+          trie.setRoot(serializedTrie);
+          this._currentData = trie.generateWordList();
+        }
+      }
+    };
+
+    // Add the listener
+    chrome.runtime.onMessage.addListener(this.messageListener);
   }
+
+  //TODO: use this dispose method to clean up all listeners
+  dispose() {
+    if (this.messageListener) {
+      chrome.runtime.onMessage.removeListener(this.messageListener);
+      this.messageListener = null;
+    }
+  }
+
+
 
   useData(initialState: string[] | null = null): [string[] | null, (newValue: string[]) => Promise<void>] {
     const [data, setData] = useState<string[] | null>(initialState);
@@ -121,33 +150,16 @@ export class FilterListDataStore extends DataStore<string[]> {
     useEffect(() => {
       const fetchData = async () => {
         try {
+          // Fetch latest data using the get method
           const value = await this.get();
           setData(value);
         } catch (error) {
           console.error('Error fetching data:', error);
         }
       };
+
+      // Call fetchData once to initialize data
       fetchData();
-
-      const listener = (request: Message<unknown>) => {
-
-        // Listen to this.triDataStore.key instead of this.key
-        if (request.action === 'dataChanged' && request.key === this.serializedTrieDataStore.key) {
-          if (this.serializedTrieDataStore.isType(request.value)) {
-            const serializedTrie = request.value;
-            const trie = new Trie([]);
-            trie.setRoot(serializedTrie);
-            setData(trie.generateWordList());
-          }
-        }
-      };
-
-      chrome.runtime.onMessage.addListener(listener);
-
-      return () => {
-        chrome.runtime.onMessage.removeListener(listener);
-
-      };
     }, []);
 
     const setNewValue = async (newValue: string[]) => {
@@ -157,12 +169,22 @@ export class FilterListDataStore extends DataStore<string[]> {
     return [data, setNewValue];
   }
 
+
   async get(): Promise<string[]> {
-    const serializedTrie= await this.serializedTrieDataStore.get();
+    if (this._currentData === null) {
+      // Fetch data only if it's the first call or no data is currently stored
+      this._currentData = await this.fetchData();
+    }
+    return this._currentData;
+  }
+
+  async fetchData(): Promise<string[]> {
+    const serializedTrie = await this.serializedTrieDataStore.get();
     const trie = new Trie([]);
     trie.setRoot(serializedTrie);
     return trie.generateWordList();
   }
+
 
   async set(wordlist: string[]): Promise<void> {
     const Tri = new Trie(wordlist);
@@ -170,9 +192,9 @@ export class FilterListDataStore extends DataStore<string[]> {
   }
 
   async getTrie(): Promise<Trie> {
-    const serializedTrie= await this.serializedTrieDataStore.get();
+    const rootNode= await this.serializedTrieDataStore.get();
     const trie = new Trie([]);
-    trie.setRoot(serializedTrie);
+    trie.setRoot(rootNode);
     return trie;
   }
 

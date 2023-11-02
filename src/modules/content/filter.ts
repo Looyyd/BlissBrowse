@@ -185,13 +185,21 @@ export async function getFilterWords() {
   return filterWords;
 }
 
+
+const filterListDataStores: { [key: string]: FilterListDataStore } = {};
 export async function getFilterTries() {
-  const tries: Trie[] = [];
+  const tries = [];
   try {
     const listsStore = new ListNamesDataStore();
     const lists = await listsStore.get();
+
     for (const list of lists) {
-      const listStore = new FilterListDataStore(list);
+      // Reuse or create a FilterListDataStore instance
+      if (!filterListDataStores[list]) {
+        filterListDataStores[list] = new FilterListDataStore(list);
+      }
+
+      const listStore = filterListDataStores[list];
       const tri = await listStore.getTrie();
       tries.push(tri);
     }
@@ -200,6 +208,8 @@ export async function getFilterTries() {
   }
   return tries;
 }
+
+
 
 export function nodeHasAProcessedParent(node: Node) {
   let currentNode:Node | null = node;
