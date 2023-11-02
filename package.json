@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \\\\\\\\\\\\\\\"Error: no tests/e2e specified\\\\\\\\\\\\\\\" && exit 1",
-    "e2e": "playwright test",
+    "unittest": "jest",
+    "e2e": "npm run build:dev && playwright test",
     "build:dev": "NODE_ENV=development webpack",
     "build:prod": "NODE_ENV=production webpack",
     "lint": "eslint 'src/**/*.{ts,tsx}'"
