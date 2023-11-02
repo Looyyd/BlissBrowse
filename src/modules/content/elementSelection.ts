@@ -1,5 +1,4 @@
-import $ from "jquery";
-import {DEBUG} from "../../constants";
+import {DEBUG, DEBUG_PERFORMANCE} from "../../constants";
 
 const min_feed_neighbors = 3;
 
@@ -20,48 +19,72 @@ function isSimilar(my_rect: DOMRect, sib_rect: DOMRect) {
   }
 }
 
-export function getFeedlikeAncestor(node: Node): Node {
-  let chosen_dom_element;
-  const parents = $(node).add($(node).parents());
-  const sibling_counts = parents.map(function (index, elem) {
-    if (!(elem instanceof Element)) {
+export function getFeedlikeAncestor(node:Node) {
+  const isElementNode = (n: Node): n is Element => n.nodeType === Node.ELEMENT_NODE;
+  let chosenDomElement = node;
+  let bestIndex = -1;  // Initialize to -1 to handle edge cases
+  const rects = new Map<Element, DOMRect>();
+
+
+  // Function to get all ancestors
+  const getAncestors = (n:Node) => {
+    const ancestors: Node[] = [];
+    while (n.parentNode && n.parentNode !== document) {
+      ancestors.push(n.parentNode);
+      n = n.parentNode;
+    }
+    return ancestors;
+  };
+
+  const ancestors = getAncestors(node);
+  const siblingsCount = ancestors.map((ancestor, index) => {
+    if (!isElementNode(ancestor)) {
       return 0;
     }
-    const myRect = elem.getBoundingClientRect();
 
-    // Ignore elements with zero height.
-    if (myRect.height == 0) {
+    const myRect = rects.get(ancestor) ||ancestor.getBoundingClientRect();
+    rects.set(ancestor, myRect);
+
+    if (myRect.height === 0) {
+      return 0;
+    }
+    if(ancestor.parentNode === null){
       return 0;
     }
 
-    const matching_siblings = $(elem)
-      .siblings()
-      .filter(function (index, sib) {
-        if (sib.nodeType != Node.ELEMENT_NODE) {
-          return false;
-        }
-        const sibRect = sib.getBoundingClientRect();
-        return isSimilar(myRect, sibRect);//is similar helps on youtube to avoir hiding everythin
-      });
-    return matching_siblings.length;
+    const matchingSiblings = Array.from(ancestor.parentNode.children).filter((sib) => {
+      if (!isElementNode(sib) || sib === ancestor) {
+        return false;
+      }
+
+      const sibRect = rects.get(sib) || sib.getBoundingClientRect();
+      rects.set(sib, sibRect);
+      const ancestorRect = rects.get(ancestor) || ancestor.getBoundingClientRect();
+      rects.set(ancestor, ancestorRect);
+
+      return isSimilar(ancestorRect, sibRect);
+    });
+
+    return matchingSiblings.length;
   });
 
-  let best_index = 0;
+  for (let i = 0; i < siblingsCount.length; i++) {
+    if (siblingsCount[i] >= min_feed_neighbors) { // Replace min_feed_neighbors with your actual threshold
+      bestIndex = i;
+      break;
+    }
+  }
 
-  // Note, parents were ordered by document order
-  //TODO: better logic for best index? maybe put into a function?
-  for (let i = 0; i < sibling_counts.length - 1; i++) {
-    if (sibling_counts[i] >= min_feed_neighbors) {
-      best_index = i;
-    }
+  if(DEBUG_PERFORMANCE) {
+    console.log("getFeedLikeAncestor number of ancestors", ancestors.length);
+    console.log("getFeedLikeAncestor chosen ancestor index", bestIndex);
   }
-  if (best_index < 0 || best_index === 0) {
-    if (DEBUG) {
-      console.log('Uh oh: best_index < 0 or best_index is the node itself');
-    }
-    chosen_dom_element = node;
-  } else {
-    chosen_dom_element = parents[best_index];
+
+  if (bestIndex >= 0) {
+    chosenDomElement = ancestors[bestIndex];
+  } else if (DEBUG) {
+    console.log('No suitable ancestor found.');
   }
-  return $(chosen_dom_element)[0];
+
+  return chosenDomElement;
 }
