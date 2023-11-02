@@ -79,7 +79,7 @@ export class ListNamesDataStore extends DatabaseStorage<string[]> {
 class SerializedTrieListDataStore extends DatabaseStorage<TrieNode> {
   key: string;
   defaultValue = new Trie([]).getRoot();
-  isType = isTrieNode;
+  isType = (obj: unknown): obj is TrieNode => (obj !== null);//TODO: make sure skipping this check is ok
 
   constructor(listName: string) {
     super();
