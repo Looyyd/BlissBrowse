@@ -21,6 +21,7 @@ function isSimilar(my_rect: DOMRect, sib_rect: DOMRect) {
 export function getFeedlikeAncestor(node: Node): Element | null {
   const isElementNode = (n: Node): n is Element => n.nodeType === Node.ELEMENT_NODE;
   let chosenDomElement: Element | null = null;
+  //TODO: put this map in global scope to get better performance boost?
   const rects = new Map<Element, DOMRect>();
 
   // Helper function to check for similar elements
