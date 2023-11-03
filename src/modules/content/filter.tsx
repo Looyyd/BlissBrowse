@@ -2,6 +2,46 @@ import {FilterAction} from "../types";
 import {DEBUG, EXTENSION_NAME} from "../../constants";
 import {addToFilterWordStatistics, FilterListDataStore, ListNamesDataStore} from "../wordLists";
 import {Trie} from "../trie";
+import React from 'react';
+import ReactDOM from 'react-dom';
+import {createRoot} from "react-dom/client";
+
+// Banner component
+type BannerProps = {
+  reason: string;
+};
+
+
+const Banner: React.FC<BannerProps> = ({reason}) => {
+  return (
+    <div className="banner">
+      {reason}
+    </div>
+  );
+};
+
+// Function to mount the React component
+export function showBannerOnElement(element: HTMLElement, reason: string) {
+  const bannerMountPoint = document.createElement('div');
+  const rootContainer = createRoot(bannerMountPoint);
+
+  // You might need to set some styles on bannerMountPoint here to position it correctly
+  element.prepend(bannerMountPoint);
+
+  rootContainer.render(<Banner reason={reason} />);
+}
+
+// Function to mount the React component
+//this version was a bit slower than the one above, could be tested more though
+/*
+export function showBannerOnElement(element:HTMLElement, reason: string) {
+  const bannerMountPoint = document.createElement('div');
+  // You might need to set some styles on bannerMountPoint here to position it correctly
+  element.prepend(bannerMountPoint);
+
+  ReactDOM.render(<Banner reason={reason} />, bannerMountPoint);
+}
+ */
 
 interface MyStats {
   [key: string]: number;
@@ -95,6 +135,9 @@ export async function filterElement(element: HTMLElement, triggeringWord: string
     element.setAttribute(`${ORIGINAL_DISPLAY_PREFIX}${SCRIPT_NAME}`, originalDisplay);
     element.style.display = 'none';
   }
+
+  //TODO: undo banner
+  showBannerOnElement(element, `Filtered by: ${triggeringWord}`);
 }
 
 async function unfilterElement(element: HTMLElement) {
