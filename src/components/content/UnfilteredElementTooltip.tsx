@@ -3,6 +3,7 @@ import FilterIgnore from "./FilterIgnore";
 import Box from "@mui/material/Box";
 import {Button} from "@mui/material";
 import {refilterElement} from "../../modules/content/filter";
+import {EXTENSION_NAME} from "../../constants";
 const logoUrl = chrome.runtime.getURL("icons/48.png");
 
 
@@ -32,7 +33,7 @@ export const UnfilteredElementTooltip: React.FC<UnfilteredElementTooltip> = ({el
           justifyContent: 'center' // This will center the button vertically, beneath the text
         }}
       >
-        <img src={logoUrl} alt="Logo" style={{ marginRight: 8, marginBottom: 4}} />
+        <img src={logoUrl} alt="Logo" id={EXTENSION_NAME+"logo"} style={{ marginRight: 8, marginBottom: 4}} />
         <Button onClick={() => refilterElement(element, listName, word)} id="refilterElementButton" variant="contained">
           Refilter element
         </Button>

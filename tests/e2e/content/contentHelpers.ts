@@ -1,6 +1,7 @@
 import {expect, testSpec} from "../fixtures";
 import {addListWithPopup, addWordWithPopup} from "../testHelpers";
 import {Locator, Page} from "@playwright/test";
+import {EXTENSION_NAME} from "../../../src/constants";
 
 export interface SiteConfig {
   name: string;
@@ -127,8 +128,17 @@ export function testSite(siteConfig: SiteConfig, fullTest: boolean = false) {
         const hasAttribute2 = await locator.getAttribute(ATTRIBUTE_FILTER);
         const parentHasAttribute2 = await hasAttributeInHierarchy(locator, ATTRIBUTE_FILTER, ATTRIBUTE_VALUE);
         expect(hasAttribute2 === ATTRIBUTE_VALUE || parentHasAttribute2).toBe(true);
-
-
+      });
+    }
+    if(fullTest){
+      testSpec("unfilter tooltip logo works " + siteConfig.name, async ({page, extensionId, context}) => {
+        const locator = siteConfig.locators_to_check_filtered[0](page);
+        expect(locator).not.toBe(null);
+        //hover over element
+        await locator.hover();
+        // get EXTENSION_NAME+"logo" element
+        const logo = await page.$("#" + EXTENSION_NAME+"logo");
+        expect(logo).not.toBe(null);
       });
     }
   });
