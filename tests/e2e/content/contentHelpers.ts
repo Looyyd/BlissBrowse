@@ -56,12 +56,12 @@ export function testSite(siteConfig: SiteConfig, fullTest: boolean = false) {
       }
       await page.goto(siteConfig.url);
       await siteConfig.setup_actions?.(page);
+      await page.waitForTimeout(1000);//TODO: better way to indicate page has been processed,
+      // maybe some kind of event done by content script
     });
 
     testSpec('words are filtered ' + siteConfig.name, async ({page, extensionId, context}) => {
 
-      await page.waitForTimeout(1000);//TODO: better way to indicate page has been processed,
-                                                // maybe some kind of event done by content script
       for (const locatorFunction of siteConfig.locators_to_check_filtered) {
         const locator = locatorFunction(page);
 
@@ -75,8 +75,6 @@ export function testSite(siteConfig: SiteConfig, fullTest: boolean = false) {
     });
 
     testSpec('words are not filtered ' + siteConfig.name, async ({page, extensionId, context}) => {
-      await page.waitForTimeout(1000);//TODO: better way to indicate page has been processed,
-                                                // maybe some kind of event done by content script
       for (const locatorFunction of siteConfig.locators_to_check_not_filtered) {
         const locator = locatorFunction(page);
 
@@ -91,7 +89,6 @@ export function testSite(siteConfig: SiteConfig, fullTest: boolean = false) {
 
 
     testSpec("word unfiltered after disabled on site " + siteConfig.name, async ({page, extensionId, context}) => {
-
       await page.goto(`chrome-extension://${extensionId}/dist/options.html`);
       await page.click("#Blacklisted_WebsitesTab");
       const hostname = new URL(siteConfig.url).hostname;
@@ -113,8 +110,6 @@ export function testSite(siteConfig: SiteConfig, fullTest: boolean = false) {
 
     if(fullTest) {
       testSpec("unfilter and refilter button works " + siteConfig.name, async ({page, extensionId, context}) => {
-        await page.waitForTimeout(1000);//TODO: better way to indicate page has been processed,
-
         const locator = siteConfig.locators_to_check_filtered[0](page);
         expect(locator).not.toBe(null);
         //hover over element
