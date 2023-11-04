@@ -4,7 +4,8 @@ import {addToFilterWordStatistics, FilterListDataStore, ListNamesDataStore} from
 import {Trie} from "../trie";
 import React from 'react';
 import {createRoot} from "react-dom/client";
-import {FilteredElementTooltip} from "../../components/content/filteredElementTooltip";
+import {FilteredElementTooltip} from "../../components/content/FilteredElementTooltip";
+import {UnfilteredElementTooltip} from "../../components/content/UnfilteredElementTooltip";
 
 
 function addTooltipStylesIfAbsent(): void {
@@ -64,8 +65,6 @@ function createHideTooltipHandler( element: HTMLElement, tooltip: HTMLElement) {
   };
 }
 
-
-
 function setupTooltipListeners(tooltip: HTMLElement, element: HTMLElement) {
   const showTooltipHandler = createShowTooltipHandler(element, tooltip);
   const hideTooltipHandler = createHideTooltipHandler(element, tooltip);
@@ -100,35 +99,55 @@ function removeTooltipListeners(tooltip: HTMLElement, element: HTMLElement) {
   }
 }
 
-export function addFilterTooltipToFilteredElement(element: HTMLElement, triggeredByWord: string, triggeredByList: string) {
+export function addComponentTooltip(element: HTMLElement, tooltipElement: React.ReactElement): void {
   addTooltipStylesIfAbsent();
 
-  // Create tooltip element
   const tooltip = document.createElement('div');
-  tooltip.classList.add('tooltip-content'); // Using a class for common styles
+  tooltip.classList.add('tooltip-content');
 
   const root = createRoot(tooltip);
   root.render(
     <React.StrictMode>
-      <FilteredElementTooltip word={triggeredByWord} listName={triggeredByList}/>
+      {tooltipElement}
     </React.StrictMode>
   );
 
-  // Generate a unique ID for the tooltip
   const tooltipId = 'tooltip-' + Math.random().toString(36).substring(2, 11);
   tooltip.id = tooltipId;
 
-  // Only add tooltip if it doesn't already exist
   if (!element.dataset.tooltipId) {
     element.dataset.tooltipId = tooltipId;
     document.body.appendChild(tooltip);
-
-    // Set up event listeners to control tooltip visibility with CSS classes
     setupTooltipListeners(tooltip, element);
   }
 }
 
-export function removeFilterTooltipFromFilteredElement(element: HTMLElement) {
+// Function to add a FilterTooltip specifically, using the addComponentTooltip function
+export function addFilterTooltipToFilteredElement(
+  element: HTMLElement,
+  triggeredByWord: string,
+  triggeredByList: string
+): void {
+  const tooltipElement = (
+    <FilteredElementTooltip
+      word={triggeredByWord}
+      listName={triggeredByList}
+      element={element}
+    />
+  );
+
+  addComponentTooltip(element, tooltipElement);
+}
+
+function addUnfilteredElementTooltip(element: HTMLElement, listName:string, word:string): void {
+  const tooltipElement = (
+    <UnfilteredElementTooltip element={element} listName={listName} word={word} />
+  );
+
+  addComponentTooltip(element, tooltipElement);
+}
+
+export function removeTooltipFromElement(element: HTMLElement) {
   // Check if the element has a tooltip associated with it
   const tooltipId = element.dataset.tooltipId;
   if (tooltipId) {
@@ -143,7 +162,6 @@ export function removeFilterTooltipFromFilteredElement(element: HTMLElement) {
     delete element.dataset.tooltipId;
   }
 }
-
 
 interface MyStats {
   [key: string]: number;
@@ -247,7 +265,27 @@ async function unfilterElement(element: HTMLElement) {
     element.removeAttribute(`${ORIGINAL_DISPLAY_PREFIX}${SCRIPT_NAME}`);
   }
 
-  removeFilterTooltipFromFilteredElement(element);
+  removeTooltipFromElement(element);
+}
+
+export function markElementAsIgnored(element: HTMLElement) {
+  element.setAttribute(FILTER_IGNORE_ATTRIBUTE, 'true');
+}
+
+export function unmarkElementAsIgnored(element: HTMLElement) {
+  element.removeAttribute(FILTER_IGNORE_ATTRIBUTE);
+}
+
+export async function unfilterAndIgnoreElement(element: HTMLElement, listName: string, word: string) {
+  await unfilterElement(element);
+  markElementAsIgnored(element);
+  addUnfilteredElementTooltip(element, listName, word);
+}
+
+export async function refilterElement(element: HTMLElement, listName: string, word: string) {
+  removeTooltipFromElement(element);
+  //TODO: filter action should be saved in tooltip
+  await filterElement(element, word, listName, FilterAction.BLUR);
 }
 
 export async function unfilterElementsIfNotInList(currentWords: string[]) {

@@ -1,16 +1,18 @@
 import Box from "@mui/material/Box";
-import {Typography} from "@mui/material";
+import {Button, Typography} from "@mui/material";
 import React from "react";
 import FilterIgnore from "./FilterIgnore";
+import {unfilterAndIgnoreElement} from "../../modules/content/filter";
 //TODO: fix, i think incorrect declaration.d.ts file
 //import Logo from "../../../icons/48.png";
 
 type FilteredElementTooltipProps = {
   listName: string;
   word: string;
+  element: HTMLElement;
 }
 
-export const FilteredElementTooltip: React.FC<FilteredElementTooltipProps> = ({ listName, word }) => {
+export const FilteredElementTooltip: React.FC<FilteredElementTooltipProps> = ({ listName, word, element}) => {
   const tooltipText = (
     <>
       Filter triggered by word: <span style={{ color: 'blue' }}>{word}</span> in list: <span style={{ color: 'green' }}>{listName}</span>
@@ -35,6 +37,9 @@ export const FilteredElementTooltip: React.FC<FilteredElementTooltipProps> = ({ 
       >
         {/*<img src={Logo} alt="Logo" style={{ marginRight: 8 }} /> */}
         <Typography color="text.primary">{tooltipText}</Typography>
+        <Button onClick={() => unfilterAndIgnoreElement(element, listName, word)} id="unfilterAndIgnoreElementButton" variant="contained">
+          Unfilter element
+        </Button>
       </Box>
     </FilterIgnore>
   );
