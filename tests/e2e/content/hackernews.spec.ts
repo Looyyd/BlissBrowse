@@ -16,4 +16,4 @@ const siteConfig: SiteConfig = {
   ]
 };
 
-testSite(siteConfig);
+testSite(siteConfig, true);

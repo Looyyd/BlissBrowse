@@ -18,6 +18,5 @@ const siteConfig: SiteConfig = {
   ]
 };
 
-//selectLocatorHelper(siteConfig);
-testSite(siteConfig);
+testSite(siteConfig, true);
 

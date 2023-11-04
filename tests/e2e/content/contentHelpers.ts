@@ -39,7 +39,7 @@ export function selectLocatorHelper(siteConfig: SiteConfig){
   });
 }
 
-export function testSite(siteConfig: SiteConfig){
+export function testSite(siteConfig: SiteConfig, fullTest: boolean = false) {
   const listname = "list1";
   const ATTRIBUTE_FILTER = "applied-action";
   const ATTRIBUTE_VALUE = "blur";
@@ -110,5 +110,31 @@ export function testSite(siteConfig: SiteConfig){
         expect(hasAttribute === ATTRIBUTE_VALUE || parentHasAttribute).toBe(false);
       }
     });
+
+    if(fullTest) {
+      testSpec("unfilter and refilter button works " + siteConfig.name, async ({page, extensionId, context}) => {
+        await page.waitForTimeout(1000);//TODO: better way to indicate page has been processed,
+
+        const locator = siteConfig.locators_to_check_filtered[0](page);
+        expect(locator).not.toBe(null);
+        //hover over element
+        await locator.hover();
+        //click unfilter button
+        await page.click("#unfilterAndIgnoreElementButton");
+        //check that element is not filtered
+        const hasAttribute = await locator.getAttribute(ATTRIBUTE_FILTER);
+        const parentHasAttribute = await hasAttributeInHierarchy(locator, ATTRIBUTE_FILTER, ATTRIBUTE_VALUE);
+        expect(hasAttribute === ATTRIBUTE_VALUE || parentHasAttribute).toBe(false);
+        //click refilter button
+        await locator.hover();
+        await page.click("#refilterElementButton");
+        //check that element is filtered
+        const hasAttribute2 = await locator.getAttribute(ATTRIBUTE_FILTER);
+        const parentHasAttribute2 = await hasAttributeInHierarchy(locator, ATTRIBUTE_FILTER, ATTRIBUTE_VALUE);
+        expect(hasAttribute2 === ATTRIBUTE_VALUE || parentHasAttribute2).toBe(true);
+
+
+      });
+    }
   });
 }

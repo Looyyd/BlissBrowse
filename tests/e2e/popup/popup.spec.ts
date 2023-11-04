@@ -66,7 +66,6 @@ testSpec.describe('Popup Tests', () => {
       //small delay because lists needs to load
       await newTab.waitForTimeout(1000);//TODO: shorter timeout
       const textAreaContent = await newTab.locator('#filterWordlistsEditorTextArea').inputValue();
-      console.log("textAreaContent", textAreaContent);
       //TODO: we should keep casing consistent, withouth lowercasing everything
       expect(textAreaContent.includes(wordToAdd.toLowerCase())).toBe(true);
     });

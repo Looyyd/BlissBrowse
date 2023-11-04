@@ -29,7 +29,7 @@ export const UnfilteredElementTooltip: React.FC<UnfilteredElementTooltip> = ({el
           alignItems: 'center'
         }}
       >
-        <Button onClick={() => refilterElement(element, listName, word)} id="unfilterAndIgnoreElementButton" variant="contained">
+        <Button onClick={() => refilterElement(element, listName, word)} id="refilterElementButton" variant="contained">
           Refilter element
         </Button>
       </Box>
