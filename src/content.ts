@@ -10,7 +10,7 @@ import {FilterActionStore} from "./modules/settings";
 import {getFeedlikeAncestor} from "./modules/content/elementSelection";
 import {
   filterElement, getFilterTries,
-  hasScriptOrStyleAncestor,
+  hasScriptOrStyleAncestor, nodeHasAIgnoredParent,
   nodeHasAProcessedParent,
   unfilterElementsIfNotInList, unfilterElementsIfNotInTries,
   unfilterElementsIfWrongAction,
@@ -52,13 +52,13 @@ async function checkAndFilterElements() {
     null,
   );
 
-  const tries = await getFilterTries();
-  await unfilterElementsIfNotInTries(tries);
+  const triesWithNames = await getFilterTries();
+  await unfilterElementsIfNotInTries(triesWithNames.map(twn => twn.trie));
   await unfilterElementsIfWrongAction(filterAction);
 
   let node = walker.nextNode();
   while (node) {
-    if (nodeHasAProcessedParent(node)) {
+    if (nodeHasAProcessedParent(node) || nodeHasAIgnoredParent(node)) {
       node = walker.nextNode();
       continue;
     }
@@ -67,21 +67,20 @@ async function checkAndFilterElements() {
       node.textContent &&
       !hasScriptOrStyleAncestor(node)) {  // Skip script and style tags
 
-      for (const trie of tries) {
+      for (const { listName, trie } of triesWithNames) {
         const filterResult = trie.shouldFilterTextContent(node.textContent);
         if (filterResult.shouldFilter && filterResult.triggeringWord) {
           const ancestor = getFeedlikeAncestor(node);
           if (ancestor instanceof HTMLElement) {
-            await filterElement(ancestor, filterResult.triggeringWord, filterAction);
+            await filterElement(ancestor, filterResult.triggeringWord, listName, filterAction);
             break;
           }
         }
       }
     }
-
-
     node = walker.nextNode();
-  }//end while node
+  }
+
 
   if(DEBUG_PERFORMANCE){
     console.log('time taken to checkandfilter', Date.now() - timePrevious);

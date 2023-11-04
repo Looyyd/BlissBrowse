@@ -3,6 +3,12 @@ import {ColorTheme, FilterAction} from "./modules/types";
 
 export const EXTENSION_NAME= "mindguard"
 
+
+//content
+
+export const FILTER_IGNORE_ATTRIBUTE = `data-${EXTENSION_NAME}-ignore`;
+
+// DEBUG
 export const DEBUG = process.env.NODE_ENV === 'development'
 export const DEBUG_MESSAGES = false;
 export const DEBUG_PERFORMANCE = false;

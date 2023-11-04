@@ -1,5 +1,5 @@
 import {FilterAction} from "../types";
-import {DEBUG, EXTENSION_NAME} from "../../constants";
+import {DEBUG, EXTENSION_NAME, FILTER_IGNORE_ATTRIBUTE} from "../../constants";
 import {addToFilterWordStatistics, FilterListDataStore, ListNamesDataStore} from "../wordLists";
 import {Trie} from "../trie";
 import React from 'react';
@@ -100,7 +100,7 @@ function removeTooltipListeners(tooltip: HTMLElement, element: HTMLElement) {
   }
 }
 
-export function addFilterTooltipToFilteredElement(element: HTMLElement, reason: string) {
+export function addFilterTooltipToFilteredElement(element: HTMLElement, triggeredByWord: string, triggeredByList: string) {
   addTooltipStylesIfAbsent();
 
   // Create tooltip element
@@ -110,7 +110,7 @@ export function addFilterTooltipToFilteredElement(element: HTMLElement, reason: 
   const root = createRoot(tooltip);
   root.render(
     <React.StrictMode>
-      <FilteredElementTooltip/>
+      <FilteredElementTooltip word={triggeredByWord} listName={triggeredByList}/>
     </React.StrictMode>
   );
 
@@ -203,7 +203,7 @@ const ORIGINAL_FILTER_PREFIX = 'original-filter-';
 const ORIGINAL_DISPLAY_PREFIX = 'original-display-';
 const SCRIPT_NAME = EXTENSION_NAME;
 
-export async function filterElement(element: HTMLElement, triggeringWord: string, filterAction: FilterAction) {
+export async function filterElement(element: HTMLElement, triggeringWord: string, listName: string,  filterAction: FilterAction) {
   if (element.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true') {
     if (DEBUG) {
       console.log('Element already processed', element, triggeringWord, filterAction);
@@ -227,7 +227,7 @@ export async function filterElement(element: HTMLElement, triggeringWord: string
     element.style.display = 'none';
   }
 
-  addFilterTooltipToFilteredElement(element, `Filtered by: ${triggeringWord}`);
+  addFilterTooltipToFilteredElement(element, triggeringWord, listName);
 }
 
 async function unfilterElement(element: HTMLElement) {
@@ -322,27 +322,32 @@ export async function getFilterWords() {
 
 
 const filterListDataStores: { [key: string]: FilterListDataStore } = {};
-export async function getFilterTries() {
-  const tries = [];
+interface ListTriePair {
+  listName: string;
+  trie: Trie;
+}
+export async function getFilterTries(): Promise<ListTriePair[]> {
+  const triesWithNames: ListTriePair[] = [];
   try {
     const listsStore = new ListNamesDataStore();
-    const lists = await listsStore.get();
+    const lists: string[] = await listsStore.get();
 
-    for (const list of lists) {
+    for (const listName of lists) {
       // Reuse or create a FilterListDataStore instance
-      if (!filterListDataStores[list]) {
-        filterListDataStores[list] = new FilterListDataStore(list);
+      if (!filterListDataStores[listName]) {
+        filterListDataStores[listName] = new FilterListDataStore(listName);
       }
 
-      const listStore = filterListDataStores[list];
-      const tri = await listStore.getTrie();
-      tries.push(tri);
+      const listStore = filterListDataStores[listName];
+      const trie: Trie = await listStore.getTrie();
+      triesWithNames.push({ listName, trie });
     }
   } catch (e) {
     console.error("Error retrieving saved words.", e);
   }
-  return tries;
+  return triesWithNames;
 }
+
 
 
 
@@ -351,6 +356,19 @@ export function nodeHasAProcessedParent(node: Node) {
   do {
     if (currentNode instanceof HTMLElement) {
       if (currentNode.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true') {
+        return true;
+      }
+    }
+    currentNode = currentNode.parentNode;
+  } while (currentNode !== null);
+  return false;
+}
+
+export function nodeHasAIgnoredParent(node: Node) {
+  let currentNode:Node | null = node;
+  do {
+    if (currentNode instanceof HTMLElement) {
+      if (currentNode.getAttribute(FILTER_IGNORE_ATTRIBUTE) === 'true') {
         return true;
       }
     }
