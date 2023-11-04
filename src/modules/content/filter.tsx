@@ -3,45 +3,147 @@ import {DEBUG, EXTENSION_NAME} from "../../constants";
 import {addToFilterWordStatistics, FilterListDataStore, ListNamesDataStore} from "../wordLists";
 import {Trie} from "../trie";
 import React from 'react';
-import ReactDOM from 'react-dom';
 import {createRoot} from "react-dom/client";
-
-// Banner component
-type BannerProps = {
-  reason: string;
-};
+import {FilteredElementTooltip} from "../../components/content/filteredElementTooltip";
 
 
-const Banner: React.FC<BannerProps> = ({reason}) => {
-  return (
-    <div className="banner">
-      {reason}
-    </div>
+function addTooltipStylesIfAbsent(): void {
+  // Check if the styles have already been added
+  if (!document.getElementById('tooltip-styles')) {
+    // Create a style element
+    const style = document.createElement('style');
+    style.id = 'tooltip-styles';
+    style.textContent = `
+      .tooltip-content {
+        position: absolute;
+        z-index: 100;
+        visibility: hidden; /* Initially hidden */
+        opacity: 0;
+        transition: opacity 0.3s, visibility 0.3s;
+      }
+      .tooltip-content.visible {
+        visibility: visible;
+        opacity: 1;
+      }
+    `;
+    // Append the style element to the document head
+    document.head.appendChild(style);
+  }
+}
+
+// This variable should be in a scope accessible to both setupTooltipListeners and removeTooltipListeners
+const tooltipVisibilityHandlers = new Map<HTMLElement, { show: () => void; hide: () => void; hideTimeoutId?: number }>();
+
+function createShowTooltipHandler(element: HTMLElement, tooltip: HTMLElement) {
+  return () => {
+    // Clear any hide timeout if it exists
+    const handlers = tooltipVisibilityHandlers.get(element);
+    if (handlers && handlers.hideTimeoutId) {
+      clearTimeout(handlers.hideTimeoutId);
+      handlers.hideTimeoutId = undefined;
+    }
+
+    const rect = element.getBoundingClientRect();
+    tooltip.style.top = `${rect.top + window.scrollY - tooltip.offsetHeight}px`;
+    tooltip.style.left = `${rect.left + window.scrollX + (element.offsetWidth - tooltip.offsetWidth) / 2}px`;
+
+    tooltip.classList.add('visible');
+  };
+}
+
+function createHideTooltipHandler( element: HTMLElement, tooltip: HTMLElement) {
+  return () => {
+    const handlers = tooltipVisibilityHandlers.get(element);
+    if (handlers) {
+      handlers.hideTimeoutId = window.setTimeout(() => {
+        tooltip.classList.remove('visible');
+        // Clear the timeout ID once the tooltip is hidden
+        handlers.hideTimeoutId = undefined;
+      }, 100);
+    }
+  };
+}
+
+
+
+function setupTooltipListeners(tooltip: HTMLElement, element: HTMLElement) {
+  const showTooltipHandler = createShowTooltipHandler(element, tooltip);
+  const hideTooltipHandler = createHideTooltipHandler(element, tooltip);
+
+  // Store the handlers for future removal
+  tooltipVisibilityHandlers.set(element, { show: showTooltipHandler, hide: hideTooltipHandler });
+
+  // Setup event listeners
+  element.addEventListener('mouseenter', showTooltipHandler);
+  element.addEventListener('mouseleave', hideTooltipHandler);
+  tooltip.addEventListener('mouseenter', showTooltipHandler);
+  tooltip.addEventListener('mouseleave', hideTooltipHandler);
+}
+
+function removeTooltipListeners(tooltip: HTMLElement, element: HTMLElement) {
+  // Retrieve the handlers
+  const handlers = tooltipVisibilityHandlers.get(element);
+
+  if (handlers) {
+    // Remove any pending timeout
+    if (handlers.hideTimeoutId) {
+      clearTimeout(handlers.hideTimeoutId);
+    }
+    // Remove event listeners
+    element.removeEventListener('mouseenter', handlers.show);
+    element.removeEventListener('mouseleave', handlers.hide);
+    tooltip.removeEventListener('mouseenter', handlers.show);
+    tooltip.removeEventListener('mouseleave', handlers.hide);
+
+    // Clean up references to the handlers
+    tooltipVisibilityHandlers.delete(element);
+  }
+}
+
+export function addFilterTooltipToFilteredElement(element: HTMLElement, reason: string) {
+  addTooltipStylesIfAbsent();
+
+  // Create tooltip element
+  const tooltip = document.createElement('div');
+  tooltip.classList.add('tooltip-content'); // Using a class for common styles
+
+  const root = createRoot(tooltip);
+  root.render(
+    <React.StrictMode>
+      <FilteredElementTooltip/>
+    </React.StrictMode>
   );
-};
 
-// Function to mount the React component
-export function showBannerOnElement(element: HTMLElement, reason: string) {
-  const bannerMountPoint = document.createElement('div');
-  const rootContainer = createRoot(bannerMountPoint);
+  // Generate a unique ID for the tooltip
+  const tooltipId = 'tooltip-' + Math.random().toString(36).substring(2, 11);
+  tooltip.id = tooltipId;
 
-  // You might need to set some styles on bannerMountPoint here to position it correctly
-  element.prepend(bannerMountPoint);
+  // Only add tooltip if it doesn't already exist
+  if (!element.dataset.tooltipId) {
+    element.dataset.tooltipId = tooltipId;
+    document.body.appendChild(tooltip);
 
-  rootContainer.render(<Banner reason={reason} />);
+    // Set up event listeners to control tooltip visibility with CSS classes
+    setupTooltipListeners(tooltip, element);
+  }
 }
 
-// Function to mount the React component
-//this version was a bit slower than the one above, could be tested more though
-/*
-export function showBannerOnElement(element:HTMLElement, reason: string) {
-  const bannerMountPoint = document.createElement('div');
-  // You might need to set some styles on bannerMountPoint here to position it correctly
-  element.prepend(bannerMountPoint);
-
-  ReactDOM.render(<Banner reason={reason} />, bannerMountPoint);
+export function removeFilterTooltipFromFilteredElement(element: HTMLElement) {
+  // Check if the element has a tooltip associated with it
+  const tooltipId = element.dataset.tooltipId;
+  if (tooltipId) {
+    // Find the tooltip element using the ID
+    const tooltip = document.getElementById(tooltipId);
+    if (tooltip) {
+      // Remove tooltip element from the DOM
+      document.body.removeChild(tooltip);
+      removeTooltipListeners(tooltip, element);
+    }
+    // Remove the data attribute from the element
+    delete element.dataset.tooltipId;
+  }
 }
- */
+
 
 interface MyStats {
   [key: string]: number;
@@ -94,17 +196,6 @@ export function shouldFilterTextContent(textContent: string, wordsToFilter: stri
   return result;
 }
 
-/*
-TODO: add a visual indicator using react, something like this:
-  // Create a DOM element to host the React component
-  const reactRoot = document.createElement('div');
-  element.appendChild(reactRoot);
-  // Create React root and render the component
-  const rootContainer = ReactDOM.createRoot(reactRoot);
-  rootContainer.render(<VisualIndicator message={`Filtered by: ${triggeringWord}`} />);
-  // Your existing logic here...
-
- */
 const PROCESSED_BY_PREFIX = 'processed-by-';
 const TRIGGERING_WORD = 'triggering-word';
 const APPLIED_ACTION = 'applied-action';
@@ -136,8 +227,7 @@ export async function filterElement(element: HTMLElement, triggeringWord: string
     element.style.display = 'none';
   }
 
-  //TODO: undo banner
-  showBannerOnElement(element, `Filtered by: ${triggeringWord}`);
+  addFilterTooltipToFilteredElement(element, `Filtered by: ${triggeringWord}`);
 }
 
 async function unfilterElement(element: HTMLElement) {
@@ -156,6 +246,8 @@ async function unfilterElement(element: HTMLElement) {
     element.style.display = element.getAttribute(`${ORIGINAL_DISPLAY_PREFIX}${SCRIPT_NAME}`) || '';
     element.removeAttribute(`${ORIGINAL_DISPLAY_PREFIX}${SCRIPT_NAME}`);
   }
+
+  removeFilterTooltipFromFilteredElement(element);
 }
 
 export async function unfilterElementsIfNotInList(currentWords: string[]) {
