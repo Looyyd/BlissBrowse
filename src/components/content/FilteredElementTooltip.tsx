@@ -4,7 +4,6 @@ import React from "react";
 import FilterIgnore from "./FilterIgnore";
 import {unfilterAndIgnoreElement} from "../../modules/content/filter";
 import {EXTENSION_NAME} from "../../constants";
-//TODO: add test that image is loaded correctly
 const logoUrl = chrome.runtime.getURL("icons/48.png");
 
 
