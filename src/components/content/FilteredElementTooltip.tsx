@@ -15,7 +15,8 @@ type FilteredElementTooltipProps = {
 export const FilteredElementTooltip: React.FC<FilteredElementTooltipProps> = ({ listName, word, element}) => {
   const tooltipText = (
     <>
-      Filter triggered by word: <span style={{ color: 'blue' }}>{word}</span> in list: <span style={{ color: 'green' }}>{listName}</span>
+      Filter triggered by word: <span style={{color: 'blue'}}>{word}</span> in list: <span
+      style={{color: 'green'}}>{listName}</span>
     </>
   );
 
@@ -32,15 +33,20 @@ export const FilteredElementTooltip: React.FC<FilteredElementTooltipProps> = ({ 
           boxShadow: 3,
           typography: 'body2',
           display: 'flex',
-          alignItems: 'center'
+          flexDirection: 'column', // Set the direction of the flex items as column
+          alignItems: 'center', // This will center the flex items (text and button) horizontally
+          justifyContent: 'center' // This will center the button vertically, beneath the text
         }}
       >
         {/*<img src={Logo} alt="Logo" style={{ marginRight: 8 }} /> */}
-        <Typography color="text.primary">{tooltipText}</Typography>
-        <Button onClick={() => unfilterAndIgnoreElement(element, listName, word)} id="unfilterAndIgnoreElementButton" variant="contained">
+        <Typography color="text.primary"
+                    style={{marginBottom: '8px'}}>{tooltipText}</Typography> {/* Add margin to space the text and button */}
+        <Button onClick={() => unfilterAndIgnoreElement(element, listName, word)} id="unfilterAndIgnoreElementButton"
+                variant="contained">
           Unfilter element
         </Button>
       </Box>
     </FilterIgnore>
   );
 };
+
