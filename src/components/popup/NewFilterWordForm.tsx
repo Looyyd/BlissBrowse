@@ -1,4 +1,4 @@
-import React, {SyntheticEvent, useState} from 'react';
+import React, {useState} from 'react';
 import {ListNamesDataStore, FilterListDataStore} from "../../modules/wordLists";
 import {
   Button,
@@ -7,7 +7,6 @@ import {
   FormHelperText,
   Typography,
   Snackbar,
-  SnackbarCloseReason,
   Alert
 } from '@mui/material';
 import ListSelector from "../ListSelector";
@@ -17,35 +16,48 @@ const NewFilterWordForm: React.FC = () => {
   const listNamesDataStore = new ListNamesDataStore();
   const [newWord, setNewWord] = useState<string>('');
   const [list, setList] = useState<string>('');
-  const [lists,] = listNamesDataStore.useData([]);
-  const [openFeedbackAlert, setOpenFeedbackAlert] = useState(false);
+  const [lists] = listNamesDataStore.useData([]);
+  const [feedbackAlert, setFeedbackAlert] = useState<{ open: boolean; type: 'success' | 'warning'; message: string }>({
+    open: false,
+    type: 'success',
+    message: ''
+  });
 
-  const handleClose = (event: Event | SyntheticEvent<Element, Event>, reason: SnackbarCloseReason) => {
+  const showAlert = (type: 'success' | 'warning', message: string) => {
+    setFeedbackAlert({ open: true, type, message });
+  };
+
+  const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
     if (reason === 'clickaway') {
       return;
     }
-    setOpenFeedbackAlert(false);
+    setFeedbackAlert((prev) => ({ ...prev, open: false }));
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (!newWord.trim()) {
+      showAlert('warning', 'Please enter a word to filter');
+      return;
+    }
+    if (!list) {
+      showAlert('warning', 'Please select a list to add the word to');
+      return;
+    }
+
     setNewWord('');
     const dataStore = new FilterListDataStore(list);
     await dataStore.addWord(newWord);
 
-    //TODO: add more precise feedback(word already exists, etc)
-    setOpenFeedbackAlert(true);
+    showAlert('success', 'Word added successfully!');
   };
 
   return (
     <>
-      <Snackbar
-        open={openFeedbackAlert}
-        autoHideDuration={3000}
-        onClose={handleClose}
-        >
-        <Alert severity="success" sx={{ width: '100%' }}>
-          Word added successfully!
+      <Snackbar open={feedbackAlert.open} autoHideDuration={3000} onClose={handleClose}>
+        <Alert onClose={handleClose} severity={feedbackAlert.type} sx={{ width: '100%' }}>
+          {feedbackAlert.message}
         </Alert>
       </Snackbar>
       <Typography variant="h6">Add Custom Word</Typography>
@@ -77,6 +89,7 @@ const NewFilterWordForm: React.FC = () => {
     </>
   );
 };
+
 
 export default NewFilterWordForm;
 
