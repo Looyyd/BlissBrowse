@@ -32,7 +32,7 @@ const NewFilterWordForm: React.FC = () => {
 
     setNewWord('');
     const dataStore = new FilterListDataStore(list);
-    await dataStore.addWord(newWord);
+    await dataStore.addNonWhiteSpaceWord(newWord);
 
     showAlert('success', 'Word added successfully!');
   };

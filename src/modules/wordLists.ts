@@ -201,7 +201,8 @@ export class FilterListDataStore extends DataStore<string[]> {
     await this.serializedTrieDataStore.set(trie.getRoot());
   }
 
-  async addWord(word: string): Promise<void> {
+  async addNonWhiteSpaceWord(word: string): Promise<void> {
+    if(word.trim() === '') return;
     await this.serializedTrieDataStore.addWord(word);
   }
 
