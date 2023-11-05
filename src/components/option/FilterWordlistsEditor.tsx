@@ -75,7 +75,8 @@ const FilterWordlistsEditor = () => {
   }
 
   const saveWords = () => {
-    const newWords = textAreaValue.split('\n');
+    const rawNewWords = textAreaValue.split('\n');
+    const newWords = rawNewWords.filter((word) => word.trim() !== '');
     const list = selectedList;
     if (!list){
       showAlert('warning', 'Please select a list before saving');
