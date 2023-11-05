@@ -103,6 +103,7 @@ export class Trie {
     return currentNode.isEndOfWord;
   }
 
+  /*
   public shouldFilterTextContent(textContent: string): FilterResult {
     const cleanedTextContent = textContent.toLowerCase().trim();
     const result: FilterResult = {
@@ -125,6 +126,46 @@ export class Trie {
         currentNode = this.root;
       }
     }
+    return result;
+  }
+   */
+
+  public shouldFilterTextContent(textContent: string): FilterResult {
+    const cleanedTextContent = textContent.toLowerCase().trim();
+    const result: FilterResult = {
+      shouldFilter: false,
+    };
+    let currentNode = this.root;
+    let triggeringWord = '';
+    let wordStartIndex = -1;
+
+    for (let i = 0; i < cleanedTextContent.length; i++) {
+      const char = cleanedTextContent[i];
+      const isBoundary = i === 0 || /[\s,.;!?]/.test(cleanedTextContent[i - 1]);
+
+      if (currentNode.children[char]) {
+        if (triggeringWord === '' && isBoundary) {
+          wordStartIndex = i;  // Set the start index when the first char of a word is found
+        }
+        triggeringWord += char;
+        currentNode = currentNode.children[char];
+        if (currentNode.isEndOfWord) {
+          // Check if the end of the word is a boundary or end of the text
+          const nextCharIsBoundary = i === cleanedTextContent.length - 1 || /[\s,.;!?]/.test(cleanedTextContent[i + 1]);
+          if (wordStartIndex === 0 || nextCharIsBoundary) {
+            result.shouldFilter = true;
+            result.triggeringWord = triggeringWord;
+            return result;
+          }
+        }
+      } else {
+        // Reset if the current sequence is not a word
+        triggeringWord = '';
+        currentNode = this.root;
+        wordStartIndex = -1;
+      }
+    }
+
     return result;
   }
 
