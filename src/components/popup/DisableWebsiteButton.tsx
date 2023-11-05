@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   BlacklistDatastore,
-  currentTabHostname,
+  currentTabHostname, isCurrentSiteForbiddenForExtensions,
 } from "../../modules/hostname";
 import Button from "@mui/material/Button"
 
@@ -10,48 +10,44 @@ const DisableWebsiteButton: React.FC = () => {
   const [blacklist,] = blacklistDataStore.useData();
   const [isDisabled, setIsDisabled] = useState(false);
   const [hostname, setHostname] = useState('');
+  const [forbiddenSite, setForbiddenSite] = useState(false);
 
   useEffect(() => {
+    if(blacklist === null) return;
     const fetchHostname = async () => {
       const host = await currentTabHostname("popup");
       setHostname(host);
+      const forbidden = await isCurrentSiteForbiddenForExtensions("popup");
+      setForbiddenSite(forbidden);
+      setIsDisabled(forbidden || (blacklist && blacklist.includes(host)));
     };
     fetchHostname();
-  }, []);
-
-  useEffect(() => {
-    const fetchIsDisabled = async () => {
-      const isDisabled = blacklist && blacklist.includes(hostname);
-      if(isDisabled !== null){
-        setIsDisabled(isDisabled);
-      }
-    };
-    fetchIsDisabled();
-  }, [blacklist, hostname]);
-
-  const updateDisableButtonText = (disableStatus: boolean) => {
-    setIsDisabled(disableStatus);
-  };
+  }, [blacklist]);
 
   const handleClick = async () => {
-    if (isDisabled) {
-      await blacklistDataStore.removeHostnameFromBlacklist(hostname);
-      updateDisableButtonText(false);
-    } else {
-      await blacklistDataStore.addHostnameToBlacklist(hostname);
-      updateDisableButtonText(true);
+    if (!forbiddenSite) {
+      if (isDisabled) {
+        await blacklistDataStore.removeHostnameFromBlacklist(hostname);
+      } else {
+        await blacklistDataStore.addHostnameToBlacklist(hostname);
+      }
+      setIsDisabled(!isDisabled);
     }
   };
+
+  const buttonText = forbiddenSite ? 'Site Restricted' : isDisabled ? 'Enable on This Site' : 'Disable on This Site';
+  const buttonColor = forbiddenSite ? "info" : isDisabled ? "warning" : "primary";
 
   return (
     <Button
       variant="contained"
-      color={isDisabled ? "warning" : "primary"}
+      color={buttonColor}
       onClick={handleClick}
+      disabled={forbiddenSite}
       style={{ margin: "10px 2px" }}
       id="disable-website-button"
     >
-      {isDisabled ? 'Enable on This Site' : 'Disable on This Site'}
+      {buttonText}
     </Button>
   );
 };

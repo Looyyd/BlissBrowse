@@ -25,6 +25,28 @@ export async function currentTabHostname(context: "popup" | "content"): Promise<
   return hostname;
 }
 
+
+export async function isCurrentSiteForbiddenForExtensions(context: "popup" | "content"): Promise<boolean> {
+  let url;
+
+  if (context === "popup") {
+    const queryOptions = { active: true, lastFocusedWindow: true };
+    const [tab] = await chrome.tabs.query(queryOptions);
+    url = tab?.url ?? '';
+  } else if (context === "content") {
+    url = window.location.href;
+  } else {
+    throw new Error("Invalid context specified");
+  }
+
+  const protocol = new URL(url).protocol;
+
+  // List of restricted protocols/schemes
+  const restrictedProtocols = ['chrome:', 'chrome-extension:', 'file:'];
+  return restrictedProtocols.includes(protocol);
+}
+
+
 export async function isCurrentSiteDisabled(context: "popup" | "content"): Promise<boolean> {
   const hostname = await currentTabHostname(context);
   return isHostnameDisabled(hostname);
