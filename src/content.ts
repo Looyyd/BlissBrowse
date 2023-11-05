@@ -130,6 +130,7 @@ const listener = async (request: Message<unknown>) => {
 };
 
 // Add message listener
+//TODO: remove listener if extension is disabled on site
 chrome.runtime.onMessage.addListener(listener);
 
 (async () => {
