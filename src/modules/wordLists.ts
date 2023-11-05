@@ -76,8 +76,7 @@ export class ListNamesDataStore extends DatabaseStorage<string[]> {
 }
 
 
-//TODO: rename according to rootNode storage
-class SerializedTrieListDataStore extends DatabaseStorage<TrieNode> {
+class TrieRootNodeDataStore extends DatabaseStorage<TrieNode> {
   key: string;
   defaultValue = new Trie([]).getRoot();
   isType = (obj: unknown): obj is TrieNode => (obj !== null);//TODO: make sure skipping this check is ok
@@ -108,7 +107,7 @@ export class FilterListDataStore extends DataStore<string[]> {
   defaultValue = DEFAULT_WORDLIST;
   isType = isStringArray;
   setPreprocessor = (value: string[]) => [...new Set(value)];
-  serializedTrieDataStore: SerializedTrieListDataStore;
+  serializedTrieDataStore: TrieRootNodeDataStore;
   _currentData: string[] | null = null;
 
   // Store a reference to the listener
@@ -117,7 +116,7 @@ export class FilterListDataStore extends DataStore<string[]> {
   constructor(listName: string) {
     super();
     this.key = FILTER_LIST_KEY_PREFIX + listName;
-    this.serializedTrieDataStore = new SerializedTrieListDataStore(listName);
+    this.serializedTrieDataStore = new TrieRootNodeDataStore(listName);
 
     this.messageListener = (request: Message<unknown>) => {
       if (request.action === 'dataChanged' && request.key === this.serializedTrieDataStore.key) {
