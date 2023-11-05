@@ -13,7 +13,7 @@ const ListsDisplay: React.FC = () => {
   const openListEditor = (listName: string) => {
     const tabToOpen = 'specificTab';
     const listToSelect = listName;
-    const optionsURL = chrome.runtime.getURL('dist/options.html');// hardcoded string TODO: remove
+    const optionsURL = chrome.runtime.getURL('options.html');
     const urlWithState = `${optionsURL}?tab=${tabToOpen}&list=${listToSelect}`;
     chrome.tabs.create({ url: urlWithState });
   }

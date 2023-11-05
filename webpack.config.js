@@ -1,7 +1,14 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
+
+// Define paths for production and development
+const outputPath = isDevelopment
+  ? path.join(__dirname, 'dev')
+  : path.join(__dirname, 'prod');
 
 module.exports = {
   mode: isDevelopment ? 'development' : 'production',
@@ -32,7 +39,8 @@ module.exports = {
   },
   output: {
     filename: '[name].js',
-    path: path.resolve(__dirname, 'dist'),
+    path: outputPath,
+    clean: true, // Clean the output directory before emit
   },
   plugins: [
     new HtmlWebpackPlugin({
@@ -45,7 +53,13 @@ module.exports = {
       filename: 'options.html',
       chunks: ['options']
     }),
+    new CopyWebpackPlugin({
+      patterns: [
+        { from: 'manifest.json', to: outputPath }, // Adjust if manifest.json is not in the root
+        { from: 'icons', to: path.join(outputPath, 'icons') } // This will copy the entire 'icons' folder
+      ]
+    }),
+    new CleanWebpackPlugin(), // Clean the build directory for every build
   ],
   devtool: isDevelopment ? 'cheap-module-source-map' : false,
 };
-

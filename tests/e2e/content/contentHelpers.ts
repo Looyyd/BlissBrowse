@@ -48,7 +48,7 @@ export function testSite(siteConfig: SiteConfig, fullTest: boolean = false) {
   testSpec.describe('Content tests ' + siteConfig.name, () => {
     testSpec.beforeEach(async ({page, extensionId}) => {
       //go to popup page
-      await page.goto(`chrome-extension://${extensionId}/dist/popup.html`);
+      await page.goto(`chrome-extension://${extensionId}/popup.html`);
 
       //TODO: probably want a more efficient way to add words to filter
       await addListWithPopup(listname, page);
@@ -90,7 +90,7 @@ export function testSite(siteConfig: SiteConfig, fullTest: boolean = false) {
 
 
     testSpec("word unfiltered after disabled on site " + siteConfig.name, async ({page, extensionId, context}) => {
-      await page.goto(`chrome-extension://${extensionId}/dist/options.html`);
+      await page.goto(`chrome-extension://${extensionId}/options.html`);
       await page.click("#Blacklisted_WebsitesTab");
       const hostname = new URL(siteConfig.url).hostname;
       await page.fill("#hostnameBlacklistEditorTextArea", hostname);

@@ -4,7 +4,7 @@ import {addListWithPopup, addWordWithPopup, getNewTabAfterAction, getNewTabPromi
 testSpec.describe('Popup Tests', () => {
   // The setup that will be done before each test in this describe block
   testSpec.beforeEach(async ({ page, extensionId }) => {
-    await page.goto(`chrome-extension://${extensionId}/dist/popup.html`);
+    await page.goto(`chrome-extension://${extensionId}/popup.html`);
   });
 
   testSpec('popup page open option button', async ({ page, extensionId, context }) => {

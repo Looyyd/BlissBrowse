@@ -5,3 +5,5 @@ safari/
 
 
 package-lock.json
+/dev/
+/prod/

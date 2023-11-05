@@ -5,8 +5,7 @@ export const headless = true;
 
 const fixtures = test.extend({
   context: async ({ }, use) => {
-    //TODO: don't hardcode this path
-    const pathToExtension = path.join(__dirname, '../../');
+    const pathToExtension = path.join(__dirname, '../../dev');
     const args = [
       `--disable-extensions-except=${pathToExtension}`,
       `--load-extension=${pathToExtension}`,
