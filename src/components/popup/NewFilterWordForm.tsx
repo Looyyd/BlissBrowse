@@ -6,10 +6,9 @@ import {
   FormControl,
   FormHelperText,
   Typography,
-  Snackbar,
-  Alert
 } from '@mui/material';
 import ListSelector from "../ListSelector";
+import {useAlert} from "../AlertContext";
 
 
 const NewFilterWordForm: React.FC = () => {
@@ -17,22 +16,7 @@ const NewFilterWordForm: React.FC = () => {
   const [newWord, setNewWord] = useState<string>('');
   const [list, setList] = useState<string>('');
   const [lists] = listNamesDataStore.useData([]);
-  const [feedbackAlert, setFeedbackAlert] = useState<{ open: boolean; type: 'success' | 'warning'; message: string }>({
-    open: false,
-    type: 'success',
-    message: ''
-  });
-
-  const showAlert = (type: 'success' | 'warning', message: string) => {
-    setFeedbackAlert({ open: true, type, message });
-  };
-
-  const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-    setFeedbackAlert((prev) => ({ ...prev, open: false }));
-  };
+  const { showAlert } = useAlert();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -55,11 +39,6 @@ const NewFilterWordForm: React.FC = () => {
 
   return (
     <>
-      <Snackbar open={feedbackAlert.open} autoHideDuration={3000} onClose={handleClose}>
-        <Alert onClose={handleClose} severity={feedbackAlert.type} sx={{ width: '100%' }}>
-          {feedbackAlert.message}
-        </Alert>
-      </Snackbar>
       <Typography variant="h6">Add Custom Word</Typography>
       <form onSubmit={handleSubmit}>
         <FormControl fullWidth margin="normal">

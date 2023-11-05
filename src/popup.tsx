@@ -8,6 +8,8 @@ import OpenOptionsButton from "./components/popup/OpenOptionsButton";
 import {ColorTheme} from "./modules/types";
 import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
 import {ColorThemeStore} from "./modules/settings";
+import {AlertProvider} from "./components/AlertContext";
+import AlertComponent from "./components/AlertComponent";
 
 
 const Popup: React.FC = () => {
@@ -38,7 +40,10 @@ if (root) {
   createRoot(root).render(
     <>
       <React.StrictMode>
-        <Popup/>
+        <AlertProvider>
+          <AlertComponent />
+          <Popup/>
+        </AlertProvider>
       </React.StrictMode>
     </>
   );
