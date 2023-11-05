@@ -1,4 +1,4 @@
-import React, {SyntheticEvent, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {ListNamesDataStore, FilterListDataStore} from "../../modules/wordLists";
 import {
   InputLabel,
@@ -7,9 +7,9 @@ import {
   Container,
   Box,
   SelectChangeEvent,
-  SnackbarCloseReason, Snackbar, Alert
 } from '@mui/material';
 import ListSelector from "../ListSelector";
+import {useAlert} from "../AlertContext";
 
 
 
@@ -20,9 +20,8 @@ const FilterWordlistsEditor = () => {
   const [selectedList, setSelectedList] = useState<string>("");
   const [, setWords] = useState<string[]>([]);
   const [textAreaValue, setTextAreaValue] = useState<string>("");
-  const [openFeedbackAlert, setOpenFeedbackAlert] = useState(false);
-
   const [urlSelectedList, setUrlSelectedList] = useState<string>("");
+  const {showAlert} = useAlert();
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -41,17 +40,10 @@ const FilterWordlistsEditor = () => {
   const isURLListValid = lists && lists.includes(urlSelectedList);
   const isListNotSelected = selectedList === "";
 
-  if (isListSelectedFromURL && areListsAvailable && isURLListValid && isListNotSelected) {
-    setSelectedList(urlSelectedList);
-  }
-}, [urlSelectedList, lists, selectedList]);
-
-  const handleFeedbackAlertClose = (event: Event | SyntheticEvent<Element, Event>, reason: SnackbarCloseReason) => {
-    if (reason === 'clickaway') {
-      return;
+    if (isListSelectedFromURL && areListsAvailable && isURLListValid && isListNotSelected) {
+      setSelectedList(urlSelectedList);
     }
-    setOpenFeedbackAlert(false);
-  };
+  }, [urlSelectedList, lists, selectedList]);
 
   useEffect(() => {
     const fetchListContent = async (list: string) => {
@@ -85,25 +77,18 @@ const FilterWordlistsEditor = () => {
   const saveWords = () => {
     const newWords = textAreaValue.split('\n');
     const list = selectedList;
-    if (!list) return;
+    if (!list){
+      showAlert('warning', 'Please select a list before saving');
+      return;
+    }
     const dataStore = new FilterListDataStore(list);
     dataStore.syncedSet(newWords).then(() => {
-      //TODO: more precise feedback(failed to save, etc)
-      setOpenFeedbackAlert(true);
+      showAlert('success', 'List updated successfully!');
     });
   };
 
   return (
     <>
-      <Snackbar
-        open={openFeedbackAlert}
-        autoHideDuration={3000}
-        onClose={handleFeedbackAlertClose}
-      >
-        <Alert severity="success" sx={{ width: '100%' }}>
-          Words saved successfully!
-        </Alert>
-      </Snackbar>
       <Container>
         <Box display="flex" flexDirection="column" alignItems="start" gap={2}>
           <InputLabel id="wordlist-label">Wordlist</InputLabel>

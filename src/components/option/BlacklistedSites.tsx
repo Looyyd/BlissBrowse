@@ -1,14 +1,12 @@
-import React, {SyntheticEvent, useState} from 'react';
+import React, {useState} from 'react';
 import {
   Box,
   TextareaAutosize,
   Button,
-  SnackbarCloseReason,
-  Snackbar,
-  Alert,
   Container
 } from '@mui/material';
 import {BlacklistDatastore} from "../../modules/hostname";
+import {useAlert} from "../AlertContext";
 
 
 
@@ -16,7 +14,7 @@ const BlacklistedSites = () => {
   const blacklistDataStore = new BlacklistDatastore();
   const [blacklist,] = blacklistDataStore.useData();
   const [textAreaValue, setTextAreaValue] = useState<string>("");
-  const [openFeedbackAlert, setOpenFeedbackAlert] = useState(false);
+  const {showAlert} = useAlert();
 
   React.useEffect(() => {
     if (blacklist) {
@@ -31,29 +29,14 @@ const BlacklistedSites = () => {
     const newBlacklist = textAreaValue.split('\n');
     const dataStore = new BlacklistDatastore();
     dataStore.syncedSet(newBlacklist).then(() => {
-      setOpenFeedbackAlert(true);
+      showAlert('success', 'Blacklist updated successfully!');
     });
   };
 
-  const handleFeedbackAlertClose = (event: Event | SyntheticEvent<Element, Event>, reason: SnackbarCloseReason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-    setOpenFeedbackAlert(false);
-  };
 
   return (
     <Container>
       <Box display="flex" flexDirection="column" alignItems="start" gap={2}>
-      <Snackbar
-        open={openFeedbackAlert}
-        autoHideDuration={3000}
-        onClose={handleFeedbackAlertClose}
-      >
-        <Alert severity="success" sx={{ width: '100%' }}>
-          Hostnames saved successfully!
-        </Alert>
-      </Snackbar>
       <Button variant="contained" color="primary" onClick={saveHostnames} id="hostname-save">
         Save
       </Button>

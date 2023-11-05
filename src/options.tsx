@@ -4,6 +4,8 @@ import TabContainer from "./components/option/OptionsTabContainer";
 import {ColorThemeStore} from "./modules/settings";
 import {ColorTheme} from "./modules/types";
 import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
+import AlertComponent from "./components/AlertComponent";
+import {AlertProvider} from "./components/AlertContext";
 
 
 const App: React.FC = () => {
@@ -32,7 +34,10 @@ if (root) {
   const rootContainer = createRoot(root);
   rootContainer.render(
     <React.StrictMode>
-      <App />
+      <AlertProvider>
+        <AlertComponent />
+        <App />
+      </AlertProvider>
     </React.StrictMode>
   );
 }
