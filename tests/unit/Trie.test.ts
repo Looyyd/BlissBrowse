@@ -1,6 +1,6 @@
-/*
 import {Trie} from "../../src/modules/trie";
 
+/*
 describe('Trie Serialization and Deserialization', () => {
 
   test('Serialization of an empty Trie', () => {
@@ -42,3 +42,30 @@ describe('Trie Serialization and Deserialization', () => {
 });
  */
 
+describe('Trie word add logic', () => {
+  test('Adding a word to an empty Trie', () => {
+    const trie = new Trie([]);
+    trie.addWord('apple');
+    expect(trie.generateWordList()).toEqual(['apple']);
+  });
+
+  test('Adding whitespace word to an empty Trie', () => {
+    const trie = new Trie([]);
+    trie.addWord(' ');
+    expect(trie.generateWordList()).toEqual([]);
+  });
+});
+
+describe('Trie filter logic', () => {
+  test("Should filter if word in trie", () => {
+    const trie = new Trie(['apple']);
+    expect(trie.shouldFilterTextContent('apple')).toEqual({ shouldFilter: true, triggeringWord: 'apple' });
+  });
+
+  test("Should not filter Putin in computing", () => {
+    const trie = new Trie(['putin']);
+    const filterResult = trie.shouldFilterTextContent('computing');
+    expect(filterResult.shouldFilter).toEqual(false);
+  });
+
+});

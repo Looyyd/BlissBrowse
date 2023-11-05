@@ -52,15 +52,18 @@ export class Trie {
   }
   // Add a new word to the Trie
   public addWord(word: string): void {
-  let currentNode = this.root;
-  for (const char of word.toLowerCase()) {
-    if (!currentNode.children[char]) {
-      currentNode.children[char] = { isEndOfWord: false, children: {} };
+    // does not add whitespace words
+    if(word.trim() === '') return;
+
+    let currentNode = this.root;
+    for (const char of word.toLowerCase()) {
+      if (!currentNode.children[char]) {
+        currentNode.children[char] = { isEndOfWord: false, children: {} };
+      }
+      currentNode = currentNode.children[char];
     }
-    currentNode = currentNode.children[char];
+    currentNode.isEndOfWord = true;
   }
-  currentNode.isEndOfWord = true;
-}
 
 
   public removeWord(word: string): void {

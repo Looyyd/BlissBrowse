@@ -94,6 +94,8 @@ class TrieRootNodeDataStore extends DatabaseStorage<TrieNode> {
   }
 
   async addWord(word: string): Promise<void> {
+    // does not add whitespace words
+    if(word.trim() === '') return;
     const trie = await this.getTrie();
     trie.addWord(word);
     const reserializedTrie = trie.getRoot();
