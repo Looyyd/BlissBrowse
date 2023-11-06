@@ -6,7 +6,6 @@ import {
   FilterActionStore,
 } from "../../modules/settings";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
-import { useEffect} from 'react';
 import Box from "@mui/material/Box";
 
 const GlobalSettings = () => {
@@ -16,15 +15,6 @@ const GlobalSettings = () => {
   const [selectedColorTheme, setSelectedColorTheme] = colorThemeStore.useData();
   const filterActions = Object.values(FilterAction);
   const colorThemes = Object.values(ColorTheme);
-
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const previous_action = await filterActionStore.get();
-      await setSelectedAction(previous_action);
-    };
-    fetchData();
-  }, []);
 
   async function onActionChange(event: SelectChangeEvent<FilterAction>) {
     const action = event.target.value as FilterAction;
@@ -47,7 +37,7 @@ const GlobalSettings = () => {
         <Select
           labelId="filterActionSelect-label"
           id="filterActionSelect"
-          value={selectedAction !== null ? selectedAction : ""}
+          value={selectedAction === null ? "" : selectedAction}
           onChange={onActionChange}
           disabled={filterActions.length === 0}
         >
@@ -68,7 +58,7 @@ const GlobalSettings = () => {
         <Select
           labelId="colorThemeSelect-label"
           id="colorThemeSelect"
-          value={selectedColorTheme !== null ? selectedColorTheme : ""}
+          value={selectedColorTheme === null ? "" : selectedColorTheme}
           onChange={onColorThemeChange}
           disabled={colorThemes.length === 0}
         >
