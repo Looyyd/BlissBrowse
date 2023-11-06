@@ -10,6 +10,7 @@ import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
 import {ColorThemeStore} from "./modules/settings";
 import {AlertProvider} from "./components/AlertContext";
 import AlertComponent from "./components/AlertComponent";
+import FeedbackButton from "./components/FeedbackButton";
 
 
 const Popup: React.FC = () => {
@@ -26,6 +27,7 @@ const Popup: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <FeedbackButton />
       <OpenOptionsButton/>
       <DisableWebsiteButton />
       <NewFilterWordForm />
