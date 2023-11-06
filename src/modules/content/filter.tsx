@@ -358,11 +358,13 @@ export async function unfilterElementsIfWrongAction(currentAction: FilterAction)
   });
 }
 
-export function hasScriptOrStyleAncestor(node: Node) {
+export function hasAncestorTagThatShouldBeIgnored(node: Node) {
+  /* Check if the node has an ancestor that should be ignored such as a <script> tag */
+  const ignore_tags = ['script', 'style', 'noscript', 'meta', 'link', 'head', 'title', 'iframe', 'object', 'embed', 'svg']
   let current = node;
   while (current.parentElement) {
     const tagName = current.parentElement.tagName.toLowerCase();
-    if (['script', 'style', 'noscript'].includes(tagName)) {
+    if (ignore_tags.includes(tagName)) {
       return true;
     }
     current = current.parentElement;

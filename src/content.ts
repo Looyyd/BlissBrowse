@@ -10,7 +10,7 @@ import {FilterActionStore} from "./modules/settings";
 import {getFeedlikeAncestor} from "./modules/content/elementSelection";
 import {
   filterElement, getFilterTries,
-  hasScriptOrStyleAncestor, nodeHasAIgnoredParent,
+  hasAncestorTagThatShouldBeIgnored, nodeHasAIgnoredParent,
   nodeHasAProcessedParent,
   unfilterElementsIfNotInList, unfilterElementsIfNotInTries,
   unfilterElementsIfWrongAction,
@@ -65,7 +65,7 @@ async function checkAndFilterElements() {
 
     if (node.nodeType === Node.TEXT_NODE &&
       node.textContent &&
-      !hasScriptOrStyleAncestor(node)) {  // Skip script and style tags
+      !hasAncestorTagThatShouldBeIgnored(node)) {  // Skip script and style tags
 
       for (const { listName, trie } of triesWithNames) {
         const filterResult = trie.shouldFilterTextContent(node.textContent);
