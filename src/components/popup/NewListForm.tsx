@@ -23,6 +23,7 @@ const NewListForm: React.FC = () => {
       showAlert('success', 'List created successfully!');
     } catch (error) {
       console.error('Error saving new list:', error);
+      showAlert('error', 'Error saving new list');
     }
   };
 
