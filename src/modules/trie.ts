@@ -162,7 +162,10 @@ export class Trie {
           }
         }
       } else {
-        // Reset if the current sequence is not a word
+        if (wordStartIndex !== -1) {
+          // Reset the loop to the character after the starting character of the last found word
+          i = wordStartIndex;
+        }
         triggeringWord = '';
         currentNode = this.root;
         wordStartIndex = -1;
