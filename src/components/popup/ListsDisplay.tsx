@@ -11,7 +11,7 @@ const ListsDisplay: React.FC = () => {
   const [lists] = listNamesDataStore.useData([]);
 
   const openListEditor = (listName: string) => {
-    const tabToOpen = 'specificTab';
+    const tabToOpen = '1';
     const listToSelect = listName;
     const optionsURL = chrome.runtime.getURL('options.html');
     const urlWithState = `${optionsURL}?tab=${tabToOpen}&list=${listToSelect}`;

@@ -14,47 +14,58 @@ import {TextEditBox} from "../TextEditBox";
 
 
 
-const FilterWordlistsEditor = () => {
-  const listNamesDataStore = new ListNamesDataStore();
-  const [lists,] = listNamesDataStore.useData();
-  const [selectedList, setSelectedList] = useState<string>("");
-  const [, setWords] = useState<string[]>([]);
-  const [textAreaValue, setTextAreaValue] = useState<string>("");
-  const [urlSelectedList, setUrlSelectedList] = useState<string>("");
-  const {showAlert} = useAlert();
+// Custom hook for managing URL parameters
+const useUrlParameter = (param:string) => {
+  const [paramValue, setParamValue] = useState("");
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const list = urlParams.get('list');
-    if (list) {
-      //TODO: this selected list shit is used because a refresh was causing simpler logic to fail,
-      // still would be nice to make this better
-      // and to remove the url parameters
-      setUrlSelectedList(list);
+    const value = urlParams.get(param);
+    if (value) {
+      setParamValue(value);
     }
-  }, []);
+  }, [param]);
+
+  return paramValue;
+};
+
+// Custom hook for managing list selection and data
+const useSelectedListData = (initialListName: string): [string, React.Dispatch<React.SetStateAction<string>>, string[]] => {
+  const [selectedList, setSelectedList] = useState(initialListName);
+  const [words, setWords] = useState<string[]>([]);
 
   useEffect(() => {
-  const isListSelectedFromURL = urlSelectedList !== "";
-  const areListsAvailable = lists && lists.length > 0;
-  const isURLListValid = lists && lists.includes(urlSelectedList);
-  const isListNotSelected = selectedList === "";
+    if (!selectedList) return;
 
-    if (isListSelectedFromURL && areListsAvailable && isURLListValid && isListNotSelected) {
-      setSelectedList(urlSelectedList);
-    }
-  }, [urlSelectedList, lists, selectedList]);
-
-  useEffect(() => {
-    const fetchListContent = async (list: string) => {
-      const dataStore = new FilterListDataStore(list)
+    const fetchData = async () => {
+      const dataStore = new FilterListDataStore(selectedList);
       const fetchedWords = await dataStore.get();
       setWords(fetchedWords);
-      setTextAreaValue(fetchedWords.join('\n'));
-    }
-    fetchListContent(selectedList);
+    };
 
+    fetchData();
   }, [selectedList]);
+
+  return [selectedList, setSelectedList, words];
+};
+
+// Main component
+const FilterWordlistsEditor = () => {
+  const listNamesDataStore = new ListNamesDataStore();
+  const [lists] = listNamesDataStore.useData();
+  const urlSelectedList = useUrlParameter('list');
+  const [selectedList, setSelectedList, words] = useSelectedListData(urlSelectedList);
+  const [textAreaValue, setTextAreaValue] = useState(words.join('\n'));
+  const { showAlert } = useAlert();
+
+  useEffect(() => {
+    if (!urlSelectedList) return;
+      setSelectedList(urlSelectedList);
+  }, [urlSelectedList]);
+
+  useEffect(() => {
+    setTextAreaValue(words.join('\n'));
+  }, [words]);
 
   const handleListChange = async (event: SelectChangeEvent<unknown>) => {
     const list = event.target.value as string;
