@@ -32,6 +32,7 @@ export const useAlert = () => {
   return context;
 };
 
+/* Provider component that wraps your app and makes alert object available to any child component that calls useAlert() */
 export const AlertProvider: FunctionComponent<AlertProviderProps> = ({ children }) => {
   const [alert, setAlert] = useState<AlertState>({ open: false, type: 'success', message: '' });
 

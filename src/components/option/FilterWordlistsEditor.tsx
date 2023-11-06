@@ -3,13 +3,13 @@ import {ListNamesDataStore, FilterListDataStore} from "../../modules/wordLists";
 import {
   InputLabel,
   Button,
-  TextareaAutosize,
   Container,
   Box,
   SelectChangeEvent,
 } from '@mui/material';
 import ListSelector from "../ListSelector";
 import {useAlert} from "../AlertContext";
+import {TextEditBox} from "../TextEditBox";
 
 
 
@@ -104,25 +104,7 @@ const FilterWordlistsEditor = () => {
           <Button variant="contained" color="error" onClick={deleteSelectedList}>
             Delete List
           </Button>
-          <Box
-            component={TextareaAutosize}
-            value={textAreaValue}
-            onChange={handleTextAreaChange}
-            id={"filterWordlistsEditorTextArea"}
-            sx={(theme) => ({
-              width: '100%',
-              minHeight: '100px',
-              padding: '12px',
-              borderRadius: '4px',
-              borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.23)',
-              background: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
-              color: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.87)' : 'rgba(0, 0, 0, 0.87)',
-              '&:focus': {
-                borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.87)' : 'rgba(0, 0, 0, 0.87)',
-                outline: 'none'
-              }
-            })}
-          />
+          <TextEditBox textAreaValue={textAreaValue} handleTextAreaChange={handleTextAreaChange} id={"filterWordlistsEditorTextArea"}/>
         </Box>
       </Container>
     </>

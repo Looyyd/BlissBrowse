@@ -27,6 +27,7 @@ export async function currentTabHostname(context: "popup" | "content"): Promise<
 
 
 export async function isCurrentSiteForbiddenForExtensions(context: "popup" | "content"): Promise<boolean> {
+  /* Returns true if the current site is forbidden for extensions to run on. */
   let url;
 
   if (context === "popup") {

@@ -3,6 +3,7 @@ import React from 'react';
 import { useAlert } from './AlertContext';
 import { Snackbar, Alert } from '@mui/material';
 
+/* Component that displays a snackbar alert when the alert context is updated */
 const AlertComponent = () => {
   const { alert, closeAlert } = useAlert();
 

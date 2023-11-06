@@ -1,16 +1,16 @@
 import React, {useState} from 'react';
 import {
   Box,
-  TextareaAutosize,
   Button,
   Container
 } from '@mui/material';
 import {BlacklistDatastore} from "../../modules/hostname";
 import {useAlert} from "../AlertContext";
+import {TextEditBox} from "../TextEditBox";
 
 
 
-const BlacklistedSites = () => {
+const BlacklistedSitesEditor = () => {
   const blacklistDataStore = new BlacklistDatastore();
   const [blacklist,] = blacklistDataStore.useData();
   const [textAreaValue, setTextAreaValue] = useState<string>("");
@@ -40,29 +40,11 @@ const BlacklistedSites = () => {
       <Button variant="contained" color="primary" onClick={saveHostnames} id="hostname-save">
         Save
       </Button>
-      <Box
-        component={TextareaAutosize}
-        value={textAreaValue}
-        onChange={handleTextAreaChange}
-        id={"hostnameBlacklistEditorTextArea"}
-        sx={(theme) => ({
-          width: '100%',
-          minHeight: '100px',
-          padding: '12px',
-          borderRadius: '4px',
-          borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.23)',
-          background: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
-          color: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.87)' : 'rgba(0, 0, 0, 0.87)',
-          '&:focus': {
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.87)' : 'rgba(0, 0, 0, 0.87)',
-            outline: 'none'
-          }
-        })}
-      />
+      <TextEditBox textAreaValue={textAreaValue} handleTextAreaChange={handleTextAreaChange} id="hostnameBlacklistEditorTextArea"/>
       </Box>
     </Container>
   );
 };
-export default BlacklistedSites;
+export default BlacklistedSitesEditor;
 
 

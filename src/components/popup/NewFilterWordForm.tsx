@@ -11,6 +11,7 @@ import ListSelector from "../ListSelector";
 import {useAlert} from "../AlertContext";
 
 
+/* A form to add a new word to a list. */
 const NewFilterWordForm: React.FC = () => {
   const listNamesDataStore = new ListNamesDataStore();
   const [newWord, setNewWord] = useState<string>('');

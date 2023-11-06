@@ -8,6 +8,7 @@ type ListSelectorProps = {
   value: string;
 }
 
+/* A component that allows the user to select a list from a dropdown menu. */
 const ListSelector: React.FC<ListSelectorProps> = ({ lists, onListChange, value }) => {
   const disabled = lists === null || lists.length === 0;
 

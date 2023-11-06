@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import WordStatistics from "./WordStatistics";
-import BlacklistedSites from "./BlacklistedSites";
+import BlacklistedSitesEditor from "./BlacklistedSitesEditor";
 import FilterWordlistsEditor from "./FilterWordlistsEditor";
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -46,7 +46,7 @@ const TabContainer = () => {
     },
     {
       tab: 'Blacklisted Websites',
-      content: <BlacklistedSites />,
+      content: <BlacklistedSitesEditor />,
     },
     {
       tab: 'Settings',
