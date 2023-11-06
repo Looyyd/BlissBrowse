@@ -45,12 +45,44 @@ function createShowTooltipHandler(element: HTMLElement, tooltip: HTMLElement) {
     }
 
     const rect = element.getBoundingClientRect();
-    tooltip.style.top = `${rect.top + window.scrollY - tooltip.offsetHeight}px`;
-    tooltip.style.left = `${rect.left + window.scrollX + (element.offsetWidth - tooltip.offsetWidth) / 2}px`;
+    const viewportHeight = window.innerHeight;
+    const tooltipHeight = tooltip.offsetHeight;
+
+    // Check if there is enough space above the element for the tooltip
+    // If not, display the tooltip below the element
+    const topPosition = rect.top - tooltipHeight;
+    const bottomPosition = rect.bottom + tooltipHeight;
+
+    if (topPosition < 0 && bottomPosition < viewportHeight) {
+      // Not enough space above and enough space below
+      tooltip.style.top = `${rect.bottom + window.scrollY}px`;
+    } else {
+      // Enough space above or no space below, display above
+      tooltip.style.top = `${rect.top + window.scrollY - tooltipHeight}px`;
+    }
+
+    // Center the tooltip horizontally
+    const leftPosition = rect.left + (element.offsetWidth - tooltip.offsetWidth) / 2;
+    const rightOverflow = leftPosition + tooltip.offsetWidth - window.innerWidth;
+
+    if (leftPosition < 0) {
+      // Adjust if tooltip overflows on the left
+      tooltip.style.left = `${window.scrollX}px`;
+    } else if (rightOverflow > 0) {
+      // Adjust if tooltip overflows on the right
+      tooltip.style.left = `${rect.left - rightOverflow + window.scrollX}px`;
+    } else {
+      // Position is good, no adjustment needed
+      tooltip.style.left = `${leftPosition + window.scrollX}px`;
+    }
 
     tooltip.classList.add('visible');
   };
 }
+
+
+
+
 
 function createHideTooltipHandler( element: HTMLElement, tooltip: HTMLElement) {
   return () => {
