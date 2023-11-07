@@ -7,6 +7,7 @@ import {
   TableRow,
   FormControl,
   SelectChangeEvent,
+  Container
 } from '@mui/material';
 import TableCell from '@mui/material/TableCell';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
@@ -124,6 +125,7 @@ const WordStatistics = () => {
 
 
   return (
+    <Container>
     <div>
       <FormControl variant="outlined" fullWidth>
         <ListSelector
@@ -157,6 +159,7 @@ const WordStatistics = () => {
         </Table>
       </div>
     </div>
+    </Container>
   );
 };
 
