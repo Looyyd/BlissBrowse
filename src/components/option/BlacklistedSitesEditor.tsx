@@ -2,12 +2,14 @@ import React, {useState} from 'react';
 import {
   Box,
   Button,
-  Container
+  Container,
+  Typography
 } from '@mui/material';
 import {BlacklistDatastore} from "../../modules/hostname";
 import {useAlert} from "../AlertContext";
 import {TextEditBox} from "../TextEditBox";
 import {Save} from "@mui/icons-material";
+import InfoIcon from '@mui/icons-material/Info';
 
 
 
@@ -38,6 +40,10 @@ const BlacklistedSitesEditor = () => {
   return (
     <Container>
       <Box display="flex" flexDirection="column" alignItems="start" gap={2}>
+        <Typography variant="body1" display="flex" alignItems="center" gap={1}>
+          <InfoIcon color="primary" />
+          This page displays websites on which you have disabled the extension.
+        </Typography>
       <Button variant="contained" color="primary" onClick={saveHostnames} id="hostname-save" startIcon={<Save/>}>
         Save
       </Button>
