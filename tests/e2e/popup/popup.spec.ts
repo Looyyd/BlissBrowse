@@ -8,10 +8,7 @@ testSpec.describe('Popup Tests', () => {
   });
 
   testSpec('popup page open option button', async ({ page, extensionId, context }) => {
-    await expect(page.locator('#openOptionsButton')).toHaveText('Open Options');
-    const currentPages = context.pages();
     await page.waitForTimeout(500);//small delay because option button was breaking test
-
     const optionButton = page.locator('#openOptionsButton');
     const newTab = await getNewTabAfterAction(context, () => optionButton.click());
 

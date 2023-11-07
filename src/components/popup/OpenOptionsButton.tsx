@@ -16,7 +16,7 @@ const OpenOptionsButton: React.FC = () => {
       startIcon={<Settings/>}
       style={{ margin: "10px 2px" }}
     >
-      Open Options
+      Advanced Options
     </Button>
   );
 };
