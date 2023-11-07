@@ -10,6 +10,7 @@ import {
 import ListSelector from "../ListSelector";
 import {useAlert} from "../AlertContext";
 import {TextEditBox} from "../TextEditBox";
+import {Delete, Save} from "@mui/icons-material";
 
 
 
@@ -109,10 +110,10 @@ const FilterWordlistsEditor = () => {
             onListChange={handleListChange}
             value={selectedList}
           />
-          <Button variant="contained" color="primary" onClick={saveWords}>
+          <Button variant="contained" color="primary" onClick={saveWords} startIcon={<Save/>}>
             Save
           </Button>
-          <Button variant="contained" color="error" onClick={deleteSelectedList}>
+          <Button variant="contained" color="error" onClick={deleteSelectedList} startIcon={<Delete/>}>
             Delete List
           </Button>
           <TextEditBox textAreaValue={textAreaValue} handleTextAreaChange={handleTextAreaChange} id={"filterWordlistsEditorTextArea"}/>

@@ -1,5 +1,6 @@
 import React from 'react';
 import Button from '@mui/material/Button';
+import {Settings} from "@mui/icons-material";
 
 const OpenOptionsButton: React.FC = () => {
   const handleClick = () => {
@@ -12,6 +13,7 @@ const OpenOptionsButton: React.FC = () => {
       color="primary"
       onClick={handleClick}
       variant="contained"
+      startIcon={<Settings/>}
       style={{ margin: "10px 2px" }}
     >
       Open Options

@@ -2,6 +2,7 @@ import React, {useState, FormEvent} from 'react';
 import {Button, TextField, FormControl, Typography} from '@mui/material';
 import {ListNamesDataStore} from "../../modules/wordLists";
 import {useAlert} from "../AlertContext";
+import {Add} from "@mui/icons-material";
 
 
 const NewListForm: React.FC = () => {
@@ -43,7 +44,7 @@ const NewListForm: React.FC = () => {
           />
         </FormControl>
 
-        <Button type="submit" variant="contained" color="primary" id="newListSubmit">
+        <Button type="submit" variant="contained" color="primary" id="newListSubmit" startIcon={<Add/>}>
           Add List
         </Button>
       </form>

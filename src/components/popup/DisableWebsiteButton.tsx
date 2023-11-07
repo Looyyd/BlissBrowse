@@ -4,6 +4,7 @@ import {
   currentTabHostname, isCurrentSiteForbiddenForExtensions,
 } from "../../modules/hostname";
 import Button from "@mui/material/Button"
+import {Link, LinkOff} from "@mui/icons-material";
 
 const DisableWebsiteButton: React.FC = () => {
   const blacklistDataStore = new BlacklistDatastore();
@@ -35,8 +36,9 @@ const DisableWebsiteButton: React.FC = () => {
     }
   };
 
-  const buttonText = forbiddenSite ? 'Site Restricted' : isDisabled ? 'Enable on This Site' : 'Disable on This Site';
+  const buttonText = forbiddenSite ? 'Site Restricted' : isDisabled ? 'Site Disabled' : 'Site Enabled';
   const buttonColor = forbiddenSite ? "info" : isDisabled ? "warning" : "primary";
+  const buttonIcon = forbiddenSite ? <LinkOff/> : isDisabled ? <LinkOff/> : <Link/>;
 
   return (
     <Button
@@ -46,6 +48,7 @@ const DisableWebsiteButton: React.FC = () => {
       disabled={forbiddenSite}
       style={{ margin: "10px 2px" }}
       id="disable-website-button"
+      startIcon={buttonIcon}
     >
       {buttonText}
     </Button>

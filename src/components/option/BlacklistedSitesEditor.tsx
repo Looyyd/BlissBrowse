@@ -7,6 +7,7 @@ import {
 import {BlacklistDatastore} from "../../modules/hostname";
 import {useAlert} from "../AlertContext";
 import {TextEditBox} from "../TextEditBox";
+import {Save} from "@mui/icons-material";
 
 
 
@@ -37,7 +38,7 @@ const BlacklistedSitesEditor = () => {
   return (
     <Container>
       <Box display="flex" flexDirection="column" alignItems="start" gap={2}>
-      <Button variant="contained" color="primary" onClick={saveHostnames} id="hostname-save">
+      <Button variant="contained" color="primary" onClick={saveHostnames} id="hostname-save" startIcon={<Save/>}>
         Save
       </Button>
       <TextEditBox textAreaValue={textAreaValue} handleTextAreaChange={handleTextAreaChange} id="hostnameBlacklistEditorTextArea"/>

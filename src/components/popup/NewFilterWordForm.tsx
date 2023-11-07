@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import ListSelector from "../ListSelector";
 import {useAlert} from "../AlertContext";
+import {Add} from "@mui/icons-material";
 
 
 /* A form to add a new word to a list. */
@@ -62,7 +63,7 @@ const NewFilterWordForm: React.FC = () => {
           <FormHelperText>Select a list to add the word to</FormHelperText>
         </FormControl>
 
-        <Button type="submit" variant="contained" color="primary" id="submitNewWordButton">
+        <Button type="submit" variant="contained" color="primary" id="submitNewWordButton" startIcon={<Add/>}>
           Add Word
         </Button>
       </form>
