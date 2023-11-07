@@ -57,15 +57,53 @@ describe('Trie word add logic', () => {
 });
 
 describe('Trie filter logic', () => {
-  test("Should filter if word in trie", () => {
+  test("Word Present In Trie", () => {
     const trie = new Trie(['apple']);
     expect(trie.shouldFilterTextContent('apple')).toEqual({ shouldFilter: true, triggeringWord: 'apple' });
   });
 
-  test("Should not filter Putin in computing", () => {
+  test("Unrelated Word with Partial Match Substring", () => {
     const trie = new Trie(['putin']);
     const filterResult = trie.shouldFilterTextContent('computing');
     expect(filterResult.shouldFilter).toEqual(false);
+  });
+
+  test("Unrelated Word with Partial Match Suffix", () => {
+    const trie = new Trie(['hamas']);
+    const filterResult = trie.shouldFilterTextContent('bahamas');
+    expect(filterResult.shouldFilter).toEqual(false);
+  });
+
+  test("Unrelated Word with Partial Match Prefix", () => {
+    const trie = new Trie(['hamas']);
+    const filterResult = trie.shouldFilterTextContent('hamases');
+    expect(filterResult.shouldFilter).toEqual(false);
+  });
+
+  test("Case Insensitivity", () => {
+    const trie = new Trie(['apple']);
+    expect(trie.shouldFilterTextContent('APPLE')).toEqual({ shouldFilter: true, triggeringWord: 'apple' });
+  });
+
+  test("Punctuation Adjacent to Trie Word", () => {
+    const trie = new Trie(['apple']);
+    const sentence = "I love apple, orange, and grapes";
+    const filterResult = trie.shouldFilterTextContent(sentence);
+    expect(filterResult.shouldFilter).toEqual(true);
+  });
+
+  test("Number adjacent to Trie Word", () => {
+    const trie = new Trie(['apple']);
+    const sentence = "apple123";
+    const filterResult = trie.shouldFilterTextContent(sentence);
+    expect(filterResult.shouldFilter).toEqual(false);//TODO: should this be true?
+  });
+
+  test("Can bactrack to find a word", () => {
+    const trie2 = new Trie(["aa aa", "ab"]);
+    const sentence2 = "aa ab";
+    const filterResult2 = trie2.shouldFilterTextContent(sentence2);
+    expect(filterResult2.shouldFilter).toEqual(true);
   });
 
 });

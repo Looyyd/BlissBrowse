@@ -134,41 +134,55 @@ export class Trie {
    */
 
   public shouldFilterTextContent(textContent: string): FilterResult {
+    function boundaryChecker(c: string): boolean {
+      // This regex checks for any non-alphanumeric character including underscores.
+      // It effectively treats punctuation, spaces, and special characters as boundaries.
+      //return /[^a-zA-Z0-9]/.test(c);
+      // This regex uses Unicode property escapes to match any character that is not a letter or number in any language.
+      // You need to use the 'u' flag with the regular expression to enable Unicode mode.
+      return /[^\p{L}\p{N}]/u.test(c);
+    }
+
     const cleanedTextContent = textContent.toLowerCase().trim();
     const result: FilterResult = {
       shouldFilter: false,
     };
     let currentNode = this.root;
     let triggeringWord = '';
-    let wordStartIndex = -1;
+    let earliestBoundaryInTriggeringWord = -1;
 
     for (let i = 0; i < cleanedTextContent.length; i++) {
       const char = cleanedTextContent[i];
-      const isBoundary = i === 0 || /[\s,.;!?]/.test(cleanedTextContent[i - 1]);
+      const currentIsBoundary = boundaryChecker(char);
 
       if (currentNode.children[char]) {
-        if (triggeringWord === '' && isBoundary) {
-          wordStartIndex = i;  // Set the start index when the first char of a word is found
+        if (currentIsBoundary && earliestBoundaryInTriggeringWord === -1) {
+          earliestBoundaryInTriggeringWord = i;  // Set the earliest boundary in the triggering word
         }
         triggeringWord += char;
         currentNode = currentNode.children[char];
         if (currentNode.isEndOfWord) {
           // Check if the end of the word is a boundary or end of the text
-          const nextCharIsBoundary = i === cleanedTextContent.length - 1 || /[\s,.;!?]/.test(cleanedTextContent[i + 1]);
-          if (wordStartIndex === 0 || nextCharIsBoundary) {
+          const nextCharIsBoundary = i === cleanedTextContent.length - 1 || boundaryChecker(cleanedTextContent[i + 1]);
+          if (nextCharIsBoundary) {
             result.shouldFilter = true;
             result.triggeringWord = triggeringWord;
             return result;
           }
         }
       } else {
-        if (wordStartIndex !== -1) {
-          // Reset the loop to the character after the starting character of the last found word
-          i = wordStartIndex;
+        if (earliestBoundaryInTriggeringWord !== -1) {
+          i = earliestBoundaryInTriggeringWord;
+        }
+        else{
+          //got to next boundary
+          while(i < cleanedTextContent.length && !boundaryChecker(cleanedTextContent[i])){
+            i++;
+          }
         }
         triggeringWord = '';
         currentNode = this.root;
-        wordStartIndex = -1;
+        earliestBoundaryInTriggeringWord = -1;
       }
     }
 
