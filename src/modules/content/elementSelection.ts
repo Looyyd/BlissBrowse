@@ -2,15 +2,15 @@ import {DEBUG, DEBUG_PERFORMANCE} from "../../constants";
 
 const min_feed_neighbors = 3;
 
-function hasSimilarBoundingBoxes(my_rect: DOMRect, sib_rect: DOMRect) {
-  //TODO: test if this logic can be improved or another function used
-  const areSizesSimilar = (size1: number, size2: number, threshold: number = 0.85): boolean => {
-    /* Returns true if size1 is within threshold% of size2 */
-    const lowerBound = size2 * threshold;
-    const upperBound = size2 / threshold;
-    return size1 >= lowerBound && size1 <= upperBound;
-  }
+const areSizesSimilar = (size1: number, size2: number, threshold: number = 0.80): boolean => {
+  /* Returns true if size1 is within threshold% of size2 */
+  const lowerBound = size2 * threshold;
+  const upperBound = size2 / threshold;
+  return size1 >= lowerBound && size1 <= upperBound;
+}
 
+function hasSimilarBoundingBoxes(my_rect: DOMRect, sib_rect: DOMRect, threshold: number = 0.80) {
+  //TODO: test if this logic can be improved or another function used
   const my_x = my_rect.left + my_rect.width / 2;
   const sib_x = sib_rect.left + sib_rect.width / 2;
 
@@ -20,9 +20,11 @@ function hasSimilarBoundingBoxes(my_rect: DOMRect, sib_rect: DOMRect) {
   const is_vertically_placed = Math.abs(my_y - sib_y) > Math.abs(my_x - sib_x);
 
   if (is_vertically_placed) {
-    return sib_rect.height !== 0 && areSizesSimilar(my_rect.width, sib_rect.width);
+    return sib_rect.height !== 0 && areSizesSimilar(my_rect.width, sib_rect.width, threshold);
   } else {
-    return sib_rect.width !== 0 && areSizesSimilar(my_rect.height, sib_rect.height);
+    //TODO: what sites have horizontally placed with different heights? youtube no, 4chan no,
+    // then should the width not be the one checked?
+    return sib_rect.width !== 0 && areSizesSimilar(my_rect.height, sib_rect.height, threshold);
   }
 }
 
@@ -44,23 +46,37 @@ export function getFeedlikeAncestor(node: Node): Element | null {
   const ancestors = [];
   const scores = [];
 
+  if(ancestor){
+    const firstAncestorRect =    rects.get(ancestor) || ancestor.getBoundingClientRect();
+    if(firstAncestorRect.height <= 3) {//twitter had a 1*1 element, so let's use 3 as a threshold
+      return null;//don't filter out elements with height 0
+    }
+  }
+
   while (ancestor) {
     const ancestorRect = rects.get(ancestor) || ancestor.getBoundingClientRect();
     rects.set(ancestor, ancestorRect);
 
+    /*
     if (ancestorRect.height === 0) {
+      //TODO: should we just not filter if height is 0?
       ancestor = getParentElement(ancestor);
       continue;
     }
+     */
+
     const ancestorArea = ancestorRect.width * ancestorRect.height;
     if (ancestorArea < 5000) {
       //todo: could stop doing this after it passes once
-      /* skip small elements that could be text */
+      // skip small elements that could be text, for exemple tiktok hashtags, usernames, etc
       ancestor = getParentElement(ancestor);
       continue;
     }
 
-    const matchingSiblings = Array.from(ancestor.parentNode!.children).filter((sib) => {
+    const siblings = Array.from(ancestor.parentNode!.children);
+    //TODO: maybe only keep siblings that have the same tag name?
+
+    const matchingSiblings = siblings.filter((sib) => {
       if (!isElementNode(sib) || sib === ancestor) {
         return false;
       }
@@ -71,15 +87,41 @@ export function getFeedlikeAncestor(node: Node): Element | null {
       return hasSimilarBoundingBoxes(ancestorRect, sibRect);
     });
 
+    const exactMatchSibblings = siblings.filter((sib) => {
+      if (!isElementNode(sib) || sib === ancestor) {
+        return false;
+      }
+
+      const sibRect = rects.get(sib) || sib.getBoundingClientRect();
+      rects.set(sib, sibRect);
+
+      //exact match using area directly, otherwise too many false positives
+      //TODO: match height and width separately?
+      return areSizesSimilar(ancestorArea, sibRect.width * sibRect.height, 0.98);
+    });
+
+    if (exactMatchSibblings.length >= 2) {
+      // early quit if siblings have exact same bounding boxes
+      //usually exactly the same size means it's almost guaranteed to be a feed
+      //the early match stop from matching something higher up the tree
+      //for example on YouTube an entire row can be matched
+      return ancestor;
+    }
+
     scores.push(matchingSiblings.length);
     ancestors.push(ancestor);
     ancestor = getParentElement(ancestor);
   }
 
+  //
   if(ancestors.length === 0) {
     return null;
   }
 
+  /* if no early exit, match the ancestor with the highest score
+  *  this will work well on sites that have elements with similar
+  *  but not exact same bounding boxes, such as 4chan, reddit and twitter
+  * */
   let bestScore = 0;
   let potentialAncestor = ancestors[0];
   for (let i = 0; i < ancestors.length; i++) {
@@ -90,6 +132,7 @@ export function getFeedlikeAncestor(node: Node): Element | null {
       }
     }
   }
+  //TODO: don't filter if size is too big?(good safety measure for now), maybe put it before,in the loop
   return potentialAncestor;
 }
 
