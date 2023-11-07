@@ -45,10 +45,17 @@ export function getFeedlikeAncestor(node: Node): Element | null {
   const scores = [];
 
   while (ancestor) {
-    const myRect = rects.get(ancestor) || ancestor.getBoundingClientRect();
-    rects.set(ancestor, myRect);
+    const ancestorRect = rects.get(ancestor) || ancestor.getBoundingClientRect();
+    rects.set(ancestor, ancestorRect);
 
-    if (myRect.height === 0) {
+    if (ancestorRect.height === 0) {
+      ancestor = getParentElement(ancestor);
+      continue;
+    }
+    const ancestorArea = ancestorRect.width * ancestorRect.height;
+    if (ancestorArea < 5000) {
+      //todo: could stop doing this after it passes once
+      /* skip small elements that could be text */
       ancestor = getParentElement(ancestor);
       continue;
     }
@@ -61,7 +68,7 @@ export function getFeedlikeAncestor(node: Node): Element | null {
       const sibRect = rects.get(sib) || sib.getBoundingClientRect();
       rects.set(sib, sibRect);
 
-      return hasSimilarBoundingBoxes(myRect, sibRect);
+      return hasSimilarBoundingBoxes(ancestorRect, sibRect);
     });
 
     scores.push(matchingSiblings.length);
