@@ -36,7 +36,10 @@ const useSelectedListData = (initialListName: string): [string, React.Dispatch<R
   const [words, setWords] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!selectedList) return;
+    if (!selectedList || selectedList === ""){
+      setWords([]);
+      return;
+    }
 
     const fetchData = async () => {
       const dataStore = new FilterListDataStore(selectedList);
@@ -83,6 +86,7 @@ const FilterWordlistsEditor = () => {
     if (!list) return;
     listNamesDataStore.deleteList(list).then(() => {
       setSelectedList("");
+      showAlert('success', 'List deleted successfully!');
     });
   }
 
