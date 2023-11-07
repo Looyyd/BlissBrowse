@@ -20,7 +20,7 @@ const ListsDisplay: React.FC = () => {
 
   return (
     <>
-      <Typography variant="h6">Your Lists</Typography>
+      <Typography variant="h6">Your lists</Typography>
       <List id="listsList">
         {lists === null ? (
           <LoadingScreen/>

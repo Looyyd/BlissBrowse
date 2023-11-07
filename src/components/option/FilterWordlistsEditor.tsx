@@ -1,16 +1,16 @@
 import React, {useEffect, useState} from 'react';
 import {ListNamesDataStore, FilterListDataStore} from "../../modules/wordLists";
 import {
-  InputLabel,
   Button,
   Container,
   Box,
-  SelectChangeEvent,
+  SelectChangeEvent, Typography,
 } from '@mui/material';
 import ListSelector from "../ListSelector";
 import {useAlert} from "../AlertContext";
 import {TextEditBox} from "../TextEditBox";
 import {Delete, Save} from "@mui/icons-material";
+import NewListForm from "../popup/NewListForm";
 
 
 
@@ -107,8 +107,12 @@ const FilterWordlistsEditor = () => {
   return (
     <>
       <Container>
+        <NewListForm/>
+        {/* separator */}
+        <Box sx={{height: 20}}/>
+        {/* separator */}
         <Box display="flex" flexDirection="column" alignItems="start" gap={2}>
-          <InputLabel id="wordlist-label">Wordlist</InputLabel>
+          <Typography variant="h6">Edit a list</Typography>
           <ListSelector
             lists={lists}
             onListChange={handleListChange}

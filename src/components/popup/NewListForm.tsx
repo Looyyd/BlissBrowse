@@ -31,7 +31,7 @@ const NewListForm: React.FC = () => {
 
   return (
     <>
-      <Typography variant="h6">Create a New List</Typography>
+      <Typography variant="h6">Create a new list</Typography>
       <form onSubmit={handleSubmit}>
         <FormControl fullWidth margin="normal">
           <TextField

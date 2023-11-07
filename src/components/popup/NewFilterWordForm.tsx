@@ -41,7 +41,7 @@ const NewFilterWordForm: React.FC = () => {
 
   return (
     <>
-      <Typography variant="h6">Add Custom Word</Typography>
+      <Typography variant="h6">Add a filter word</Typography>
       <form onSubmit={handleSubmit}>
         <FormControl fullWidth margin="normal">
           <TextField
