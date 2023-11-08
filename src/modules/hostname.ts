@@ -43,8 +43,8 @@ export async function isCurrentSiteForbiddenForExtensions(context: "popup" | "co
   const protocol = new URL(url).protocol;
 
   // List of restricted protocols/schemes
-  //TODO: html files are allowed by chrome
-  const restrictedProtocols = ['chrome:', 'chrome-extension:', 'file:'];
+  const restrictedProtocols = ['chrome:', 'chrome-extension:'];
+
   return restrictedProtocols.includes(protocol);
 }
 
