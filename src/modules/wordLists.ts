@@ -2,7 +2,7 @@ import {
   DEFAULT_LISTNAMES_ARRAY,
   DEFAULT_WORD_STATISTICS,
   DEFAULT_WORDLIST,
-  LIST_OF_LIST_NAMES_KEY_PREFIX,
+  LIST_OF_LIST_NAMES_KEY,
   FILTER_LIST_KEY_PREFIX,
   WORD_STATISTICS_KEY_PREFIX, TRIE_KEY_PREFIX
 } from "../constants";
@@ -52,7 +52,7 @@ export class StatisticsDataStore extends DatabaseStorage<number> {
 }
 
 export class ListNamesDataStore extends DatabaseStorage<string[]> {
-  key = LIST_OF_LIST_NAMES_KEY_PREFIX;
+  key = LIST_OF_LIST_NAMES_KEY;
   defaultValue = DEFAULT_LISTNAMES_ARRAY;
   isType = isStringArray;
 

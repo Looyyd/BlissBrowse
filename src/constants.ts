@@ -2,7 +2,7 @@ import {ColorTheme, FilterAction} from "./modules/types";
 
 
 export const EXTENSION_NAME= "mindguard"
-
+export const DEFAULT_LIST_NAME = "default"
 
 //content
 
@@ -29,7 +29,7 @@ export const ALL_LISTS_SYMBOL = 'All_LISTS_3213546516541';
 export const WORD_STATISTICS_KEY_PREFIX = 'statistics-word-';
 export const FILTER_LIST_KEY_PREFIX = 'list-';
 export const TRIE_KEY_PREFIX = 'trie-';
-export const LIST_OF_LIST_NAMES_KEY_PREFIX = "listNames"
+export const LIST_OF_LIST_NAMES_KEY = "listNames"
 export const BLACKLISTED_WEBSITES_KEY_PREFIX = 'blacklist';
 export const FILTER_ACTION_KEY = 'actionToApplyOnFilter';
 export const COLOR_THEME_KEY = 'colorTheme';
