@@ -1,6 +1,7 @@
-import {DEBUG_MESSAGES} from "./constants";
+import {DEBUG, DEBUG_MESSAGES, DEFAULT_LIST_NAME, LIST_OF_LIST_NAMES_KEY} from "./constants";
 import IndexedDBModule from "./modules/IndexedDBModule";
 import {DataChangeMessage, Message} from "./modules/types";
+import {ListNamesDataStore} from "./modules/wordLists";
 
 
 (async () => {
@@ -11,6 +12,14 @@ import {DataChangeMessage, Message} from "./modules/types";
 chrome.runtime.onInstalled.addListener(async function(details) {
   if (details.reason === 'install') {
     // This block will run when the extension is first installed
+
+    // create default wordlist
+    //TODO: test if this works, because it doesn't with load unpacked extension
+    const dataStore = new ListNamesDataStore();
+    await dataStore.createNewList(DEFAULT_LIST_NAME);
+    if(DEBUG){
+      console.log('default list created');
+    }
   } else if (details.reason === 'update') {
     // This block will run when the extension is updated
     // You can also set or update storage values here
