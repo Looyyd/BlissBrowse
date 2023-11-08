@@ -1,6 +1,7 @@
 import React from 'react';
 import Button from '@mui/material/Button';
 import {BugReport} from "@mui/icons-material";
+import {Tooltip} from "@mui/material";
 
 const feedbackFormUrl = 'https://docs.google.com/forms/d/e/1FAIpQLScjTffzbJdl6hIA3Dqx6pCgPpxrCaMc0m5FoBogDst8qeNpDw/viewform?usp=sf_link'
 
@@ -11,14 +12,17 @@ const FeedbackButton = () => {
   };
 
     return (
-    <Button
-      variant="contained"
-      color="primary"
-      startIcon={<BugReport/>} // Add the warning icon as the startIcon
-      onClick={handleOpenForm}
-    >
-      Give Feedback
-    </Button>
+      <Tooltip title="Report a bug or request a feature">
+        <Button
+          variant="contained"
+          color="primary"
+          //startIcon={<BugReport/>} // Add the warning icon as the startIcon
+          onClick={handleOpenForm}
+          style={{ margin: "10px 2px" }}
+        >
+          <BugReport/>
+        </Button>
+      </Tooltip>
   );
 }
 

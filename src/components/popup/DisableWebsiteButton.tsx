@@ -5,6 +5,7 @@ import {
 } from "../../modules/hostname";
 import Button from "@mui/material/Button"
 import {Link, LinkOff} from "@mui/icons-material";
+import {Tooltip} from "@mui/material";
 
 const DisableWebsiteButton: React.FC = () => {
   const blacklistDataStore = new BlacklistDatastore();
@@ -39,19 +40,29 @@ const DisableWebsiteButton: React.FC = () => {
   const buttonText = forbiddenSite ? 'Site Restricted' : isDisabled ? 'Site Disabled' : 'Site Enabled';
   const buttonColor = forbiddenSite ? "info" : isDisabled ? "warning" : "primary";
   const buttonIcon = forbiddenSite ? <LinkOff/> : isDisabled ? <LinkOff/> : <Link/>;
+  let tooltipText;
+  if (forbiddenSite) {
+    tooltipText = "Chrome extensions are disabled on this website";
+  } else if (isDisabled) {
+    tooltipText = "Click to enable the extension on this website";
+  } else {
+    tooltipText = "Click to disable the extension on this website";
+  }
 
   return (
-    <Button
-      variant="contained"
-      color={buttonColor}
-      onClick={handleClick}
-      disabled={forbiddenSite}
-      style={{ margin: "10px 2px" }}
-      id="disable-website-button"
-      startIcon={buttonIcon}
-    >
-      {buttonText}
-    </Button>
+    <Tooltip title={tooltipText}>
+      <Button
+        variant="contained"
+        color={buttonColor}
+        onClick={handleClick}
+        disabled={forbiddenSite}
+        style={{ margin: "10px 2px" }}
+        id="disable-website-button"
+        startIcon={buttonIcon}
+      >
+        {buttonText}
+      </Button>
+    </Tooltip>
   );
 };
 
