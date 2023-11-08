@@ -2,6 +2,7 @@ import React from 'react';
 import {Button, List, ListItem, ListItemText, Typography} from '@mui/material';
 import {ListNamesDataStore} from "../../modules/wordLists";
 import LoadingScreen from "../LoadingScreen";
+import {Edit} from "@mui/icons-material";
 
 
 
@@ -29,7 +30,13 @@ const ListsDisplay: React.FC = () => {
           <div key={index}>
             <ListItem>
               <ListItemText primary={listName} />
-              <Button onClick={() => openListEditor(listName)} id={"edit-"+listName.replace(" ", "_")}>Edit</Button>
+              <Button
+                onClick={() => openListEditor(listName)}
+                id={"edit-"+listName.replace(" ", "_")}
+                color="primary"
+                startIcon={<Edit/>}
+                variant="contained"
+              >Edit</Button>
             </ListItem>
           </div>
         )))

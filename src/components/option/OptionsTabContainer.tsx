@@ -46,10 +46,12 @@ const TabContainer = () => {
       tab: 'Blacklisted Websites',
       content: <BlacklistedSitesEditor />,
     },
+    /*
     {
       tab: 'Settings',
       content: <GlobalSettings />,
     }
+     */
   ];
 
   return (

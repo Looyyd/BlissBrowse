@@ -1,7 +1,7 @@
 import {ColorTheme, FilterAction} from "./modules/types";
 
 
-export const EXTENSION_NAME= "mindguard"
+export const EXTENSION_NAME= "BlissBrowse"
 export const DEFAULT_LIST_NAME = "default"
 
 //content

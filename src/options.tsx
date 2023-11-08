@@ -6,6 +6,7 @@ import {ColorTheme} from "./modules/types";
 import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
 import AlertComponent from "./components/AlertComponent";
 import {AlertProvider} from "./components/AlertContext";
+import {lightTheme} from "./themes";
 
 
 const App: React.FC = () => {
@@ -21,10 +22,10 @@ const App: React.FC = () => {
   });
 
   return (
-    <ThemeProvider theme={theme}>
+    <>
       <CssBaseline />
       <TabContainer />
-    </ThemeProvider>
+    </>
   );
 };
 
@@ -34,10 +35,12 @@ if (root) {
   const rootContainer = createRoot(root);
   rootContainer.render(
     <React.StrictMode>
-      <AlertProvider>
-        <AlertComponent />
-        <App />
-      </AlertProvider>
+      <ThemeProvider theme={lightTheme}>
+        <AlertProvider>
+          <AlertComponent />
+          <App />
+        </AlertProvider>
+      </ThemeProvider>
     </React.StrictMode>
   );
 }

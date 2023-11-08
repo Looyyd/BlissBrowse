@@ -6,11 +6,12 @@ import NewFilterWordForm from "./components/popup/NewFilterWordForm";
 import NewListForm from "./components/popup/NewListForm";
 import OpenOptionsButton from "./components/popup/OpenOptionsButton";
 import {ColorTheme} from "./modules/types";
-import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
+import {Container, createTheme, CssBaseline, ThemeProvider} from "@mui/material";
 import {ColorThemeStore} from "./modules/settings";
 import {AlertProvider} from "./components/AlertContext";
 import AlertComponent from "./components/AlertComponent";
 import FeedbackButton from "./components/FeedbackButton";
+import {lightTheme} from "./themes";
 
 
 const Popup: React.FC = () => {
@@ -18,22 +19,17 @@ const Popup: React.FC = () => {
   const [colorTheme,] = colorThemeStore.useData(colorThemeStore.get());
 
   const darkMode = colorTheme === ColorTheme.DARK;
-  const theme = createTheme({
-    palette: {
-      mode: darkMode ? 'dark' : 'light',
-    },
-  });
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <FeedbackButton />
-      <OpenOptionsButton/>
-      <DisableWebsiteButton />
-      <NewFilterWordForm />
-      <NewListForm />
-      <ListsDisplay />
-    </ThemeProvider>
+      <Container >
+        <CssBaseline />
+        <FeedbackButton />
+        <OpenOptionsButton/>
+        <DisableWebsiteButton />
+        <NewFilterWordForm />
+        <NewListForm />
+        <ListsDisplay />
+      </Container>
   );
 };
 
@@ -42,10 +38,12 @@ if (root) {
   createRoot(root).render(
     <>
       <React.StrictMode>
-        <AlertProvider>
-          <AlertComponent />
-          <Popup/>
-        </AlertProvider>
+        <ThemeProvider theme={lightTheme}>
+          <AlertProvider>
+            <AlertComponent />
+            <Popup/>
+          </AlertProvider>
+        </ThemeProvider>
       </React.StrictMode>
     </>
   );
