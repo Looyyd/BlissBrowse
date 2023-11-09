@@ -16,7 +16,7 @@ import {useEffect, useState} from "react";
 * @throws Error if n is not a number
  */
 export async function getFilterWordStatistics(word: string): Promise<number> {
-  const dataStore = new StatisticsDataStore(word);
+  const dataStore = new WordStatisticsDataStore(word);
   return await dataStore.get();
 }
 
@@ -24,12 +24,12 @@ export async function getFilterWordStatistics(word: string): Promise<number> {
 * @throws Error if n is not a number
  */
 export async function addToFilterWordStatistics(word: string, countToAdd: number){
-  const dataStore = new StatisticsDataStore(word);
+  const dataStore = new WordStatisticsDataStore(word);
   await dataStore.add(countToAdd);
 }
 
 
-export class StatisticsDataStore extends DatabaseStorage<number> {
+export class WordStatisticsDataStore extends DatabaseStorage<number> {
   key: string;
   defaultValue = DEFAULT_WORD_STATISTICS;
   IndexedDBStoreName = WORD_STATISTICS_STORE_NAME;
@@ -51,6 +51,7 @@ export class StatisticsDataStore extends DatabaseStorage<number> {
     await this.syncedSet(value);
   }
 }
+
 
 export class ListNamesDataStore extends DatabaseStorage<string[]> {
   key = LIST_OF_LIST_NAMES_KEY;//TODO: should maybe not use single key but 1 row per list?

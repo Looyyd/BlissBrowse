@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {getFilterWordStatistics, ListNamesDataStore, FilterListDataStore} from "../../modules/wordLists";
 import {
   Table,
@@ -13,9 +13,18 @@ import TableCell from '@mui/material/TableCell';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import ArrowDownward from '@mui/icons-material/ArrowDownward';
 import ListSelector from "../ListSelector";
-import {ALL_LISTS_SYMBOL} from "../../constants";
+import {ALL_LISTS_SYMBOL, WORD_STATISTICS_STORE_NAME} from "../../constants";
+import {getAllDataStore} from "../../modules/storage";
+import {StatisticsArray, StatisticsEntry} from "../../modules/types";
 
 
+type sortKey = 'key' | 'value'; // 'key' for word, 'value' for statistic
+
+// Assuming this is the type for your sortConfig
+export type SortConfig = {
+  key: sortKey;
+  direction: 'asc' | 'desc';
+};
 
 const WordStatistics = () => {
   const listNamesDataStore = new ListNamesDataStore();
@@ -23,9 +32,12 @@ const WordStatistics = () => {
   const [syncedLists,] = listNamesDataStore.useData([]);
   //lists are showed
   const [lists, setLists] = useState<string[] | null>(null);
-  const [sortConfig, setSortConfig] = useState<{ key: null | number, direction: string }>({ key: null, direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "key", direction: 'asc' });
   const [selectedList, setSelectedList] = useState<string | null>(null);
-  const [statistics, setStatistics] = useState<{ [word: string]: number }>({});
+  const [statistics, setStatistics] = useState<StatisticsArray>([]);
+  const [shownStatistics, setShownStatistics] = useState<StatisticsArray>([]);
+
+  //TODO: into statistics type
   const columnNames = ["Word", "Times Seen"];
 
   useEffect(() => {
@@ -36,6 +48,16 @@ const WordStatistics = () => {
     }
   }, [syncedLists]);
 
+  useEffect(() => {
+    async function getStatistics(){
+      //TODO: make the statistics refresh on change, create a datastore?
+      const Statistics = await getAllDataStore<StatisticsEntry>(WORD_STATISTICS_STORE_NAME);
+      console.log(Statistics);
+      setStatistics(Statistics);
+    }
+    getStatistics();
+  }, []);
+
   //set the first list as selectedList by default
   useEffect(() => {
     if (selectedList === null && lists !== null && lists.includes(ALL_LISTS_SYMBOL)) {
@@ -44,21 +66,31 @@ const WordStatistics = () => {
   }, [lists]);
 
   useEffect(() => {
-    console.log('selectedList changed:', selectedList);
-    if (lists !== null && lists.length > 0 && selectedList !== null) {
-      console.log('fetching statistics');
-      fetchStatistics(selectedList);
+    async function showListStatistics() {
+      console.log('selectedList changed:', selectedList);
+      if (lists !== null && lists.length > 0 && selectedList !== null) {
+        if(selectedList === ALL_LISTS_SYMBOL){
+          setShownStatistics(statistics);
+        }else{
+          const dataStore = new FilterListDataStore(selectedList);
+          const words = await dataStore.get(); // Assuming this returns an array of strings
+          const statisticsToShow = statistics.filter(entry => words.includes(entry.key));
+          setShownStatistics(statisticsToShow);
+        }
+      }
     }
+    showListStatistics();
   }, [selectedList]);
 
-  const sortedStatistics = React.useMemo(() => {
-    const sortableItems = Object.entries(statistics);
-    const key = sortConfig.key;
-    if (key !== null) {
+  const sortedStatistics = useMemo(() => {
+    // Clone the array before sorting to avoid mutating state directly
+    const sortableItems = [...shownStatistics];
+
+    if (sortConfig.key !== null) {
       sortableItems.sort((a, b) => {
-        // Convert to lowercase if sorting by word (index 0)
-        const aValue = key === 0 ? a[key].toLowerCase() : a[key];
-        const bValue = key === 0 ? b[key].toLowerCase() : b[key];
+        // Directly access the properties of the object
+        const aValue = sortConfig.key === 'key' ? a[sortConfig.key].toLowerCase() : a[sortConfig.key];
+        const bValue = sortConfig.key === 'key' ? b[sortConfig.key].toLowerCase() : b[sortConfig.key];
 
         if (aValue < bValue) {
           return sortConfig.direction === 'asc' ? -1 : 1;
@@ -69,44 +101,17 @@ const WordStatistics = () => {
         return 0;
       });
     }
+
     return sortableItems;
-  }, [statistics, sortConfig]);
+  }, [shownStatistics, sortConfig]);
 
-
-  const fetchStatistics = async (list: string | null) => {
-    if (!list) return;
-    let lists_to_show: string[];
-    console.log('fetching statistics for list:', list);
-    if (list === ALL_LISTS_SYMBOL) {
-      if (lists === null) return;
-      lists_to_show = lists;
-    }
-    else {
-      lists_to_show = [list];
-    }
-
-    let words_to_show: string[] = [];
-    for (const list_to_show of lists_to_show) {
-      const dataStore = new FilterListDataStore(list_to_show);
-      const words = await dataStore.get();
-      words_to_show = words_to_show.concat(words);
-    }
-    words_to_show = [...new Set(words_to_show)];
-
-    const statisticsDiv: { [word: string]: number } = {};
-    for (const word of words_to_show) {
-      statisticsDiv[word] = await getFilterWordStatistics(word);
-    }
-
-    setStatistics(statisticsDiv);
-  };
 
   const handleListChange = async (e: SelectChangeEvent<string>) => {
     const newList = e.target.value;
     setSelectedList(newList);
   };
 
-  const handleSort = (key: number) => {
+  const handleSort = (key: sortKey) => {
     if (sortConfig.key === key) {
       setSortConfig({ key, direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' });
     } else {
@@ -114,7 +119,7 @@ const WordStatistics = () => {
     }
   };
   // Function to return sort indicator
-  const getSortIndicator = (key: number) => {
+  const getSortIndicator = (key: sortKey) => {
     if (sortConfig.key === key) {
       return sortConfig.direction === 'asc' ?
         <ArrowUpward fontSize="small" style={{ verticalAlign: '2px' }} /> :
@@ -138,21 +143,27 @@ const WordStatistics = () => {
         <Table>
           <TableHead>
             <TableRow>
-              {columnNames.map((name, index) => (
-                <TableCell key={index} onClick={() => handleSort(index)}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
-                    <span>{name}</span>
-                    <span style={{ marginLeft: '8px', width: '24px', display: 'inline-block' }}>{getSortIndicator(index)}</span>
-                  </div>
-                </TableCell>
-              ))}
+              {columnNames.map((name, index) => {
+                // Determine the sortKey based on the index or column name
+                const sortKey = index === 0 ? 'key' : 'value';
+                return (
+                  <TableCell key={name} onClick={() => handleSort(sortKey)}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
+                      <span>{name}</span>
+                      <span style={{ marginLeft: '8px', width: '24px', display: 'inline-block' }}>
+                      {getSortIndicator(sortKey)}
+                    </span>
+                    </div>
+                  </TableCell>
+                );
+              })}
             </TableRow>
           </TableHead>
           <TableBody>
-            {sortedStatistics.map(([word, stat]) => (
-              <TableRow key={word}>
-                <TableCell>{word}</TableCell>
-                <TableCell>{stat}</TableCell>
+            {sortedStatistics.map((entry) => (
+              <TableRow key={entry.key}>
+                <TableCell>{entry.key}</TableCell>
+                <TableCell>{entry.value}</TableCell>
               </TableRow>
             ))}
           </TableBody>

@@ -28,6 +28,7 @@ chrome.runtime.onInstalled.addListener(async function(details) {
 
 
 type SendResponseFunc = (response: unknown) => void;
+
 const handleGet = (storeName: string, key: string, sendResponse: SendResponseFunc): void => {
   IndexedDBModule.getIndexedDBKey(storeName, key)
     .then((data: unknown) => {
@@ -44,6 +45,24 @@ const handleGet = (storeName: string, key: string, sendResponse: SendResponseFun
       }
     });
 };
+
+const handleGetAll = (storeName: string, sendResponse: SendResponseFunc): void => {
+  IndexedDBModule.getAllIndexedDBKeys(storeName)
+    .then((data: unknown) => {
+      if (DEBUG_MESSAGES) {
+        console.log('Sending data from background listener data:', data);
+      }
+      sendResponse({ success: true, data });
+    })
+    .catch((error: unknown) => {
+      if (error instanceof Error) {
+        sendResponse({ success: false, error: error.message });
+      } else {
+        sendResponse({ success: false, error: 'An unknown error occurred.' });
+      }
+    });
+}
+
 
 function sendDataChangedMessage(storeName: string, key: string, value: unknown) {
   const message : DataChangeMessage<unknown>= { action: 'dataChanged', key: key, value: value, storeName: storeName };
@@ -102,6 +121,8 @@ chrome.runtime.onMessage.addListener((request: Message<unknown>, sender, sendRes
 
   if (request.action === 'get') {
     handleGet(request.storeName, request.key, sendResponse);
+  } else if (request.action === 'getAll') {
+   handleGetAll(request.storeName, sendResponse);
   } else if (request.action === 'set') {
     handleSet(request.storeName, request.key, request.value,sendResponse);
   } else if (request.action === 'localStorageSet') {

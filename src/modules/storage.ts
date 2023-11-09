@@ -1,5 +1,11 @@
 import {DEBUG_MESSAGES, LOCAL_STORAGE_STORE_NAME} from "../constants";
-import {GetDataMessage, IndexedDBSetDataMessage, LocalStorageSetMessage, RemoveDataMessage} from "./types";
+import {
+  GetAllMessage,
+  GetDataMessage,
+  IndexedDBSetDataMessage,
+  LocalStorageSetMessage,
+  RemoveDataMessage
+} from "./types";
 
 export async function getStorageKey<T>(storeName:string, key: string): Promise<T>{
   return new Promise((resolve, reject) => {
@@ -14,6 +20,25 @@ export async function getStorageKey<T>(storeName:string, key: string): Promise<T
       }
       if (response.success) {
         resolve(response.data as T);
+      } else {
+        reject(new Error(response.error));
+      }
+    });
+  });
+}
+
+export async function getAllDataStore<T>(storeName:string): Promise<T[]>{
+  return new Promise((resolve, reject) => {
+    const getMessage: GetAllMessage = {
+      action: 'getAll',
+      storeName: storeName
+    };
+    chrome.runtime.sendMessage(getMessage, (response) => {
+      if(DEBUG_MESSAGES){
+        console.log('getAllDataStore response:', response);
+      }
+      if (response.success) {
+        resolve(response.data as T[]);
       } else {
         reject(new Error(response.error));
       }

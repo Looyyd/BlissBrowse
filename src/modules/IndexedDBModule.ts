@@ -73,6 +73,36 @@ class IndexedDBModule {
       }
     });
   }
+
+  static async getAllIndexedDBKeys<T>(storeName: string): Promise<T[]> {
+    return new Promise((resolve, reject) => {
+      if (this.db) {
+        const transaction = this.db.transaction([storeName], 'readonly');
+        const objectStore = transaction.objectStore(storeName);
+        const request = objectStore.openCursor();
+        const results: T[] = [];
+
+        request.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
+          if (cursor) {
+            // Push the value part of the key-value pair into the results array
+            results.push(cursor.value);
+            cursor.continue(); // Move to the next object in the store
+          } else {
+            // No more entries, so resolve with the collected results
+            resolve(results);
+          }
+        };
+
+        request.onerror = () => {
+          reject(new Error(`Error fetching all data from ${storeName}`));
+        };
+      } else {
+        reject(new Error(`Database is not initialized`));
+      }
+    });
+  }
+
 }
 
 

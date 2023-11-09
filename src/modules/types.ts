@@ -28,36 +28,51 @@ export function isNumber(value: unknown): value is number {
 }
 
 
+export type StatisticsEntry = {
+  key: string;
+  value: number;
+};
+
+export type StatisticsArray = StatisticsEntry[];
+
+//TODO: better organize the message? why are there so many, at least document them?
 interface BaseMessage {
   action: string;
-  key: string;
   storeName: string;
   destination?: string;
   source?: string;
 }
 
-export interface DataChangeMessage<T> extends BaseMessage {
+interface KeyedMessage extends BaseMessage {
+  key: string;
+}
+
+export interface DataChangeMessage<T> extends KeyedMessage {
   action: 'dataChanged';
   value: T;
 }
 
-export interface IndexedDBSetDataMessage<T> extends BaseMessage {
+export interface IndexedDBSetDataMessage<T> extends KeyedMessage {
   action: 'set';
   value: T;
 }
 
-export interface LocalStorageSetMessage<T> extends BaseMessage {
+export interface LocalStorageSetMessage<T> extends KeyedMessage {
   action: 'localStorageSet';
   value: T;
 }
 
 // getData message type
-export interface GetDataMessage extends BaseMessage {
+export interface GetDataMessage extends KeyedMessage {
   action: 'get';
 }
 
-export interface RemoveDataMessage extends BaseMessage {
+export interface RemoveDataMessage extends KeyedMessage {
   action: 'remove';
+}
+
+export interface GetAllMessage extends BaseMessage {
+  action: 'getAll';
 }
 
 // Union type for all possible messages
@@ -65,4 +80,5 @@ export type Message<T> = DataChangeMessage<T>
   | IndexedDBSetDataMessage<T>
   | LocalStorageSetMessage<T>
   | RemoveDataMessage
-  | GetDataMessage;
+  | GetDataMessage
+  | GetAllMessage;
