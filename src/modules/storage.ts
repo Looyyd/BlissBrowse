@@ -1,11 +1,12 @@
-import {DEBUG_MESSAGES} from "../constants";
+import {DEBUG_MESSAGES, LOCAL_STORAGE_STORE_NAME} from "../constants";
 import {GetDataMessage, IndexedDBSetDataMessage, LocalStorageSetMessage, RemoveDataMessage} from "./types";
 
-export async function getStorageKey<T>(key: string): Promise<T>{
+export async function getStorageKey<T>(storeName:string, key: string): Promise<T>{
   return new Promise((resolve, reject) => {
     const getMessage: GetDataMessage = {
       action: 'get',
-      key: key
+      key: key,
+      storeName: storeName
     };
     chrome.runtime.sendMessage(getMessage, (response) => {
       if(DEBUG_MESSAGES){
@@ -20,12 +21,13 @@ export async function getStorageKey<T>(key: string): Promise<T>{
   });
 }
 
-export async function setStorageKey<T>(key: string, value: T): Promise<void> {
+export async function setStorageKey<T>(storeName: string, key: string, value: T): Promise<void> {
   return new Promise((resolve, reject) => {
     const setMessage: IndexedDBSetDataMessage<T> = {
       action: 'set',
       key: key,
-      value: value
+      value: value,
+      storeName: storeName
     };
     chrome.runtime.sendMessage(setMessage, (response) => {
       if (response.success) {
@@ -47,7 +49,8 @@ export async function setLocalStorageKey<T>(key: string, value: T): Promise<void
     const message: LocalStorageSetMessage<T> = {
       action: 'localStorageSet',
       key: key,
-      value: value
+      value: value,
+      storeName:  LOCAL_STORAGE_STORE_NAME//TODO: it's kinda hacky cause it's not going to be used
     };
     chrome.runtime.sendMessage(message, (response) => {
       if (response.success) {
@@ -62,11 +65,12 @@ export async function setLocalStorageKey<T>(key: string, value: T): Promise<void
   });
 }
 
-export async function removeStorageKey(key: string): Promise<void> {
+export async function removeStorageKey(storeName:string, key: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const message: RemoveDataMessage= {
       action: 'remove',
-      key: key
+      key: key,
+      storeName: storeName
     };
     chrome.runtime.sendMessage(message, (response) => {
       if (response.success) {

@@ -1,6 +1,7 @@
+import {STORE_NAMES} from "../constants";
+
 class IndexedDBModule {
   private static dbName = 'myExtensionDB';
-  private static storeName = 'myExtensionStore';
   private static db: IDBDatabase | null = null;
 
   static async init() {
@@ -11,7 +12,9 @@ class IndexedDBModule {
         const target = event.target as IDBRequest;
         if (target) {
           this.db = target.result as IDBDatabase;
-          this.db.createObjectStore(this.storeName, { keyPath: 'key' });
+          for(const storeName of STORE_NAMES){
+            this.db.createObjectStore(storeName, { keyPath: 'key' });
+          }
         }
       };
 
@@ -29,11 +32,11 @@ class IndexedDBModule {
     });
   }
 
-  static async getIndexedDBKey<T>(key: string): Promise<T> {
+  static async getIndexedDBKey<T>(storeName: string, key: string): Promise<T> {
     return new Promise((resolve, reject) => {
       if (this.db) {
-        const transaction = this.db.transaction([this.storeName], 'readonly');
-        const objectStore = transaction.objectStore(this.storeName);
+        const transaction = this.db.transaction([storeName], 'readonly');
+        const objectStore = transaction.objectStore(storeName);
         const request = objectStore.get(key);
         request.onsuccess = () => resolve(request.result ? request.result.value : null);
         request.onerror = () => reject(new Error(`Error fetching data for key ${key}`));
@@ -43,11 +46,11 @@ class IndexedDBModule {
     });
   }
 
-  static async setIndexedDBKey<T>(key: string, value: T): Promise<void> {
+  static async setIndexedDBKey<T>(storeName: string, key: string, value: T): Promise<void> {
     return new Promise((resolve, reject) => {
       if (this.db) {
-        const transaction = this.db.transaction([this.storeName], 'readwrite');
-        const objectStore = transaction.objectStore(this.storeName);
+        const transaction = this.db.transaction([storeName], 'readwrite');
+        const objectStore = transaction.objectStore(storeName);
         const request = objectStore.put({ key, value });
         request.onsuccess = () => resolve();
         request.onerror = () => reject(new Error(`Error setting data for key ${key}`));
@@ -57,11 +60,11 @@ class IndexedDBModule {
     });
   }
 
-  static async removeIndexedDBKey(key: string): Promise<void> {
+  static async removeIndexedDBKey(storeName: string, key: string): Promise<void> {
     return new Promise((resolve, reject) => {
       if (this.db) {
-        const transaction = this.db.transaction([this.storeName], 'readwrite');
-        const objectStore = transaction.objectStore(this.storeName);
+        const transaction = this.db.transaction([storeName], 'readwrite');
+        const objectStore = transaction.objectStore(storeName);
         const request = objectStore.delete(key);
         request.onsuccess = () => resolve();
         request.onerror = () => reject(new Error(`Error removing data for key ${key}`));

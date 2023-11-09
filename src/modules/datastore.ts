@@ -1,6 +1,6 @@
 import {getStorageKey, setLocalStorageKey, setStorageKey} from "./storage";
 import {useEffect, useState} from "react";
-import {DEBUG_MESSAGES} from "../constants";
+import {DEBUG_MESSAGES, LOCAL_STORAGE_STORE_NAME} from "../constants";
 import {Message} from "./types";
 
 
@@ -11,6 +11,7 @@ let listenerCount = 0;
 
 export abstract class DataStore<T> {
   protected abstract key: string;
+  abstract IndexedDBStoreName:string;
   protected _currentData: T | null = null; // New variable
   abstract defaultValue: T;
 
@@ -26,7 +27,7 @@ export abstract class DataStore<T> {
   constructor() {
     // Setup listener in the constructor
     this.messageListener = (request: Message<unknown>) => {
-      if (request.action === 'dataChanged' && request.key === this.key) {
+      if (request.action === 'dataChanged' && request.storeName === this.IndexedDBStoreName && request.key === this.key) {
         if (this.isType(request.value)) {
           this._currentData = request.value; // Update the private variable
         }
@@ -62,11 +63,12 @@ export abstract class DataStore<T> {
       };
       fetchData();
 
+      //TODO: is this listener needed since we have one in the constructor?
       const listener = (request: Message<unknown>,) => {
         if(DEBUG_MESSAGES){
           console.log('message received in custom hook', request);
         }
-        if (request.action === 'dataChanged' && request.key === this.key) {
+        if (request.action === 'dataChanged' && request.storeName === this.IndexedDBStoreName && request.key === this.key) {
           if(this.isType(request.value)){
             setData(request.value);
           }
@@ -107,6 +109,8 @@ export abstract class DataStore<T> {
 }
 
 export abstract class LocalStorageStore<T> extends DataStore<T> {
+  IndexedDBStoreName: string = LOCAL_STORAGE_STORE_NAME;
+
   fetchData(): T {
     const item = localStorage.getItem(this.key);
     if (item === null) {
@@ -143,7 +147,7 @@ export abstract class DatabaseStorage<T> extends DataStore<T> {
   }
 
   async fetchData(): Promise<T> {
-    const item = await getStorageKey<T>(this.key);
+    const item = await getStorageKey<T>(this.IndexedDBStoreName,this.key);
     if(!this.isType(item)){
       if(item === null){
         return this.defaultValue;
@@ -156,7 +160,7 @@ export abstract class DatabaseStorage<T> extends DataStore<T> {
   async set(value: T): Promise<void> {
     //synced through background script
     const processedValue = this.setPreprocessor(value);
-    await setStorageKey(this.key, processedValue);
+    await setStorageKey(this.IndexedDBStoreName, this.key, processedValue);
   }
 }
 

@@ -28,8 +28,8 @@ chrome.runtime.onInstalled.addListener(async function(details) {
 
 
 type SendResponseFunc = (response: unknown) => void;
-const handleGet = (key: string, sendResponse: SendResponseFunc): void => {
-  IndexedDBModule.getIndexedDBKey(key)
+const handleGet = (storeName: string, key: string, sendResponse: SendResponseFunc): void => {
+  IndexedDBModule.getIndexedDBKey(storeName, key)
     .then((data: unknown) => {
       if (DEBUG_MESSAGES) {
         console.log('Sending data from background listener data:', data);
@@ -45,8 +45,8 @@ const handleGet = (key: string, sendResponse: SendResponseFunc): void => {
     });
 };
 
-function sendDataChangedMessage(key: string, value: unknown) {
-  const message : DataChangeMessage<unknown>= { action: 'dataChanged', key: key, value: value };
+function sendDataChangedMessage(storeName: string, key: string, value: unknown) {
+  const message : DataChangeMessage<unknown>= { action: 'dataChanged', key: key, value: value, storeName: storeName };
   if(DEBUG_MESSAGES){
     console.log('message sent from sendDataChangedMessage', message);
   }
@@ -64,10 +64,10 @@ function sendDataChangedMessage(key: string, value: unknown) {
   });
 }
 
-const handleSet = (key: string, value: unknown, sendResponse: SendResponseFunc): void => {
-  IndexedDBModule.setIndexedDBKey(key, value)
+const handleSet = (storeName: string, key: string, value: unknown, sendResponse: SendResponseFunc): void => {
+  IndexedDBModule.setIndexedDBKey(storeName, key, value)
     .then(() => {
-      sendDataChangedMessage(key, value);
+      sendDataChangedMessage(storeName, key, value);
       sendResponse({ success: true });
     })
     .catch((error: unknown) => {
@@ -80,10 +80,10 @@ const handleSet = (key: string, value: unknown, sendResponse: SendResponseFunc):
 };
 
 
-const handleRemove = (key: string, sendResponse: SendResponseFunc): void => {
-  IndexedDBModule.removeIndexedDBKey(key)
+const handleRemove = (storeName: string, key: string, sendResponse: SendResponseFunc): void => {
+  IndexedDBModule.removeIndexedDBKey(storeName, key)
     .then(() => {
-      sendDataChangedMessage(key, null);//TODO: what should be sent here? default value?
+      sendDataChangedMessage(storeName, key, null);//TODO: what should be sent here? default value?
       sendResponse({ success: true });
     })
     .catch((error: unknown) => {
@@ -101,16 +101,16 @@ chrome.runtime.onMessage.addListener((request: Message<unknown>, sender, sendRes
   }
 
   if (request.action === 'get') {
-    handleGet(request.key, sendResponse);
+    handleGet(request.storeName, request.key, sendResponse);
   } else if (request.action === 'set') {
-    handleSet(request.key, request.value, sendResponse);
+    handleSet(request.storeName, request.key, request.value,sendResponse);
   } else if (request.action === 'localStorageSet') {
     //only inform of change, can't set local storage from background so must be done from content script
-    sendDataChangedMessage(request.key, request.value);
+    sendDataChangedMessage(request.storeName, request.key, request.value);
     sendResponse({ success: true });
   }
   else if (request.action === 'remove') {
-    handleRemove(request.key, sendResponse);
+    handleRemove(request.storeName, request.key, sendResponse);
   }
   else if(request.action === 'dataChanged'){
     sendResponse({ success: true });

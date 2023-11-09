@@ -26,10 +26,19 @@ export const DEFAULT_COLOR_THEME = ColorTheme.LIGHT;
 export const ALL_LISTS_SYMBOL = 'All_LISTS_3213546516541';
 
 //storage keys
-export const WORD_STATISTICS_KEY_PREFIX = 'statistics-word-';
-export const FILTER_LIST_KEY_PREFIX = 'list-';
-export const TRIE_KEY_PREFIX = 'trie-';
-export const LIST_OF_LIST_NAMES_KEY = "listNames"
-export const BLACKLISTED_WEBSITES_KEY_PREFIX = 'blacklist';
+
+//settings keys
+export const BLACKLISTED_WEBSITES_KEY = 'blacklist';
 export const FILTER_ACTION_KEY = 'actionToApplyOnFilter';
 export const COLOR_THEME_KEY = 'colorTheme';
+
+//hack store name
+export const LOCAL_STORAGE_STORE_NAME = 'localStorage';
+//INDEXEDDB store names
+export const SETTINGS_STORE_NAME = 'settings';
+export const WORD_STATISTICS_STORE_NAME = 'statistics';
+export const FILTER_LIST_STORE_NAME = 'lists';
+export const TRIE_STORE_NAME = 'tries';
+export const LIST_OF_LIST_NAMES_KEY = "listNames"
+
+export const STORE_NAMES = [SETTINGS_STORE_NAME, WORD_STATISTICS_STORE_NAME, FILTER_LIST_STORE_NAME, TRIE_STORE_NAME, LIST_OF_LIST_NAMES_KEY];

@@ -1,9 +1,9 @@
 import {
   BATCH_STAT_UPDATE_INTERVAL,
-  BLACKLISTED_WEBSITES_KEY_PREFIX,
+  BLACKLISTED_WEBSITES_KEY,
   DEBUG, DEBUG_PERFORMANCE,
   FILTER_ACTION_KEY,
-  TRIE_KEY_PREFIX,
+  TRIE_STORE_NAME,
 } from "./constants";
 import {isCurrentSiteDisabled} from "./modules/hostname";
 import {FilterActionStore} from "./modules/settings";
@@ -110,10 +110,10 @@ observer.observe(document.body, { childList: true, subtree: true });
 
 const listener = async (request: Message<unknown>) => {
   function keyImpactsFilter(key: string) {
-    if(key.startsWith(BLACKLISTED_WEBSITES_KEY_PREFIX)){
+    if(key.startsWith(BLACKLISTED_WEBSITES_KEY)){
       return true;
     }
-    if(key.startsWith(TRIE_KEY_PREFIX)){
+    if(key.startsWith(TRIE_STORE_NAME)){
       return true;
     }
     if(key.startsWith(FILTER_ACTION_KEY)){

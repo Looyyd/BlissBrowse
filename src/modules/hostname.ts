@@ -1,4 +1,4 @@
-import {DEFAULT_HOSTNAME_BLACKLIST, BLACKLISTED_WEBSITES_KEY_PREFIX} from "../constants";
+import {DEFAULT_HOSTNAME_BLACKLIST, BLACKLISTED_WEBSITES_KEY, SETTINGS_STORE_NAME} from "../constants";
 import {DatabaseStorage} from "./datastore";
 
 import {isStringArray} from "./types";
@@ -62,7 +62,8 @@ export async function isHostnameDisabled(hostname: string): Promise<boolean> {
 
 
 export class BlacklistDatastore extends DatabaseStorage<string[]> {
-  key = BLACKLISTED_WEBSITES_KEY_PREFIX;
+  IndexedDBStoreName = SETTINGS_STORE_NAME;
+  key = BLACKLISTED_WEBSITES_KEY;
   defaultValue = DEFAULT_HOSTNAME_BLACKLIST;
   isType = isStringArray;
 

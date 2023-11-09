@@ -31,6 +31,7 @@ export function isNumber(value: unknown): value is number {
 interface BaseMessage {
   action: string;
   key: string;
+  storeName: string;
   destination?: string;
   source?: string;
 }

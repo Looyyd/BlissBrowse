@@ -3,8 +3,8 @@ import {
   DEFAULT_WORD_STATISTICS,
   DEFAULT_WORDLIST,
   LIST_OF_LIST_NAMES_KEY,
-  FILTER_LIST_KEY_PREFIX,
-  WORD_STATISTICS_KEY_PREFIX, TRIE_KEY_PREFIX
+  FILTER_LIST_STORE_NAME,
+  WORD_STATISTICS_STORE_NAME, TRIE_STORE_NAME
 } from "../constants";
 import {DatabaseStorage, DataStore} from "./datastore";
 import {isNumber, isStringArray, Message} from "./types";
@@ -32,11 +32,12 @@ export async function addToFilterWordStatistics(word: string, countToAdd: number
 export class StatisticsDataStore extends DatabaseStorage<number> {
   key: string;
   defaultValue = DEFAULT_WORD_STATISTICS;
+  IndexedDBStoreName = WORD_STATISTICS_STORE_NAME;
   isType = isNumber;
 
   constructor(word: string) {
     super();
-    this.key = WORD_STATISTICS_KEY_PREFIX + word;
+    this.key =  word;
   }
 
   async add(countToAdd: number): Promise<void> {
@@ -52,7 +53,8 @@ export class StatisticsDataStore extends DatabaseStorage<number> {
 }
 
 export class ListNamesDataStore extends DatabaseStorage<string[]> {
-  key = LIST_OF_LIST_NAMES_KEY;
+  key = LIST_OF_LIST_NAMES_KEY;//TODO: should maybe not use single key but 1 row per list?
+  IndexedDBStoreName = LIST_OF_LIST_NAMES_KEY;
   defaultValue = DEFAULT_LISTNAMES_ARRAY;
   isType = isStringArray;
 
@@ -79,11 +81,12 @@ export class ListNamesDataStore extends DatabaseStorage<string[]> {
 class TrieRootNodeDataStore extends DatabaseStorage<TrieNode> {
   key: string;
   defaultValue = new Trie([]).getRoot();
+  IndexedDBStoreName = TRIE_STORE_NAME;
   isType = (obj: unknown): obj is TrieNode => (obj !== null);//TODO: make sure skipping this check is ok
 
   constructor(listName: string) {
     super();
-    this.key = TRIE_KEY_PREFIX + listName;
+    this.key = listName;
   }
 
   async getTrie(): Promise<Trie> {
@@ -111,13 +114,14 @@ export class FilterListDataStore extends DataStore<string[]> {
   setPreprocessor = (value: string[]) => [...new Set(value)];
   serializedTrieDataStore: TrieRootNodeDataStore;
   _currentData: string[] | null = null;
+  IndexedDBStoreName = FILTER_LIST_STORE_NAME;
 
   // Store a reference to the listener
   messageListener: ((request: Message<unknown>) => void) | null = null;
 
   constructor(listName: string) {
     super();
-    this.key = FILTER_LIST_KEY_PREFIX + listName;
+    this.key = listName;
     this.serializedTrieDataStore = new TrieRootNodeDataStore(listName);
 
     this.messageListener = (request: Message<unknown>) => {
@@ -209,7 +213,7 @@ export class FilterListDataStore extends DataStore<string[]> {
   }
 
   async clear(): Promise<void> {
-    await removeStorageKey(this.serializedTrieDataStore.key);
+    await removeStorageKey(this.serializedTrieDataStore.IndexedDBStoreName,this.serializedTrieDataStore.key);
   }
 }
 
