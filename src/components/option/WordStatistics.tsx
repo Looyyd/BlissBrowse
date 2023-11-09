@@ -7,7 +7,7 @@ import {
   TableRow,
   FormControl,
   SelectChangeEvent,
-  Container
+  Container, Typography
 } from '@mui/material';
 import TableCell from '@mui/material/TableCell';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
@@ -16,6 +16,7 @@ import ListSelector from "../ListSelector";
 import {ALL_LISTS_SYMBOL, WORD_STATISTICS_STORE_NAME} from "../../constants";
 import {getAllDataStore} from "../../modules/storage";
 import {StatisticsArray, StatisticsEntry} from "../../modules/types";
+import InfoIcon from "@mui/icons-material/Info";
 
 
 type sortKey = 'key' | 'value'; // 'key' for word, 'value' for statistic
@@ -131,6 +132,10 @@ const WordStatistics = () => {
 
   return (
     <Container>
+      <Typography variant="body1" display="flex" alignItems="center" gap={1}>
+        <InfoIcon color="primary" />
+        Words that have never been seen are not displayed in statistics.
+      </Typography>
     <div>
       <FormControl variant="outlined" fullWidth>
         <ListSelector
