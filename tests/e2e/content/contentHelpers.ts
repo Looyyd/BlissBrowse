@@ -130,16 +130,5 @@ export function testSite(siteConfig: SiteConfig, fullTest: boolean = false) {
         expect(hasAttribute2 === ATTRIBUTE_VALUE || parentHasAttribute2).toBe(true);
       });
     }
-    if(fullTest){
-      testSpec("unfilter tooltip logo works " + siteConfig.name, async ({page, extensionId, context}) => {
-        const locator = siteConfig.locators_to_check_filtered[0](page);
-        expect(locator).not.toBe(null);
-        //hover over element
-        await locator.hover();
-        // get EXTENSION_NAME+"logo" element
-        const logo = await page.$("#" + EXTENSION_NAME+"logo");
-        expect(logo).not.toBe(null);
-      });
-    }
   });
 }

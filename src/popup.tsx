@@ -6,12 +6,13 @@ import NewFilterWordForm from "./components/popup/NewFilterWordForm";
 import NewListForm from "./components/popup/NewListForm";
 import OpenOptionsButton from "./components/popup/OpenOptionsButton";
 import {ColorTheme} from "./modules/types";
-import {Container, createTheme, CssBaseline, ThemeProvider} from "@mui/material";
+import {Box, Container, CssBaseline, ThemeProvider} from "@mui/material";
 import {ColorThemeStore} from "./modules/settings";
 import {AlertProvider} from "./components/AlertContext";
 import AlertComponent from "./components/AlertComponent";
 import FeedbackButton from "./components/FeedbackButton";
 import {lightTheme} from "./themes";
+import ExtensionTitle from "./components/ExtensionTitle";
 
 
 const Popup: React.FC = () => {
@@ -23,9 +24,12 @@ const Popup: React.FC = () => {
   return (
       <Container >
         <CssBaseline />
-        <FeedbackButton />
-        <OpenOptionsButton/>
-        <DisableWebsiteButton />
+        <ExtensionTitle />
+        <Box display="flex" flexDirection="row" justifyContent="center" flexWrap="wrap">
+          <FeedbackButton />
+          <OpenOptionsButton/>
+          <DisableWebsiteButton />
+        </Box>
         <NewFilterWordForm />
         <NewListForm />
         <ListsDisplay />
