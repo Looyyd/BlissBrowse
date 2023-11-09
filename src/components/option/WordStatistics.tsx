@@ -132,7 +132,7 @@ const WordStatistics = () => {
 
   return (
     <Container>
-      <Typography variant="body1" display="flex" alignItems="center" gap={1}>
+      <Typography variant="body1" display="flex" alignItems="center" gap={1} marginBottom={3}>
         <InfoIcon color="primary" />
         Words that have never been seen are not displayed in statistics.
       </Typography>
