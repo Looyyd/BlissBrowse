@@ -1,7 +1,7 @@
-import {getStorageKey, setLocalStorageKey, setStorageKey} from "./storage";
+import {getAllDataStore, getStorageKey, setLocalStorageKey, setStorageKey} from "./storage";
 import {useEffect, useState} from "react";
 import {DEBUG_MESSAGES, LOCAL_STORAGE_STORE_NAME} from "../constants";
-import {Message} from "./types";
+import {IndexedDBKeyValueStore, Message} from "./types";
 
 
 
@@ -9,10 +9,109 @@ import {Message} from "./types";
 let listenerCount = 0;
 
 
-export abstract class DataStore<T> {
+
+export abstract class FullDataStore<T> {
+  abstract IndexedDBStoreName:string;
+  protected _currentData: IndexedDBKeyValueStore<T> | null = null;
+
+  messageListener: ((request: Message<unknown>) => void) | null = null;
+
+  setPreprocessor(value: T): T {
+    return value;
+  }
+
+  constructor() {
+    // Setup listener in the constructor
+    this.messageListener = (request: Message<unknown>) => {
+      if (request.action === 'dataChanged' && request.storeName === this.IndexedDBStoreName) {
+        const key = request.key;
+        const newValue = request.value as T;//TODO: type check?
+        const newPair: IndexedDBKeyValueStore<T> = {};
+        newPair[key] = {key: key, value: newValue};
+        this._currentData = {...this._currentData,...newPair}
+      }
+    };
+    chrome.runtime.onMessage.addListener(this.messageListener);
+  }
+
+  async getAll(){
+    if(this._currentData === null){
+      this._currentData = await getAllDataStore<T>(this.IndexedDBStoreName);
+    }
+    return this._currentData;
+  }
+
+  dispose() {
+    if (this.messageListener) {
+      chrome.runtime.onMessage.removeListener(this.messageListener);
+      this.messageListener = null;
+    }
+  }
+
+  async set(key:string,value: T): Promise<void> {
+    //synced through background script
+    const processedValue = this.setPreprocessor(value);
+    await setStorageKey(this.IndexedDBStoreName, key, processedValue);
+  }
+
+  useData() {
+    const [allRows, setAllRows] = useState<IndexedDBKeyValueStore<T>>();
+
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const value = await this.getAll();
+          setAllRows(value);
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      };
+      fetchData();
+
+      //TODO: is this listener needed since we have one in the constructor?
+      // would need to put the hook in the constructor
+      const listener = (request: Message<unknown>,) => {
+        if(DEBUG_MESSAGES){
+          console.log('message received in custom hook', request);
+        }
+        if (request.action === 'dataChanged' && request.storeName === this.IndexedDBStoreName) {
+          const key = request.key;
+          const newValue = request.value as T;//TODO: type check?
+          const newPair: IndexedDBKeyValueStore<T> = {};
+          newPair[key] = {key: key, value: newValue};
+          setAllRows({...allRows,...newPair});
+        }
+      };
+      // Add message listener
+      if(DEBUG_MESSAGES){
+        console.log('listener added in custom hook', this.IndexedDBStoreName);
+      }
+      chrome.runtime.onMessage.addListener(listener);
+
+      return () => {
+        // Remove message listener
+        chrome.runtime.onMessage.removeListener(listener);
+        if(DEBUG_MESSAGES){
+          console.log('listener removed in custom hook', this.IndexedDBStoreName);
+        }
+      };
+    }, []);
+
+    const setRow = async (key: string, newValue: T) => {
+      await this.set(key,newValue);
+      const newPair: IndexedDBKeyValueStore<T> = {};
+      newPair[key] = {key: key, value: newValue};
+      setAllRows({...allRows,...newPair});
+    };
+
+    return [allRows, setRow] as const;
+  }
+}
+
+export abstract class RowDataStore<T> {
   protected abstract key: string;
   abstract IndexedDBStoreName:string;
-  protected _currentData: T | null = null; // New variable
+  protected _currentData: T | null = null;
   abstract defaultValue: T;
 
   abstract get(): T | Promise<T>;
@@ -21,7 +120,6 @@ export abstract class DataStore<T> {
   abstract fetchData(): Promise<T> | T;
 
   messageListener: ((request: Message<unknown>) => void) | null = null;
-
 
 
   constructor() {
@@ -33,7 +131,6 @@ export abstract class DataStore<T> {
         }
       }
     };
-
     chrome.runtime.onMessage.addListener(this.messageListener);
   }
 
@@ -63,7 +160,8 @@ export abstract class DataStore<T> {
       };
       fetchData();
 
-      //TODO: is this listener needed since we have one in the constructor?
+      //TODO: is this listener needed since we have one in the constructor?,
+      // would need to put the hook in the constructor
       const listener = (request: Message<unknown>,) => {
         if(DEBUG_MESSAGES){
           console.log('message received in custom hook', request);
@@ -108,7 +206,7 @@ export abstract class DataStore<T> {
   }
 }
 
-export abstract class LocalStorageStore<T> extends DataStore<T> {
+export abstract class LocalStorageStore<T> extends RowDataStore<T> {
   IndexedDBStoreName: string = LOCAL_STORAGE_STORE_NAME;
 
   fetchData(): T {
@@ -137,7 +235,7 @@ export abstract class LocalStorageStore<T> extends DataStore<T> {
 }
 
 
-export abstract class DatabaseStorage<T> extends DataStore<T> {
+export abstract class DatabaseStorage<T> extends RowDataStore<T> {
 
   //TODO: error handling, because doesn't say if store is not found
   async get(): Promise<T> {

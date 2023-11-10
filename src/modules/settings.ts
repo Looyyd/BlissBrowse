@@ -6,7 +6,7 @@ import {
   SETTINGS_STORE_NAME
 } from "../constants";
 import {ColorTheme, FilterAction, isColorTheme, isFilterAction} from "./types";
-import {DatabaseStorage, LocalStorageStore} from "./datastore";
+import {DatabaseStorage, FullDataStore, LocalStorageStore} from "./datastore";
 
 
 export class FilterActionStore extends DatabaseStorage<FilterAction>{
@@ -27,6 +27,9 @@ export class ColorThemeStore extends LocalStorageStore<ColorTheme>{
 export type ListSettings = {
   disabled?: boolean;
 }
+export const DEFAULT_LIST_SETTINGS: ListSettings = {
+  disabled: false
+}
 
 export class ListSettingsStore extends DatabaseStorage<ListSettings>{
   key: string;
@@ -44,4 +47,8 @@ export class ListSettingsStore extends DatabaseStorage<ListSettings>{
     console.log("ListSettingsStore.get", result);
     return result;
   }
+}
+
+export class FullListSettingsStore extends FullDataStore<ListSettings>{
+  IndexedDBStoreName = LIST_SETTINGS_STORE_NAME;
 }

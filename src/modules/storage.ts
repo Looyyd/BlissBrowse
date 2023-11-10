@@ -2,7 +2,7 @@ import {DEBUG_MESSAGES, LOCAL_STORAGE_STORE_NAME} from "../constants";
 import {
   GetAllMessage,
   GetDataMessage,
-  IndexedDBSetDataMessage,
+  IndexedDBSetDataMessage, IndexedDBKeyValueStore,
   LocalStorageSetMessage,
   RemoveDataMessage
 } from "./types";
@@ -27,7 +27,7 @@ export async function getStorageKey<T>(storeName:string, key: string): Promise<T
   });
 }
 
-export async function getAllDataStore<T>(storeName:string): Promise<T[]>{
+export async function getAllDataStore<T>(storeName:string): Promise<IndexedDBKeyValueStore<T>>{
   return new Promise((resolve, reject) => {
     const getMessage: GetAllMessage = {
       action: 'getAll',
@@ -38,7 +38,7 @@ export async function getAllDataStore<T>(storeName:string): Promise<T[]>{
         console.log('getAllDataStore response:', response);
       }
       if (response.success) {
-        resolve(response.data as T[]);
+        resolve(response.data as IndexedDBKeyValueStore<T>);
       } else {
         reject(new Error(response.error));
       }

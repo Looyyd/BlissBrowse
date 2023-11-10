@@ -3,7 +3,8 @@ import {Button, List, ListItem, ListItemText, Typography} from '@mui/material';
 import {ListNamesDataStore} from "../../modules/wordLists";
 import LoadingScreen from "../LoadingScreen";
 import {Edit} from "@mui/icons-material";
-import {ListSettings, ListSettingsStore} from "../../modules/settings";
+import {FullListSettingsStore, ListSettings, ListSettingsStore} from "../../modules/settings";
+import {KeyValue} from "../../modules/types";
 
 //TODO: put as global generic type?
 type UseDataReturnType = readonly [ListSettings | null, (newValue: ListSettings) => Promise<void>];
@@ -42,7 +43,9 @@ function useListSettings(lists: string[] | null) {
 const ListsDisplay: React.FC = () => {
   const listNamesDataStore = new ListNamesDataStore();
   const [lists] = listNamesDataStore.useData([]);
-  const listSettings = useListSettings(lists);
+  //const listSettings = useListSettings(lists);
+  const settingsDataStore = new FullListSettingsStore();
+  const [listSettings, setRowData] = settingsDataStore.useData();
 
 
   const openListEditor = (listName: string) => {
@@ -53,22 +56,21 @@ const ListsDisplay: React.FC = () => {
     chrome.tabs.create({ url: urlWithState });
   }
 
-  //TODO: don't use index, i think maybe there is a cleaner way to do this
-  const toggleListDisable = (currentSettings: ListSettings, index: number) => {
-    if(!lists || !listSettings) {
+  const toggleListDisable = async (listName: string) => {
+    if (!lists || !listSettings) {
       return;
     }
-    const newListSettings = currentSettings;
-    newListSettings.disabled = !newListSettings.disabled;
-    const dataStore = new ListSettingsStore(lists[index]);
-    dataStore.set(newListSettings);
+    const settingsKeyValue = listSettings[listName];
+    const settings = settingsKeyValue ? settingsKeyValue.value : {disabled: false};//hardcoded default
+    settings.disabled = !settings.disabled;
+    await settingsDataStore.set(listName, settings);
   }
 
   return (
     <>
       <Typography variant="h6">Your lists</Typography>
       <List id="listsList">
-        {lists === null ? (
+        {lists === null || listSettings === undefined ? (
           <LoadingScreen/>
         ) : (
           lists.map((listName, index) => (
@@ -76,12 +78,12 @@ const ListsDisplay: React.FC = () => {
             <ListItem>
               <ListItemText primary={listName} />
               <Button
-                onClick={() => toggleListDisable(listSettings[index], index)}
+                onClick={() => toggleListDisable(listName)}
                 id={"toggle-"+listName.replace(" ", "_")}
                 color="primary"
                 variant="contained"
               >
-                {listSettings[index]?.disabled ? "Enable" : "Disable"}
+                {listSettings[listName]?.value.disabled ? "Enable" : "Disable"}
               </Button>
               <Button
                 onClick={() => openListEditor(listName)}

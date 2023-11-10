@@ -1,11 +1,11 @@
 import React, {useEffect, useState} from 'react';
-import WordStatistics from "./WordStatistics";
 import BlacklistedSitesEditor from "./BlacklistedSitesEditor";
 import FilterWordlistsEditor from "./FilterWordlistsEditor";
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import GlobalSettings from "./GlobalSettings";
+import WordStatistics from "./WordStatistics";
 
 const TabContainer = () => {
   const [activeTab, setActiveTab] = useState(() => {

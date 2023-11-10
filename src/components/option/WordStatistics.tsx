@@ -1,5 +1,9 @@
 import React, {useEffect, useMemo, useState} from 'react';
-import {getFilterWordStatistics, ListNamesDataStore, FilterListDataStore} from "../../modules/wordLists";
+import {
+  ListNamesDataStore,
+  FilterListDataStore,
+  FullStatisticsDataStore, Statistics
+} from "../../modules/wordLists";
 import {
   Table,
   TableHead,
@@ -13,9 +17,8 @@ import TableCell from '@mui/material/TableCell';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import ArrowDownward from '@mui/icons-material/ArrowDownward';
 import ListSelector from "../ListSelector";
-import {ALL_LISTS_SYMBOL, WORD_STATISTICS_STORE_NAME} from "../../constants";
-import {getAllDataStore} from "../../modules/storage";
-import {StatisticsArray, StatisticsEntry} from "../../modules/types";
+import {ALL_LISTS_SYMBOL} from "../../constants";
+import {IndexedDBKeyValueStore, StatisticsEntry} from "../../modules/types";
 import InfoIcon from "@mui/icons-material/Info";
 
 
@@ -35,8 +38,9 @@ const WordStatistics = () => {
   const [lists, setLists] = useState<string[] | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "key", direction: 'asc' });
   const [selectedList, setSelectedList] = useState<string | null>(null);
-  const [statistics, setStatistics] = useState<StatisticsArray>([]);
-  const [shownStatistics, setShownStatistics] = useState<StatisticsArray>([]);
+  const statDataStore = new FullStatisticsDataStore();
+  const [statistics, ] = statDataStore.useData();
+  const [shownStatistics, setShownStatistics] = useState<IndexedDBKeyValueStore<Statistics>>({});
 
   //TODO: into statistics type
   const columnNames = ["Word", "Times Seen"];
@@ -49,16 +53,6 @@ const WordStatistics = () => {
     }
   }, [syncedLists]);
 
-  useEffect(() => {
-    async function getStatistics(){
-      //TODO: make the statistics refresh on change, create a datastore?
-      const Statistics = await getAllDataStore<StatisticsEntry>(WORD_STATISTICS_STORE_NAME);
-      console.log(Statistics);
-      setStatistics(Statistics);
-    }
-    getStatistics();
-  }, []);
-
   //set the first list as selectedList by default
   useEffect(() => {
     if (selectedList === null && lists !== null && lists.includes(ALL_LISTS_SYMBOL)) {
@@ -68,24 +62,38 @@ const WordStatistics = () => {
 
   useEffect(() => {
     async function showListStatistics() {
+      if(statistics === undefined){
+        return;
+      }
       console.log('selectedList changed:', selectedList);
       if (lists !== null && lists.length > 0 && selectedList !== null) {
         if(selectedList === ALL_LISTS_SYMBOL){
           setShownStatistics(statistics);
         }else{
           const dataStore = new FilterListDataStore(selectedList);
-          const words = await dataStore.get(); // Assuming this returns an array of strings
-          const statisticsToShow = statistics.filter(entry => words.includes(entry.key));
+          const words = await dataStore.get();
+          const statisticsToShow: IndexedDBKeyValueStore<Statistics> = {};
+          for(const word of words){
+            //TODO: is it undefined or null?
+            if(statistics[word] !== undefined){
+              statisticsToShow[word] = statistics[word];
+            }
+          }
+          //const statisticsToShow = statistics.filter(entry => words.includes(entry.key));
           setShownStatistics(statisticsToShow);
         }
       }
     }
     showListStatistics();
-  }, [selectedList]);
+  }, [selectedList, statistics]);
 
   const sortedStatistics = useMemo(() => {
     // Clone the array before sorting to avoid mutating state directly
-    const sortableItems = [...shownStatistics];
+    //const sortableItems = [...shownStatistics];
+    const sortableItems: StatisticsEntry[] = [];
+    for(const [key, keyvalue] of Object.entries(shownStatistics)){
+      sortableItems.push({key, value: keyvalue.value});
+    }
 
     if (sortConfig.key !== null) {
       sortableItems.sort((a, b) => {

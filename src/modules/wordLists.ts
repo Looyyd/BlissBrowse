@@ -6,7 +6,7 @@ import {
   FILTER_LIST_STORE_NAME,
   WORD_STATISTICS_STORE_NAME, TRIE_STORE_NAME
 } from "../constants";
-import {DatabaseStorage, DataStore} from "./datastore";
+import {DatabaseStorage, FullDataStore, RowDataStore} from "./datastore";
 import {isNumber, isStringArray, Message} from "./types";
 import {removeStorageKey} from "./storage";
 import {Trie, TrieNode} from "./trie";
@@ -50,6 +50,12 @@ export class WordStatisticsDataStore extends DatabaseStorage<number> {
     const value = currentCount - countToSubtract;
     await this.syncedSet(value);
   }
+}
+
+export type Statistics = number;
+//TODO: statistics type
+export class FullStatisticsDataStore extends FullDataStore<Statistics> {
+  IndexedDBStoreName = WORD_STATISTICS_STORE_NAME;
 }
 
 
@@ -108,7 +114,7 @@ class TrieRootNodeDataStore extends DatabaseStorage<TrieNode> {
 }
 
 
-export class FilterListDataStore extends DataStore<string[]> {
+export class FilterListDataStore extends RowDataStore<string[]> {
   key: string;
   defaultValue = DEFAULT_WORDLIST;
   isType = isStringArray;

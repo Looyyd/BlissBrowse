@@ -1,4 +1,5 @@
 import {STORE_NAMES} from "../constants";
+import {IndexedDBKeyValueStore} from "./types";
 
 class IndexedDBModule {
   private static dbName = 'myExtensionDB';
@@ -75,19 +76,19 @@ class IndexedDBModule {
     });
   }
 
-  static async getAllIndexedDBKeys<T>(storeName: string): Promise<T[]> {
+  static async getAllIndexedDBKeys<T>(storeName: string): Promise<IndexedDBKeyValueStore<T>> {
     return new Promise((resolve, reject) => {
       if (this.db) {
         const transaction = this.db.transaction([storeName], 'readonly');
         const objectStore = transaction.objectStore(storeName);
         const request = objectStore.openCursor();
-        const results: T[] = [];
+        const results: IndexedDBKeyValueStore<T> = {};
 
         request.onsuccess = (event) => {
           const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
           if (cursor) {
-            // Push the value part of the key-value pair into the results array
-            results.push(cursor.value);
+            // Store the value in the results object using the key
+            results[cursor.key as string] = cursor.value;
             cursor.continue(); // Move to the next object in the store
           } else {
             // No more entries, so resolve with the collected results
@@ -103,6 +104,7 @@ class IndexedDBModule {
       }
     });
   }
+
 
 }
 

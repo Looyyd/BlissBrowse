@@ -82,3 +82,12 @@ export type Message<T> = DataChangeMessage<T>
   | RemoveDataMessage
   | GetDataMessage
   | GetAllMessage;
+
+
+export type IndexedDBKeyValueStore<T> = {
+  [key: string]: {key:string, value: T};
+};
+
+export function KeyValue(key: string, value: any): {key:string, value: any}{
+  return {key: key, value: value};
+}
