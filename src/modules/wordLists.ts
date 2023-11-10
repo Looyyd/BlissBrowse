@@ -53,7 +53,6 @@ export class WordStatisticsDataStore extends DatabaseStorage<number> {
 }
 
 export type Statistics = number;
-//TODO: statistics type
 export class FullStatisticsDataStore extends FullDataStore<Statistics> {
   IndexedDBStoreName = WORD_STATISTICS_STORE_NAME;
 }
