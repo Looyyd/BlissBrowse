@@ -15,7 +15,6 @@ const OpenOptionsButton: React.FC = () => {
         color="primary"
         onClick={handleClick}
         variant="contained"
-        //startIcon={<Settings/>}
         style={{ margin: "10px 2px" }}
       >
         <Settings/>

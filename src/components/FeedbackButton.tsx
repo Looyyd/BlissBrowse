@@ -16,7 +16,6 @@ const FeedbackButton = () => {
         <Button
           variant="contained"
           color="primary"
-          //startIcon={<BugReport/>} // Add the warning icon as the startIcon
           onClick={handleOpenForm}
           style={{ margin: "10px 2px" }}
         >

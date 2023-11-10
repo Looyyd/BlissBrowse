@@ -13,8 +13,9 @@ import InfoIcon from '@mui/icons-material/Info';
 
 
 
+const blacklistDataStore = new BlacklistDatastore();
+
 const BlacklistedSitesEditor = () => {
-  const blacklistDataStore = new BlacklistDatastore();
   const [blacklist,] = blacklistDataStore.useData();
   const [textAreaValue, setTextAreaValue] = useState<string>("");
   const {showAlert} = useAlert();

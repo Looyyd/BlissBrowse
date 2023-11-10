@@ -5,10 +5,11 @@ import LoadingScreen from "../LoadingScreen";
 import {Edit} from "@mui/icons-material";
 import {FullListSettingsStore} from "../../modules/settings";
 
+const listNamesDataStore = new ListNamesDataStore();
+const settingsDataStore = new FullListSettingsStore();
+
 const ListsDisplay: React.FC = () => {
-  const listNamesDataStore = new ListNamesDataStore();
   const [lists] = listNamesDataStore.useData([]);
-  const settingsDataStore = new FullListSettingsStore();
   const [listSettings, setRowData] = settingsDataStore.useData();
 
 

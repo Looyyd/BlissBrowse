@@ -5,8 +5,8 @@ import {useAlert} from "../AlertContext";
 import {Add} from "@mui/icons-material";
 
 
+const listNamesDataStore = new ListNamesDataStore();
 const NewListForm: React.FC = () => {
-  const listNamesDataStore = new ListNamesDataStore();
   const [listName, setListName] = useState<string>('');
   const { showAlert } = useAlert();
 

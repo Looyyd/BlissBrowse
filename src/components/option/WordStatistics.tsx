@@ -30,15 +30,16 @@ export type SortConfig = {
   direction: 'asc' | 'desc';
 };
 
+const listNamesDataStore = new ListNamesDataStore();
+const statDataStore = new FullStatisticsDataStore();
+
 const WordStatistics = () => {
-  const listNamesDataStore = new ListNamesDataStore();
   //fetched lists are not showed
   const [syncedLists,] = listNamesDataStore.useData([]);
   //lists are showed
   const [lists, setLists] = useState<string[] | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "key", direction: 'asc' });
   const [selectedList, setSelectedList] = useState<string | null>(null);
-  const statDataStore = new FullStatisticsDataStore();
   const [statistics, ] = statDataStore.useData();
   const [shownStatistics, setShownStatistics] = useState<IndexedDBKeyValueStore<Statistics>>({});
 

@@ -53,9 +53,10 @@ const useSelectedListData = (initialListName: string): [string, React.Dispatch<R
   return [selectedList, setSelectedList, words];
 };
 
+const listNamesDataStore = new ListNamesDataStore();
+
 // Main component
 const FilterWordlistsEditor = () => {
-  const listNamesDataStore = new ListNamesDataStore();
   const [lists] = listNamesDataStore.useData();
   const urlSelectedList = useUrlParameter('list');
   const [selectedList, setSelectedList, words] = useSelectedListData(urlSelectedList);

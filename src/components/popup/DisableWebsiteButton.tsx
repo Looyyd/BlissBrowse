@@ -7,8 +7,9 @@ import Button from "@mui/material/Button"
 import {Link, LinkOff} from "@mui/icons-material";
 import {Tooltip} from "@mui/material";
 
+const blacklistDataStore = new BlacklistDatastore();
+
 const DisableWebsiteButton: React.FC = () => {
-  const blacklistDataStore = new BlacklistDatastore();
   const [blacklist,] = blacklistDataStore.useData();
   const [isDisabled, setIsDisabled] = useState(false);
   const [hostname, setHostname] = useState('');

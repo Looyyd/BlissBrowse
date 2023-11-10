@@ -13,8 +13,9 @@ import {Add} from "@mui/icons-material";
 
 
 /* A form to add a new word to a list. */
+const listNamesDataStore = new ListNamesDataStore();
+
 const NewFilterWordForm: React.FC = () => {
-  const listNamesDataStore = new ListNamesDataStore();
   const [newWord, setNewWord] = useState<string>('');
   const [list, setList] = useState<string>('');
   const [lists] = listNamesDataStore.useData([]);

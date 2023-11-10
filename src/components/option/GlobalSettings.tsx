@@ -8,9 +8,10 @@ import {
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 import Box from "@mui/material/Box";
 
+const colorThemeStore = new ColorThemeStore();
+const filterActionStore = new FilterActionStore();
+
 const GlobalSettings = () => {
-  const colorThemeStore = new ColorThemeStore();
-  const filterActionStore = new FilterActionStore();
   const [selectedAction, setSelectedAction] = filterActionStore.useData();
   const [selectedColorTheme, setSelectedColorTheme] = colorThemeStore.useData();
   const filterActions = Object.values(FilterAction);
