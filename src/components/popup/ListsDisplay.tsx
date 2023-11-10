@@ -1,49 +1,13 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {Button, List, ListItem, ListItemText, Typography} from '@mui/material';
 import {ListNamesDataStore} from "../../modules/wordLists";
 import LoadingScreen from "../LoadingScreen";
 import {Edit} from "@mui/icons-material";
-import {FullListSettingsStore, ListSettings, ListSettingsStore} from "../../modules/settings";
-import {KeyValue} from "../../modules/types";
-
-//TODO: put as global generic type?
-type UseDataReturnType = readonly [ListSettings | null, (newValue: ListSettings) => Promise<void>];
-
-
-//TODO: these settings are not refreshed when a setting changes, there is no listener
-function useListSettings(lists: string[] | null) {
-  const [listSettings, setListSettings] = useState<ListSettings[]>([]);
-
-  useEffect(() => {
-    async function fetchListSettings() {
-      if (!lists) {
-        return;
-      }
-
-      try {
-        const settings = await Promise.all(
-          lists.map(listName => {
-            // Assuming ListSettingsDataStore has a method to fetch data without using a hook
-            const dataStore = new ListSettingsStore(listName);
-            return dataStore.get();
-          })
-        );
-        setListSettings(settings);
-      } catch (error) {
-        console.error("Error fetching list settings:", error);
-      }
-    }
-
-    fetchListSettings();
-  }, [lists]);
-
-  return listSettings;
-}
+import {FullListSettingsStore} from "../../modules/settings";
 
 const ListsDisplay: React.FC = () => {
   const listNamesDataStore = new ListNamesDataStore();
   const [lists] = listNamesDataStore.useData([]);
-  //const listSettings = useListSettings(lists);
   const settingsDataStore = new FullListSettingsStore();
   const [listSettings, setRowData] = settingsDataStore.useData();
 
@@ -63,7 +27,7 @@ const ListsDisplay: React.FC = () => {
     const settingsKeyValue = listSettings[listName];
     const settings = settingsKeyValue ? settingsKeyValue.value : {disabled: false};//hardcoded default
     settings.disabled = !settings.disabled;
-    await settingsDataStore.set(listName, settings);
+    await setRowData(listName, settings);
   }
 
   return (
