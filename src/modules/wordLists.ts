@@ -2,7 +2,7 @@ import {
   DEFAULT_LISTNAMES_ARRAY,
   DEFAULT_WORD_STATISTICS,
   DEFAULT_WORDLIST,
-  LIST_OF_LIST_NAMES_KEY,
+  LIST_OF_LIST_NAMES_DATASTORE,
   FILTER_LIST_STORE_NAME,
   WORD_STATISTICS_STORE_NAME, TRIE_STORE_NAME
 } from "../constants";
@@ -60,8 +60,10 @@ export class FullStatisticsDataStore extends FullDataStore<Statistics> {
 
 
 export class ListNamesDataStore extends DatabaseStorage<string[]> {
-  key = LIST_OF_LIST_NAMES_KEY;//TODO: should maybe not use single key but 1 row per list?
-  IndexedDBStoreName = LIST_OF_LIST_NAMES_KEY;
+  //TODO: datastore used as key, maybe fix names
+  key = LIST_OF_LIST_NAMES_DATASTORE;//TODO: should maybe not use single key but 1 row per list? what are the tradeoffs?
+                                                        // seems to me like this works fine
+  IndexedDBStoreName = LIST_OF_LIST_NAMES_DATASTORE;
   defaultValue = DEFAULT_LISTNAMES_ARRAY;
   isType = isStringArray;
 
@@ -155,8 +157,8 @@ export class FilterListDataStore extends RowDataStore<string[]> {
   }
 
 
-
   useData(initialState: string[] | null = null): [string[] | null, (newValue: string[]) => Promise<void>] {
+    //TODO: this data will not be refreshed if changes happen in other tabs
     const [data, setData] = useState<string[] | null>(initialState);
 
     useEffect(() => {

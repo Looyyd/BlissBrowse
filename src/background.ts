@@ -1,4 +1,4 @@
-import {DEBUG, DEBUG_MESSAGES, DEFAULT_LIST_NAME, LIST_OF_LIST_NAMES_KEY} from "./constants";
+import {DEBUG, DEBUG_MESSAGES, FIRST_INSTALL_DEFAULT_LIST_NAME} from "./constants";
 import IndexedDBModule from "./modules/IndexedDBModule";
 import {DataChangeMessage, Message} from "./modules/types";
 import {ListNamesDataStore} from "./modules/wordLists";
@@ -16,7 +16,7 @@ chrome.runtime.onInstalled.addListener(async function(details) {
     // create default wordlist
     //TODO: test if this works, because it doesn't with load unpacked extension
     const dataStore = new ListNamesDataStore();
-    await dataStore.createNewList(DEFAULT_LIST_NAME);
+    await dataStore.createNewList(FIRST_INSTALL_DEFAULT_LIST_NAME);
     if(DEBUG){
       console.log('default list created');
     }

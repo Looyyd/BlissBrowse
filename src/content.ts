@@ -1,8 +1,7 @@
 import {
   BATCH_STAT_UPDATE_INTERVAL,
-  BLACKLISTED_WEBSITES_KEY,
   DEBUG, DEBUG_PERFORMANCE,
-  FILTER_ACTION_KEY,
+  LIST_OF_LIST_NAMES_DATASTORE, LIST_SETTINGS_STORE_NAME, SETTINGS_STORE_NAME,
   TRIE_STORE_NAME,
 } from "./constants";
 import {isCurrentSiteDisabled} from "./modules/hostname";
@@ -109,23 +108,22 @@ observer.observe(document.body, { childList: true, subtree: true });
 
 
 const listener = async (request: Message<unknown>) => {
-  function keyImpactsFilter(key: string) {
-    if(key.startsWith(BLACKLISTED_WEBSITES_KEY)){
-      return true;
-    }
-    if(key.startsWith(TRIE_STORE_NAME)){
-      return true;
-    }
-    if(key.startsWith(FILTER_ACTION_KEY)){
-      return true;
-    }
-    return false;
+  //TODO: the listener could be more specific about what changed, and only refresh that.
+  // for example, if the blacklist changes, only refresh if the current site was added or removed
+  function dataStoreImpactsContents(dataStore: string) {
+    const impactedStores = [
+      SETTINGS_STORE_NAME,
+      TRIE_STORE_NAME,
+      LIST_OF_LIST_NAMES_DATASTORE,
+      LIST_SETTINGS_STORE_NAME
+    ];
+    return impactedStores.includes(dataStore);
   }
   if(DEBUG) {
     console.log('message received in content listener', request);
   }
-  //TODO: fix now that we have multiple stores, add tests
-  if (request.action === 'dataChanged' && keyImpactsFilter(request.key)) {
+  //TODO: add e2e tests? to make sure that refreshes are happening when they should
+  if (request.action === 'dataChanged' && dataStoreImpactsContents(request.storeName)) {
     await debouncedCheckAndFilter();
   }
 };
