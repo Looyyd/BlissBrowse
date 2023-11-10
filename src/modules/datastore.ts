@@ -139,6 +139,7 @@ export abstract class LocalStorageStore<T> extends DataStore<T> {
 
 export abstract class DatabaseStorage<T> extends DataStore<T> {
 
+  //TODO: error handling, because doesn't say if store is not found
   async get(): Promise<T> {
     if (this._currentData === null) {
       this._currentData = await this.fetchData(); // Implement fetchData method

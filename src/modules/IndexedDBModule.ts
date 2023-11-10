@@ -12,6 +12,7 @@ class IndexedDBModule {
         const target = event.target as IDBRequest;
         if (target) {
           this.db = target.result as IDBDatabase;
+          //TODO: this is not rerun when extension refreshsed, so new stores are not added
           for(const storeName of STORE_NAMES){
             this.db.createObjectStore(storeName, { keyPath: 'key' });
           }

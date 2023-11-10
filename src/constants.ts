@@ -34,11 +34,20 @@ export const COLOR_THEME_KEY = 'colorTheme';
 
 //hack store name
 export const LOCAL_STORAGE_STORE_NAME = 'localStorage';
+
 //INDEXEDDB store names
 export const SETTINGS_STORE_NAME = 'settings';
 export const WORD_STATISTICS_STORE_NAME = 'statistics';
 export const FILTER_LIST_STORE_NAME = 'lists';
 export const TRIE_STORE_NAME = 'tries';
 export const LIST_OF_LIST_NAMES_KEY = "listNames"
+//TODO: merge with lists into a single class?
+export const LIST_SETTINGS_STORE_NAME = "listSettings"
 
-export const STORE_NAMES = [SETTINGS_STORE_NAME, WORD_STATISTICS_STORE_NAME, FILTER_LIST_STORE_NAME, TRIE_STORE_NAME, LIST_OF_LIST_NAMES_KEY];
+export const STORE_NAMES =
+  [SETTINGS_STORE_NAME,
+    WORD_STATISTICS_STORE_NAME,
+    FILTER_LIST_STORE_NAME,
+    TRIE_STORE_NAME,
+    LIST_OF_LIST_NAMES_KEY,
+    LIST_SETTINGS_STORE_NAME];

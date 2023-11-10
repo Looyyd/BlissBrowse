@@ -124,6 +124,7 @@ const listener = async (request: Message<unknown>) => {
   if(DEBUG) {
     console.log('message received in content listener', request);
   }
+  //TODO: fix now that we have multiple stores, add tests
   if (request.action === 'dataChanged' && keyImpactsFilter(request.key)) {
     await debouncedCheckAndFilter();
   }
