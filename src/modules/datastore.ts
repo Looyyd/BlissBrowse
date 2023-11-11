@@ -1,7 +1,7 @@
 import {getAllDataStore, getStorageKey, removeStorageKey, setLocalStorageKey, setStorageKey} from "./storage";
 import {useEffect, useState} from "react";
 import {LOCAL_STORAGE_STORE_NAME} from "../constants";
-import {IndexedDBKeyValueStore, KeyValue, Message} from "./types";
+import {ActionType, IndexedDBKeyValueStore, KeyValue, Message} from "./types";
 
 export abstract class ListenableDataStore<T> {
   abstract get(): T | Promise<T>;
@@ -61,7 +61,7 @@ export abstract class FullDataStore<T> extends ListenableDataStore<IndexedDBKeyV
     super();
     // Setup listener in the constructor
     this.messageListener = (request: Message<unknown>) => {
-      if (request.action === 'dataChanged' && request.storeName === this.IndexedDBStoreName) {
+      if (request.action === ActionType.DataChanged && request.storeName === this.IndexedDBStoreName) {
         if(this._currentData !== null){
           const newValue = request.value as T;//TODO: type check?
           //TODO: we are not using this function anymore, because react needs deep copy to refresh components.
@@ -119,7 +119,7 @@ export abstract class RowDataStore<T> extends ListenableDataStore<T>{
     super();
     // Setup listener in the constructor
     this.messageListener = (request: Message<unknown>) => {
-      if (request.action === 'dataChanged' && request.storeName === this.IndexedDBStoreName && request.key === this.key) {
+      if (request.action === ActionType.DataChanged && request.storeName === this.IndexedDBStoreName && request.key === this.key) {
         if (this.isType(request.value)) {
           this._currentData = request.value; // Update the private variable
           this.notifySubscribers();

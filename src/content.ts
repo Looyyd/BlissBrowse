@@ -1,21 +1,27 @@
 import {
   BATCH_STAT_UPDATE_INTERVAL,
-  DEBUG, DEBUG_PERFORMANCE,
-  LIST_OF_LIST_NAMES_DATASTORE, LIST_SETTINGS_STORE_NAME, SETTINGS_STORE_NAME,
+  DEBUG,
+  DEBUG_PERFORMANCE,
+  LIST_OF_LIST_NAMES_DATASTORE,
+  LIST_SETTINGS_STORE_NAME,
+  SETTINGS_STORE_NAME,
   TRIE_STORE_NAME,
 } from "./constants";
 import {isCurrentSiteDisabled} from "./modules/hostname";
 import {FilterActionStore} from "./modules/settings";
 import {getFeedlikeAncestor} from "./modules/content/elementSelection";
 import {
-  filterElement, getFilterTries,
-  hasAncestorTagThatShouldBeIgnored, nodeHasAIgnoredParent,
+  filterElement,
+  getFilterTries,
+  hasAncestorTagThatShouldBeIgnored,
+  nodeHasAIgnoredParent,
   nodeHasAProcessedParent,
-  unfilterElementsIfNotInList, unfilterElementsIfNotInTries,
+  unfilterElementsIfNotInList,
+  unfilterElementsIfNotInTries,
   unfilterElementsIfWrongAction,
   writeInMemoryStatisticsToStorage
 } from "./modules/content/filter";
-import {Message} from "./modules/types";
+import {ActionType, Message} from "./modules/types";
 
 /*
 some logic taken from:
@@ -123,7 +129,7 @@ const listener = async (request: Message<unknown>) => {
     console.log('message received in content listener', request);
   }
   //TODO: add e2e tests? to make sure that refreshes are happening when they should
-  if (request.action === 'dataChanged' && dataStoreImpactsContents(request.storeName)) {
+  if (request.action === ActionType.DataChanged && dataStoreImpactsContents(request.storeName)) {
     await debouncedCheckAndFilter();
   }
 };

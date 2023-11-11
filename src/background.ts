@@ -1,6 +1,6 @@
 import {DEBUG, DEBUG_MESSAGES, FIRST_INSTALL_DEFAULT_LIST_NAME} from "./constants";
 import IndexedDBModule from "./modules/IndexedDBModule";
-import {DataChangeMessage, Message} from "./modules/types";
+import {ActionType, DataChangeMessage, Message} from "./modules/types";
 import {ListNamesDataStore} from "./modules/wordLists";
 
 
@@ -65,7 +65,7 @@ const handleGetAll = (storeName: string, sendResponse: SendResponseFunc): void =
 
 
 function sendDataChangedMessage(storeName: string, key: string, value: unknown) {
-  const message : DataChangeMessage<unknown>= { action: 'dataChanged', key: key, value: value, storeName: storeName };
+  const message : DataChangeMessage<unknown>= { action: ActionType.DataChanged, key: key, value: value, storeName: storeName };
   if(DEBUG_MESSAGES){
     console.log('message sent from sendDataChangedMessage', message);
   }
@@ -119,25 +119,30 @@ chrome.runtime.onMessage.addListener((request: Message<unknown>, sender, sendRes
     console.log('request in background listener:', request);
   }
 
-  if (request.action === 'get') {
-    handleGet(request.storeName, request.key, sendResponse);
-  } else if (request.action === 'getAll') {
-   handleGetAll(request.storeName, sendResponse);
-  } else if (request.action === 'set') {
-    handleSet(request.storeName, request.key, request.value,sendResponse);
-  } else if (request.action === 'localStorageSet') {
-    //only inform of change, can't set local storage from background so must be done from content script
-    sendDataChangedMessage(request.storeName, request.key, request.value);
-    sendResponse({ success: true });
-  }
-  else if (request.action === 'remove') {
-    handleRemove(request.storeName, request.key, sendResponse);
-  }
-  else if(request.action === 'dataChanged'){
-    sendResponse({ success: true });
-  } else {
-    console.log("Unknown action in background listener: ", request);
-    sendResponse({ success: false, error: 'Unknown action.' });
+  switch(request.action) {
+    case ActionType.Get:
+      handleGet(request.storeName, request.key, sendResponse);
+      break;
+    case ActionType.GetAll:
+      handleGetAll(request.storeName, sendResponse);
+      break;
+    case ActionType.Set:
+      handleSet(request.storeName, request.key, request.value,sendResponse);
+      break;
+    case ActionType.LocalStorageSet:
+      //only inform of change, can't set local storage from background so must be done from content script
+      sendDataChangedMessage(request.storeName, request.key, request.value);
+      sendResponse({ success: true });
+      break;
+    case ActionType.Remove:
+      handleRemove(request.storeName, request.key, sendResponse);
+      break;
+    case ActionType.DataChanged:
+      sendResponse({ success: true });
+      break;
+    default:
+      console.log("Unknown action in background listener: ", request);
+      sendResponse({ success: false, error: 'Unknown action.' });
   }
 
   return true;  // This is necessary to handle the asynchronous response

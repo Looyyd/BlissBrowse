@@ -37,7 +37,7 @@ export type StatisticsArray = StatisticsEntry[];
 
 //TODO: better organize the message? why are there so many, at least document them?
 interface BaseMessage {
-  action: string;
+  action: ActionType;
   storeName: string;
   destination?: string;
   source?: string;
@@ -47,32 +47,48 @@ interface KeyedMessage extends BaseMessage {
   key: string;
 }
 
+export enum ActionType {
+  Get = 'get',
+  GetAll = 'getAll',
+  Set = 'set',
+  LocalStorageSet = 'localStorageSet',
+  Remove = 'remove',
+  DataChanged = 'dataChanged',
+}
+
+// Message sent when data changes, to keep datastores in sync with background, sent from background
 export interface DataChangeMessage<T> extends KeyedMessage {
-  action: 'dataChanged';
+  action: ActionType.DataChanged;
   value: T;
 }
 
+// Message sent to set IndexedDB data from the content,options, or popup script to the background script
 export interface IndexedDBSetDataMessage<T> extends KeyedMessage {
-  action: 'set';
+  action: ActionType.Set;
   value: T;
 }
 
+// Message sent to inform that localstorage has been set from the content,options,
+// or popup script to the background script.
+// The background script will then sent a dataChanged message
 export interface LocalStorageSetMessage<T> extends KeyedMessage {
-  action: 'localStorageSet';
+  action: ActionType.LocalStorageSet;
   value: T;
 }
 
-// getData message type
+// Message sent to get IndexedDB data from the background script to the content, options, or popup script
 export interface GetDataMessage extends KeyedMessage {
-  action: 'get';
+  action: ActionType.Get;
 }
 
+// Message sent to remove IndexedDB data from the content,options, or popup script to the background script
 export interface RemoveDataMessage extends KeyedMessage {
-  action: 'remove';
+  action: ActionType.Remove;
 }
 
+// Message sent to get all IndexedDB data from a table, sent from the content,options, or popup script to the background script
 export interface GetAllMessage extends BaseMessage {
-  action: 'getAll';
+  action: ActionType.GetAll;
 }
 
 // Union type for all possible messages
