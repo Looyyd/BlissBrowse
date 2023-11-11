@@ -135,6 +135,7 @@ export class FilterListDataStore extends RowDataStore<string[]> {
     this.serializedTrieDataStore = new TrieRootNodeDataStore(listName);
 
     this.messageListener = (request: Message<unknown>) => {
+      //TODO: doesn't watch the table for changes
       if (request.action === 'dataChanged' && request.key === this.serializedTrieDataStore.key) {
         if (this.serializedTrieDataStore.isType(request.value)) {
           const serializedTrie = request.value;
