@@ -192,16 +192,11 @@ export abstract class RowDataStore<T> {
     }, []);
 
     const setSyncedData = async (newValue: T) => {
-      await this.syncedSet(newValue);
+      await this.set(newValue);
       setData(newValue);
     };
 
     return [data, setSyncedData] as const;
-  }
-
-  async syncedSet(value: T) :Promise<void>{
-    // all messages are synced now
-    await this.set(value);
   }
 }
 

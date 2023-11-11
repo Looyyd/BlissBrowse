@@ -31,12 +31,12 @@ export class WordStatisticsDataStore extends DatabaseStorage<number> {
   async add(countToAdd: number): Promise<void> {
     const currentCount = await this.get();
     const value = currentCount + countToAdd;
-    await this.syncedSet(value);
+    await this.set(value);
   }
   async subtract(countToSubtract: number): Promise<void> {
     const currentCount = await this.get();
     const value = currentCount - countToSubtract;
-    await this.syncedSet(value);
+    await this.set(value);
   }
 }
 
@@ -59,7 +59,7 @@ export class ListNamesDataStore extends DatabaseStorage<string[]> {
   async createNewList(listName: string): Promise<void> {
     const listNames = await this.get();
     if (!listNames.includes(listName)) {
-      await this.syncedSet(listNames.concat(listName));
+      await this.set(listNames.concat(listName));
     }
   }
 
@@ -68,7 +68,7 @@ export class ListNamesDataStore extends DatabaseStorage<string[]> {
     const index = listNames.indexOf(listName);
     if (index > -1) {
       listNames.splice(index, 1);
-      await this.syncedSet(listNames);
+      await this.set(listNames);
       const trieStore = new TrieRootNodeDataStore(listName);
       await trieStore.clear();
     }

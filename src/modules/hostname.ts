@@ -73,7 +73,7 @@ export class BlacklistDatastore extends DatabaseStorage<string[]> {
       return;
     }
     blacklist.push(hostname);
-    await this.syncedSet(blacklist);
+    await this.set(blacklist);
   }
 
   async removeHostnameFromBlacklist(hostname: string) {
@@ -82,6 +82,6 @@ export class BlacklistDatastore extends DatabaseStorage<string[]> {
     if (index > -1) {
       blacklist.splice(index, 1);
     }
-    await this.syncedSet(blacklist);
+    await this.set(blacklist);
   }
 }

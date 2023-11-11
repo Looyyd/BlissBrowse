@@ -32,7 +32,7 @@ const BlacklistedSitesEditor = () => {
   const saveHostnames = () => {
     const newBlacklist = textAreaValue.split('\n');
     const dataStore = new BlacklistDatastore();
-    dataStore.syncedSet(newBlacklist).then(() => {
+    dataStore.set(newBlacklist).then(() => {
       showAlert('success', 'Blacklist updated successfully!');
     });
   };
