@@ -8,11 +8,13 @@ import AlertComponent from "./components/AlertComponent";
 import {AlertProvider} from "./components/AlertContext";
 import {lightTheme} from "./themes";
 import {DataStoreProvider} from "./components/DataStoreContext";
+import {useDataFromStore} from "./modules/datastore";
 
+
+const colorThemeStore = new ColorThemeStore();
 
 const App: React.FC = () => {
-  const colorThemeStore = new ColorThemeStore();
-  const [colorTheme,] = colorThemeStore.useData(colorThemeStore.get());
+  const [colorTheme] = useDataFromStore(colorThemeStore, colorThemeStore.get());
 
 
   const darkMode = colorTheme === ColorTheme.DARK;

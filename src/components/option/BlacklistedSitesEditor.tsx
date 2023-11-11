@@ -10,13 +10,14 @@ import {useAlert} from "../AlertContext";
 import {TextEditBox} from "../TextEditBox";
 import {Save} from "@mui/icons-material";
 import InfoIcon from '@mui/icons-material/Info';
+import {useDataFromStore} from "../../modules/datastore";
 
 
 
 const blacklistDataStore = new BlacklistDatastore();
 
 const BlacklistedSitesEditor = () => {
-  const [blacklist,] = blacklistDataStore.useData();
+  const [blacklist] = useDataFromStore(blacklistDataStore);
   const [textAreaValue, setTextAreaValue] = useState<string>("");
   const {showAlert} = useAlert();
 

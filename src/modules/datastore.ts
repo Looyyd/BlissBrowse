@@ -1,16 +1,52 @@
 import {getAllDataStore, getStorageKey, removeStorageKey, setLocalStorageKey, setStorageKey} from "./storage";
 import {useEffect, useState} from "react";
-import {DEBUG_MESSAGES, LOCAL_STORAGE_STORE_NAME} from "../constants";
-import {changeValueIndexedDB, IndexedDBKeyValueStore, Message} from "./types";
+import {LOCAL_STORAGE_STORE_NAME} from "../constants";
+import {IndexedDBKeyValueStore, KeyValue, Message} from "./types";
+
+export abstract class ListenableDataStore<T> {
+  abstract get(): T | Promise<T>;
+  private dataChangeSubscribers: (() => void)[] = [];
+
+  // Method for components to subscribe to changes
+  subscribe(callback: () => void): void {
+    this.dataChangeSubscribers.push(callback);
+  }
+
+  // Method for components to unsubscribe
+  unsubscribe(callback: () => void): void {
+    this.dataChangeSubscribers = this.dataChangeSubscribers.filter(sub => sub !== callback);
+  }
+
+  // Notify all dataChangeSubscribers of a change
+  protected notifySubscribers(): void {
+    this.dataChangeSubscribers.forEach(callback => callback());
+  }
+}
+
+export function useDataFromStore<T>(dataStore: ListenableDataStore<T>, defaultValue: T | null = null) {
+  const [data, setData] = useState<T | null>(defaultValue);
+
+  useEffect(() => {
+    const updateState = async () => {
+      const value = await dataStore.get();
+      setData(value);
+    };
+
+    dataStore.subscribe(updateState); // Subscribe for updates
+
+    // Fetch initial data
+    updateState();
+
+    return () => {
+      dataStore.unsubscribe(updateState); // Unsubscribe when component unmounts
+    };
+  }, [dataStore]);
+
+  return [data] as const;
+}
 
 
-
-// Global counter variable
-let listenerCount = 0;
-
-
-
-export abstract class FullDataStore<T> {
+export abstract class FullDataStore<T> extends ListenableDataStore<IndexedDBKeyValueStore<T>> {
   abstract IndexedDBStoreName:string;
   protected _currentData: IndexedDBKeyValueStore<T> | null = null;
 
@@ -20,13 +56,21 @@ export abstract class FullDataStore<T> {
     return value;
   }
 
+
   constructor() {
+    super();
     // Setup listener in the constructor
     this.messageListener = (request: Message<unknown>) => {
       if (request.action === 'dataChanged' && request.storeName === this.IndexedDBStoreName) {
         if(this._currentData !== null){
           const newValue = request.value as T;//TODO: type check?
-          changeValueIndexedDB(this._currentData, request.key, newValue);
+          //TODO: we are not using this function anymore, because react needs deep copy to refresh components.
+          // maybe because deepcopy is not an optimal default, we should only deepcopy if there is a subscriber?
+          // or maybe there is another way to force rerender of components?
+          //changeValueIndexedDB(this._currentData, request.key, newValue);
+          this._currentData = {...this._currentData, [request.key]: KeyValue(request.key, newValue)};
+          //TODO: notify only if value changed?
+          this.notifySubscribers();
         }
       }
     };
@@ -47,67 +91,17 @@ export abstract class FullDataStore<T> {
     }
   }
 
+  //TODO: should we set currentData in there?
   async set(key:string,value: T): Promise<void> {
     //synced through background script
     const processedValue = this.setPreprocessor(value);
+    //TODO: does this cause double notification since we also have a dataChanged listener?
+    //this.notifySubscribers();
     await setStorageKey(this.IndexedDBStoreName, key, processedValue);
-  }
-
-  useData() {
-    const [allRows, setAllRows] = useState<IndexedDBKeyValueStore<T>>();
-
-    useEffect(() => {
-      const fetchData = async () => {
-        try {
-          const value = await this.get();
-          setAllRows(value);
-        } catch (error) {
-          console.error('Error fetching data:', error);
-        }
-      };
-      fetchData();
-
-      //TODO: is this listener needed since we have one in the constructor?
-      // would need to put the hook in the constructor
-      const listener = (request: Message<unknown>,) => {
-        if(DEBUG_MESSAGES){
-          console.log('message received in custom hook', request);
-        }
-        if (request.action === 'dataChanged' && request.storeName === this.IndexedDBStoreName) {
-          const key = request.key;
-          const newValue = request.value as T;//TODO: type check?
-          const newPair: IndexedDBKeyValueStore<T> = {};
-          newPair[key] = {key: key, value: newValue};
-          setAllRows({...allRows,...newPair});
-        }
-      };
-      // Add message listener
-      if(DEBUG_MESSAGES){
-        console.log('listener added in custom hook', this.IndexedDBStoreName);
-      }
-      chrome.runtime.onMessage.addListener(listener);
-
-      return () => {
-        // Remove message listener
-        chrome.runtime.onMessage.removeListener(listener);
-        if(DEBUG_MESSAGES){
-          console.log('listener removed in custom hook', this.IndexedDBStoreName);
-        }
-      };
-    }, []);
-
-    const setRow = async (key: string, newValue: T) => {
-      await this.set(key,newValue);
-      const newPair: IndexedDBKeyValueStore<T> = {};
-      newPair[key] = {key: key, value: newValue};
-      setAllRows({...allRows,...newPair});
-    };
-
-    return [allRows, setRow] as const;
   }
 }
 
-export abstract class RowDataStore<T> {
+export abstract class RowDataStore<T> extends ListenableDataStore<T>{
   protected abstract key: string;
   abstract IndexedDBStoreName:string;
   protected _currentData: T | null = null;
@@ -122,11 +116,13 @@ export abstract class RowDataStore<T> {
 
 
   constructor() {
+    super();
     // Setup listener in the constructor
     this.messageListener = (request: Message<unknown>) => {
       if (request.action === 'dataChanged' && request.storeName === this.IndexedDBStoreName && request.key === this.key) {
         if (this.isType(request.value)) {
           this._currentData = request.value; // Update the private variable
+          this.notifySubscribers();
         }
       }
     };
@@ -145,59 +141,6 @@ export abstract class RowDataStore<T> {
     return value;
   }
 
-  useData(initialState: T | null = null) {
-    const [data, setData] = useState<T | null>(initialState);
-
-    useEffect(() => {
-      const fetchData = async () => {
-        try {
-          const value = await this.get();
-          setData(value);
-        } catch (error) {
-          console.error('Error fetching data:', error);
-        }
-      };
-      fetchData();
-
-      //TODO: is this listener needed since we have one in the constructor?,
-      // would need to put the hook in the constructor
-      const listener = (request: Message<unknown>,) => {
-        if(DEBUG_MESSAGES){
-          console.log('message received in custom hook', request);
-        }
-        if (request.action === 'dataChanged' && request.storeName === this.IndexedDBStoreName && request.key === this.key) {
-          if(this.isType(request.value)){
-            setData(request.value);
-          }
-        }
-      };
-
-      // Add message listener
-      if(DEBUG_MESSAGES){
-        listenerCount++;
-        console.log('listener added in custom hook', this.key);
-        console.log('listener count', listenerCount);
-      }
-      chrome.runtime.onMessage.addListener(listener);
-
-      return () => {
-        // Remove message listener
-        chrome.runtime.onMessage.removeListener(listener);
-        if(DEBUG_MESSAGES){
-          listenerCount--;
-          console.log('listener removed in custom hook', this.key);
-          console.log('listener count', listenerCount);
-        }
-      };
-    }, []);
-
-    const setSyncedData = async (newValue: T) => {
-      await this.set(newValue);
-      setData(newValue);
-    };
-
-    return [data, setSyncedData] as const;
-  }
 }
 
 export abstract class LocalStorageStore<T> extends RowDataStore<T> {
@@ -224,6 +167,8 @@ export abstract class LocalStorageStore<T> extends RowDataStore<T> {
   async set(value: T): Promise<void> {
     //synced through background script
     const processedValue = this.setPreprocessor(value);
+    //TODO: does this cause double notification since we also have a dataChanged listener?
+    this.notifySubscribers();
     await setLocalStorageKey(this.key, processedValue)
   }
 }
@@ -253,6 +198,9 @@ export abstract class DatabaseStorage<T> extends RowDataStore<T> {
   async set(value: T): Promise<void> {
     //synced through background script
     const processedValue = this.setPreprocessor(value);
+    //TODO: notify only if value changed?
+    //TODO: does this cause double notification since we also have a dataChanged listener?
+    this.notifySubscribers();
     await setStorageKey(this.IndexedDBStoreName, this.key, processedValue);
   }
 

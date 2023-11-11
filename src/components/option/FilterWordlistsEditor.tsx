@@ -12,6 +12,7 @@ import {Delete, Save} from "@mui/icons-material";
 import NewListForm from "../popup/NewListForm";
 import {useDataStore} from "../DataStoreContext";
 import {TrieRootNodeDataStore} from "../../modules/wordLists";
+import {useDataFromStore} from "../../modules/datastore";
 
 
 
@@ -58,7 +59,7 @@ const useSelectedListData = (initialListName: string): [string, React.Dispatch<R
 // Main component
 const FilterWordlistsEditor = () => {
   const { listNamesDataStore } = useDataStore();
-  const [lists] = listNamesDataStore.useData();
+  const [lists] = useDataFromStore(listNamesDataStore);
   const urlSelectedList = useUrlParameter('list');
   const [selectedList, setSelectedList, words] = useSelectedListData(urlSelectedList);
   const [textAreaValue, setTextAreaValue] = useState(words.join('\n'));

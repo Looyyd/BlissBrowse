@@ -19,6 +19,7 @@ import {ALL_LISTS_SYMBOL} from "../../constants";
 import {IndexedDBKeyValueStore, StatisticsEntry} from "../../modules/types";
 import InfoIcon from "@mui/icons-material/Info";
 import {useDataStore} from "../DataStoreContext";
+import {useDataFromStore} from "../../modules/datastore";
 
 
 type sortKey = 'key' | 'value'; // 'key' for word, 'value' for statistic
@@ -34,12 +35,12 @@ const statDataStore = new FullStatisticsDataStore();
 const WordStatistics = () => {
   const { listNamesDataStore } = useDataStore();
   //fetched lists are not showed
-  const [syncedLists,] = listNamesDataStore.useData([]);
+  const [syncedLists] = useDataFromStore(listNamesDataStore);
   //lists are showed
   const [lists, setLists] = useState<string[] | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "key", direction: 'asc' });
   const [selectedList, setSelectedList] = useState<string | null>(null);
-  const [statistics, ] = statDataStore.useData();
+  const [statistics] = useDataFromStore(statDataStore);
   const [shownStatistics, setShownStatistics] = useState<IndexedDBKeyValueStore<Statistics>>({});
 
   //TODO: into statistics type
@@ -47,7 +48,7 @@ const WordStatistics = () => {
 
   useEffect(() => {
     //add "ALL LISTS" to the shown lists
-    if(syncedLists !==null && syncedLists.length > 0 ){
+    if(syncedLists !== undefined && syncedLists !==null && syncedLists.length > 0 ){
       const newLists = [ALL_LISTS_SYMBOL].concat(syncedLists);
       setLists(newLists);
     }
@@ -62,7 +63,7 @@ const WordStatistics = () => {
 
   useEffect(() => {
     async function showListStatistics() {
-      if(statistics === undefined){
+      if(statistics === null){
         return;
       }
       console.log('selectedList changed:', selectedList);

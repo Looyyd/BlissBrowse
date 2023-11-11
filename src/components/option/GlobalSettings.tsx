@@ -7,24 +7,25 @@ import {
 } from "../../modules/settings";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 import Box from "@mui/material/Box";
+import {useDataFromStore} from "../../modules/datastore";
 
 const colorThemeStore = new ColorThemeStore();
 const filterActionStore = new FilterActionStore();
 
 const GlobalSettings = () => {
-  const [selectedAction, setSelectedAction] = filterActionStore.useData();
-  const [selectedColorTheme, setSelectedColorTheme] = colorThemeStore.useData();
+  const [selectedAction] = useDataFromStore(filterActionStore);
+  const [selectedColorTheme] = useDataFromStore(colorThemeStore);
   const filterActions = Object.values(FilterAction);
   const colorThemes = Object.values(ColorTheme);
 
   async function onActionChange(event: SelectChangeEvent<FilterAction>) {
     const action = event.target.value as FilterAction;
-    await setSelectedAction(action);
+    await filterActionStore.set(action);
   }
 
   async function onColorThemeChange(event: SelectChangeEvent<ColorTheme>) {
     const colorTheme = event.target.value as ColorTheme;
-    await setSelectedColorTheme(colorTheme);
+    await colorThemeStore.set(colorTheme);
   }
 
   return (

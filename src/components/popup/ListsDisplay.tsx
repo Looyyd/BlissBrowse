@@ -4,13 +4,14 @@ import LoadingScreen from "../LoadingScreen";
 import {Edit} from "@mui/icons-material";
 import {FullListSettingsStore} from "../../modules/settings";
 import {useDataStore} from "../DataStoreContext";
+import {useDataFromStore} from "../../modules/datastore";
 
 const listSettingsDataStore = new FullListSettingsStore();
 
 const ListsDisplay: React.FC = () => {
   const { listNamesDataStore } = useDataStore();
-  const [lists] = listNamesDataStore.useData([]);
-  const [listSettings, setRowData] = listSettingsDataStore.useData();
+  const [lists] = useDataFromStore(listNamesDataStore);
+  const [listSettings] = useDataFromStore(listSettingsDataStore);
 
 
   const openListEditor = (listName: string) => {
@@ -28,14 +29,14 @@ const ListsDisplay: React.FC = () => {
     const settingsKeyValue = listSettings[listName];
     const settings = settingsKeyValue ? settingsKeyValue.value : {disabled: false};//hardcoded default
     settings.disabled = !settings.disabled;
-    await setRowData(listName, settings);
+    await listSettingsDataStore.set(listName, settings);
   }
 
   return (
     <>
       <Typography variant="h6">Your lists</Typography>
       <List id="listsList">
-        {lists === null || listSettings === undefined ? (
+        {lists === null || listSettings === null ? (
           <LoadingScreen/>
         ) : (
           lists.map((listName, index) => (

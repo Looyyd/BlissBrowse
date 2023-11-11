@@ -6,11 +6,12 @@ import {
 import Button from "@mui/material/Button"
 import {Link, LinkOff} from "@mui/icons-material";
 import {Tooltip} from "@mui/material";
+import {useDataFromStore} from "../../modules/datastore";
 
 const blacklistDataStore = new BlacklistDatastore();
 
 const DisableWebsiteButton: React.FC = () => {
-  const [blacklist,] = blacklistDataStore.useData();
+  const [blacklist] = useDataFromStore(blacklistDataStore);
   const [isDisabled, setIsDisabled] = useState(false);
   const [hostname, setHostname] = useState('');
   const [forbiddenSite, setForbiddenSite] = useState(false);

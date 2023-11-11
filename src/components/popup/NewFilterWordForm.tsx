@@ -11,6 +11,7 @@ import {useAlert} from "../AlertContext";
 import {Add} from "@mui/icons-material";
 import {useDataStore} from "../DataStoreContext";
 import {TrieRootNodeDataStore} from "../../modules/wordLists";
+import {useDataFromStore} from "../../modules/datastore";
 
 
 /* A form to add a new word to a list. */
@@ -18,7 +19,7 @@ const NewFilterWordForm: React.FC = () => {
   const { listNamesDataStore } = useDataStore();
   const [newWord, setNewWord] = useState<string>('');
   const [list, setList] = useState<string>('');
-  const [lists] = listNamesDataStore.useData([]);
+  const [lists] = useDataFromStore(listNamesDataStore);
   const { showAlert } = useAlert();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {

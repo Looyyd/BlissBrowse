@@ -14,11 +14,12 @@ import FeedbackButton from "./components/FeedbackButton";
 import {lightTheme} from "./themes";
 import ExtensionTitle from "./components/ExtensionTitle";
 import {DataStoreProvider} from "./components/DataStoreContext";
+import {useDataFromStore} from "./modules/datastore";
 
 
 const Popup: React.FC = () => {
   const colorThemeStore = new ColorThemeStore();
-  const [colorTheme,] = colorThemeStore.useData(colorThemeStore.get());
+  const [colorTheme] = useDataFromStore(colorThemeStore);
 
   const darkMode = colorTheme === ColorTheme.DARK;
 
