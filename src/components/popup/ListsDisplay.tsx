@@ -5,12 +5,12 @@ import {Edit} from "@mui/icons-material";
 import {FullListSettingsStore} from "../../modules/settings";
 import {useDataStore} from "../DataStoreContext";
 
-const settingsDataStore = new FullListSettingsStore();
+const listSettingsDataStore = new FullListSettingsStore();
 
 const ListsDisplay: React.FC = () => {
   const { listNamesDataStore } = useDataStore();
   const [lists] = listNamesDataStore.useData([]);
-  const [listSettings, setRowData] = settingsDataStore.useData();
+  const [listSettings, setRowData] = listSettingsDataStore.useData();
 
 
   const openListEditor = (listName: string) => {
