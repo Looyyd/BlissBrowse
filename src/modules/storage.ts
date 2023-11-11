@@ -1,8 +1,10 @@
 import {DEBUG_MESSAGES, LOCAL_STORAGE_STORE_NAME} from "../constants";
 import {
+  ActionType,
   GetAllMessage,
   GetDataMessage,
-  IndexedDBSetDataMessage, IndexedDBKeyValueStore,
+  IndexedDBKeyValueStore,
+  IndexedDBSetDataMessage,
   LocalStorageSetMessage,
   RemoveDataMessage
 } from "./types";
@@ -10,7 +12,7 @@ import {
 export async function getStorageKey<T>(storeName:string, key: string): Promise<T>{
   return new Promise((resolve, reject) => {
     const getMessage: GetDataMessage = {
-      action: 'get',
+      action: ActionType.Get,
       key: key,
       storeName: storeName
     };
@@ -30,7 +32,7 @@ export async function getStorageKey<T>(storeName:string, key: string): Promise<T
 export async function getAllDataStore<T>(storeName:string): Promise<IndexedDBKeyValueStore<T>>{
   return new Promise((resolve, reject) => {
     const getMessage: GetAllMessage = {
-      action: 'getAll',
+      action: ActionType.GetAll,
       storeName: storeName
     };
     chrome.runtime.sendMessage(getMessage, (response) => {
@@ -49,7 +51,7 @@ export async function getAllDataStore<T>(storeName:string): Promise<IndexedDBKey
 export async function setStorageKey<T>(storeName: string, key: string, value: T): Promise<void> {
   return new Promise((resolve, reject) => {
     const setMessage: IndexedDBSetDataMessage<T> = {
-      action: 'set',
+      action: ActionType.Set,
       key: key,
       value: value,
       storeName: storeName
@@ -72,7 +74,7 @@ export async function setLocalStorageKey<T>(key: string, value: T): Promise<void
   localStorage.setItem(key, JSON.stringify(value));
   return new Promise((resolve, reject) => {
     const message: LocalStorageSetMessage<T> = {
-      action: 'localStorageSet',
+      action: ActionType.LocalStorageSet,
       key: key,
       value: value,
       storeName:  LOCAL_STORAGE_STORE_NAME//TODO: it's kinda hacky cause it's not going to be used
@@ -93,7 +95,7 @@ export async function setLocalStorageKey<T>(key: string, value: T): Promise<void
 export async function removeStorageKey(storeName:string, key: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const message: RemoveDataMessage= {
-      action: 'remove',
+      action: ActionType.Remove,
       key: key,
       storeName: storeName
     };
