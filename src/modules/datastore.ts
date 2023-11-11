@@ -1,4 +1,4 @@
-import {getAllDataStore, getStorageKey, setLocalStorageKey, setStorageKey} from "./storage";
+import {getAllDataStore, getStorageKey, removeStorageKey, setLocalStorageKey, setStorageKey} from "./storage";
 import {useEffect, useState} from "react";
 import {DEBUG_MESSAGES, LOCAL_STORAGE_STORE_NAME} from "../constants";
 import {changeValueIndexedDB, IndexedDBKeyValueStore, Message} from "./types";
@@ -239,7 +239,7 @@ export abstract class DatabaseStorage<T> extends RowDataStore<T> {
   //TODO: error handling, because doesn't say if store is not found
   async get(): Promise<T> {
     if (this._currentData === null) {
-      this._currentData = await this.fetchData(); // Implement fetchData method
+      this._currentData = await this.fetchData();
     }
     return this._currentData;
   }
@@ -259,6 +259,11 @@ export abstract class DatabaseStorage<T> extends RowDataStore<T> {
     //synced through background script
     const processedValue = this.setPreprocessor(value);
     await setStorageKey(this.IndexedDBStoreName, this.key, processedValue);
+  }
+
+  async clear(): Promise<void> {
+    this._currentData = null;
+    await removeStorageKey(this.IndexedDBStoreName,this.key);
   }
 }
 

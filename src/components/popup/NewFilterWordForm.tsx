@@ -1,5 +1,4 @@
 import React, {useState} from 'react';
-import {FilterListDataStore} from "../../modules/wordLists";
 import {
   Button,
   TextField,
@@ -11,6 +10,7 @@ import ListSelector from "../ListSelector";
 import {useAlert} from "../AlertContext";
 import {Add} from "@mui/icons-material";
 import {useDataStore} from "../DataStoreContext";
+import {TrieRootNodeDataStore} from "../../modules/wordLists";
 
 
 /* A form to add a new word to a list. */
@@ -34,8 +34,8 @@ const NewFilterWordForm: React.FC = () => {
     }
 
     setNewWord('');
-    const dataStore = new FilterListDataStore(list);
-    await dataStore.addNonWhiteSpaceWord(newWord);
+    const dataStore = new TrieRootNodeDataStore(list);
+    await dataStore.addWord(newWord);
 
     showAlert('success', 'Word added successfully!');
   };

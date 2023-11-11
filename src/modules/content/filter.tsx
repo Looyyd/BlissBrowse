@@ -1,6 +1,6 @@
 import {FilterAction} from "../types";
 import {DEBUG, EXTENSION_NAME, FILTER_IGNORE_ATTRIBUTE} from "../../constants";
-import {addToFilterWordStatistics, FilterListDataStore, ListNamesDataStore} from "../wordLists";
+import {addToFilterWordStatistics, ListNamesDataStore, TrieRootNodeDataStore} from "../wordLists";
 import {Trie} from "../trie";
 import React from 'react';
 import {createRoot} from "react-dom/client";
@@ -372,28 +372,7 @@ export function hasAncestorTagThatShouldBeIgnored(node: Node) {
   return false;
 }
 
-// Function to retrieve the words to be filtered
-export async function getFilterWords() {
-  let filterWords: string[] = [];
-  try {
-    const listsStore = new ListNamesDataStore();
-    const lists = await listsStore.get();
-    for (const list of lists) {
-      const listStore = new FilterListDataStore(list);
-      const savedWords = await listStore.get();
-      filterWords = filterWords.concat(savedWords);
-    }
-  } catch (e) {
-    console.error("Error retrieving saved words.", e);
-  }
-  if (DEBUG) {
-    console.log('filterWords:', filterWords);
-  }
-  return filterWords;
-}
-
-
-const filterListDataStores: { [key: string]: FilterListDataStore } = {};
+const trieDataStores: { [key: string]: TrieRootNodeDataStore} = {};
 interface ListTriePair {
   listName: string;
   trie: Trie;
@@ -406,11 +385,11 @@ export async function getFilterTries(): Promise<ListTriePair[]> {
 
     for (const listName of lists) {
       // Reuse or create a FilterListDataStore instance
-      if (!filterListDataStores[listName]) {
-        filterListDataStores[listName] = new FilterListDataStore(listName);
+      if (!trieDataStores[listName]) {
+        trieDataStores[listName] = new TrieRootNodeDataStore(listName);
       }
 
-      const listStore = filterListDataStores[listName];
+      const listStore = trieDataStores[listName];
       const trie: Trie = await listStore.getTrie();
       triesWithNames.push({ listName, trie });
     }

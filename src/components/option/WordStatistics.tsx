@@ -1,7 +1,6 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {
-  FilterListDataStore,
-  FullStatisticsDataStore, Statistics
+  FullStatisticsDataStore, Statistics, TrieRootNodeDataStore
 } from "../../modules/wordLists";
 import {
   Table,
@@ -71,8 +70,8 @@ const WordStatistics = () => {
         if(selectedList === ALL_LISTS_SYMBOL){
           setShownStatistics(statistics);
         }else{
-          const dataStore = new FilterListDataStore(selectedList);
-          const words = await dataStore.get();
+          const dataStore = new TrieRootNodeDataStore(selectedList);
+          const words = await dataStore.getWordList();
           const statisticsToShow: IndexedDBKeyValueStore<Statistics> = {};
           for(const word of words){
             //TODO: is it undefined or null?

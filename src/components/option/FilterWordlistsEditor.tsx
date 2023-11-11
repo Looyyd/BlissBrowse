@@ -1,5 +1,4 @@
 import React, {useEffect, useState} from 'react';
-import {FilterListDataStore} from "../../modules/wordLists";
 import {
   Button,
   Container,
@@ -12,6 +11,7 @@ import {TextEditBox} from "../TextEditBox";
 import {Delete, Save} from "@mui/icons-material";
 import NewListForm from "../popup/NewListForm";
 import {useDataStore} from "../DataStoreContext";
+import {TrieRootNodeDataStore} from "../../modules/wordLists";
 
 
 
@@ -43,8 +43,8 @@ const useSelectedListData = (initialListName: string): [string, React.Dispatch<R
     }
 
     const fetchData = async () => {
-      const dataStore = new FilterListDataStore(selectedList);
-      const fetchedWords = await dataStore.get();
+      const dataStore = new TrieRootNodeDataStore(selectedList);
+      const fetchedWords = await dataStore.getWordList();
       setWords(fetchedWords);
     };
 
@@ -100,8 +100,8 @@ const FilterWordlistsEditor = () => {
       showAlert('warning', 'Please select a list before saving');
       return;
     }
-    const dataStore = new FilterListDataStore(list);
-    dataStore.syncedSet(newWords).then(() => {
+    const dataStore = new TrieRootNodeDataStore(list);
+    dataStore.setWordList(newWords).then(() => {
       showAlert('success', 'List updated successfully!');
     });
   };
