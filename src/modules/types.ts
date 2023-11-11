@@ -35,7 +35,6 @@ export type StatisticsEntry = {
 
 export type StatisticsArray = StatisticsEntry[];
 
-//TODO: better organize the message? why are there so many, at least document them?
 interface BaseMessage {
   action: ActionType;
   storeName: string;
