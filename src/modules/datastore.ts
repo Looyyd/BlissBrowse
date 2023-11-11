@@ -1,7 +1,7 @@
 import {getAllDataStore, getStorageKey, setLocalStorageKey, setStorageKey} from "./storage";
 import {useEffect, useState} from "react";
 import {DEBUG_MESSAGES, LOCAL_STORAGE_STORE_NAME} from "../constants";
-import {IndexedDBKeyValueStore, Message} from "./types";
+import {changeValueIndexedDB, IndexedDBKeyValueStore, Message} from "./types";
 
 
 
@@ -24,12 +24,10 @@ export abstract class FullDataStore<T> {
     // Setup listener in the constructor
     this.messageListener = (request: Message<unknown>) => {
       if (request.action === 'dataChanged' && request.storeName === this.IndexedDBStoreName) {
-        const key = request.key;
-        const newValue = request.value as T;//TODO: type check?
-        const newPair: IndexedDBKeyValueStore<T> = {};
-        newPair[key] = {key: key, value: newValue};
-        //TODO: make more efficient
-        this._currentData = {...this._currentData,...newPair}
+        if(this._currentData !== null){
+          const newValue = request.value as T;//TODO: type check?
+          changeValueIndexedDB(this._currentData, request.key, newValue);
+        }
       }
     };
     chrome.runtime.onMessage.addListener(this.messageListener);

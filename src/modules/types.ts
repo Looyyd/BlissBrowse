@@ -91,3 +91,7 @@ export type IndexedDBKeyValueStore<T> = {
 export function KeyValue(key: string, value: any): {key:string, value: any}{
   return {key: key, value: value};
 }
+
+export function changeValueIndexedDB<T>(currentData: IndexedDBKeyValueStore<T>, key: string, newValue: T): void {
+  currentData[key] = { key, value: newValue };
+}
