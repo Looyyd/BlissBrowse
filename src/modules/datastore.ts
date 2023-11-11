@@ -28,6 +28,7 @@ export abstract class FullDataStore<T> {
         const newValue = request.value as T;//TODO: type check?
         const newPair: IndexedDBKeyValueStore<T> = {};
         newPair[key] = {key: key, value: newValue};
+        //TODO: make more efficient
         this._currentData = {...this._currentData,...newPair}
       }
     };
