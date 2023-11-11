@@ -33,7 +33,7 @@ export abstract class FullDataStore<T> {
     chrome.runtime.onMessage.addListener(this.messageListener);
   }
 
-  async getAll(){
+  async get(){
     if(this._currentData === null){
       this._currentData = await getAllDataStore<T>(this.IndexedDBStoreName);
     }
@@ -59,7 +59,7 @@ export abstract class FullDataStore<T> {
     useEffect(() => {
       const fetchData = async () => {
         try {
-          const value = await this.getAll();
+          const value = await this.get();
           setAllRows(value);
         } catch (error) {
           console.error('Error fetching data:', error);
