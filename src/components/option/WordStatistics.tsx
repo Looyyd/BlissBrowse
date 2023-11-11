@@ -1,6 +1,5 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {
-  ListNamesDataStore,
   FilterListDataStore,
   FullStatisticsDataStore, Statistics
 } from "../../modules/wordLists";
@@ -20,6 +19,7 @@ import ListSelector from "../ListSelector";
 import {ALL_LISTS_SYMBOL} from "../../constants";
 import {IndexedDBKeyValueStore, StatisticsEntry} from "../../modules/types";
 import InfoIcon from "@mui/icons-material/Info";
+import {useDataStore} from "../DataStoreContext";
 
 
 type sortKey = 'key' | 'value'; // 'key' for word, 'value' for statistic
@@ -30,10 +30,10 @@ export type SortConfig = {
   direction: 'asc' | 'desc';
 };
 
-const listNamesDataStore = new ListNamesDataStore();
 const statDataStore = new FullStatisticsDataStore();
 
 const WordStatistics = () => {
+  const { listNamesDataStore } = useDataStore();
   //fetched lists are not showed
   const [syncedLists,] = listNamesDataStore.useData([]);
   //lists are showed

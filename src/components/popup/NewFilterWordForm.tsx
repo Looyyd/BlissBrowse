@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {ListNamesDataStore, FilterListDataStore} from "../../modules/wordLists";
+import {FilterListDataStore} from "../../modules/wordLists";
 import {
   Button,
   TextField,
@@ -10,12 +10,12 @@ import {
 import ListSelector from "../ListSelector";
 import {useAlert} from "../AlertContext";
 import {Add} from "@mui/icons-material";
+import {useDataStore} from "../DataStoreContext";
 
 
 /* A form to add a new word to a list. */
-const listNamesDataStore = new ListNamesDataStore();
-
 const NewFilterWordForm: React.FC = () => {
+  const { listNamesDataStore } = useDataStore();
   const [newWord, setNewWord] = useState<string>('');
   const [list, setList] = useState<string>('');
   const [lists] = listNamesDataStore.useData([]);

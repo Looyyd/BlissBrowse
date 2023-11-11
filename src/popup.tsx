@@ -13,6 +13,7 @@ import AlertComponent from "./components/AlertComponent";
 import FeedbackButton from "./components/FeedbackButton";
 import {lightTheme} from "./themes";
 import ExtensionTitle from "./components/ExtensionTitle";
+import {DataStoreProvider} from "./components/DataStoreContext";
 
 
 const Popup: React.FC = () => {
@@ -42,12 +43,14 @@ if (root) {
   createRoot(root).render(
     <>
       <React.StrictMode>
-        <ThemeProvider theme={lightTheme}>
-          <AlertProvider>
-            <AlertComponent />
-            <Popup/>
-          </AlertProvider>
-        </ThemeProvider>
+        <DataStoreProvider>
+          <ThemeProvider theme={lightTheme}>
+            <AlertProvider>
+              <AlertComponent />
+              <Popup/>
+            </AlertProvider>
+          </ThemeProvider>
+        </DataStoreProvider>
       </React.StrictMode>
     </>
   );

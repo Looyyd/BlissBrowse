@@ -1,14 +1,14 @@
 import React from 'react';
 import {Button, List, ListItem, ListItemText, Typography} from '@mui/material';
-import {ListNamesDataStore} from "../../modules/wordLists";
 import LoadingScreen from "../LoadingScreen";
 import {Edit} from "@mui/icons-material";
 import {FullListSettingsStore} from "../../modules/settings";
+import {useDataStore} from "../DataStoreContext";
 
-const listNamesDataStore = new ListNamesDataStore();
 const settingsDataStore = new FullListSettingsStore();
 
 const ListsDisplay: React.FC = () => {
+  const { listNamesDataStore } = useDataStore();
   const [lists] = listNamesDataStore.useData([]);
   const [listSettings, setRowData] = settingsDataStore.useData();
 

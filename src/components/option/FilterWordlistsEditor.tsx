@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {ListNamesDataStore, FilterListDataStore} from "../../modules/wordLists";
+import {FilterListDataStore} from "../../modules/wordLists";
 import {
   Button,
   Container,
@@ -11,6 +11,7 @@ import {useAlert} from "../AlertContext";
 import {TextEditBox} from "../TextEditBox";
 import {Delete, Save} from "@mui/icons-material";
 import NewListForm from "../popup/NewListForm";
+import {useDataStore} from "../DataStoreContext";
 
 
 
@@ -53,10 +54,10 @@ const useSelectedListData = (initialListName: string): [string, React.Dispatch<R
   return [selectedList, setSelectedList, words];
 };
 
-const listNamesDataStore = new ListNamesDataStore();
 
 // Main component
 const FilterWordlistsEditor = () => {
+  const { listNamesDataStore } = useDataStore();
   const [lists] = listNamesDataStore.useData();
   const urlSelectedList = useUrlParameter('list');
   const [selectedList, setSelectedList, words] = useSelectedListData(urlSelectedList);

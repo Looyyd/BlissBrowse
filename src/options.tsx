@@ -7,6 +7,7 @@ import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
 import AlertComponent from "./components/AlertComponent";
 import {AlertProvider} from "./components/AlertContext";
 import {lightTheme} from "./themes";
+import {DataStoreProvider} from "./components/DataStoreContext";
 
 
 const App: React.FC = () => {
@@ -35,12 +36,14 @@ if (root) {
   const rootContainer = createRoot(root);
   rootContainer.render(
     <React.StrictMode>
-      <ThemeProvider theme={lightTheme}>
-        <AlertProvider>
-          <AlertComponent />
-          <App />
-        </AlertProvider>
-      </ThemeProvider>
+      <DataStoreProvider>
+        <ThemeProvider theme={lightTheme}>
+          <AlertProvider>
+            <AlertComponent />
+            <App />
+          </AlertProvider>
+        </ThemeProvider>
+      </DataStoreProvider>
     </React.StrictMode>
   );
 }
