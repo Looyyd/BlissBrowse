@@ -11,14 +11,6 @@ import {Trie, TrieNode} from "./trie";
 /*
 * @throws Error if n is not a number
  */
-export async function getFilterWordStatistics(word: string): Promise<number> {
-  const dataStore = new WordStatisticsDataStore(word);
-  return await dataStore.get();
-}
-
-/*
-* @throws Error if n is not a number
- */
 export async function addToFilterWordStatistics(word: string, countToAdd: number){
   const dataStore = new WordStatisticsDataStore(word);
   await dataStore.add(countToAdd);
