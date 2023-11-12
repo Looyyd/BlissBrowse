@@ -1,6 +1,6 @@
 import {getAllDataStore, getStorageKey, removeStorageKey, setLocalStorageKey, setStorageKey} from "./storage";
 import {useEffect, useState} from "react";
-import {LOCAL_STORAGE_STORE_NAME} from "../constants";
+import {DEBUG, LOCAL_STORAGE_STORE_NAME} from "../constants";
 import {ActionType, IndexedDBKeyValueStore, KeyValue, Message} from "./types";
 
 export abstract class ListenableDataStore<T> {
@@ -24,12 +24,21 @@ export abstract class ListenableDataStore<T> {
 }
 
 export function useDataFromStore<T>(dataStore: ListenableDataStore<T>, defaultValue: T | null = null) {
+  /* returns [data, error]
+  error is null if no error happened, if datastore.get errors out,
+  error is set until next successful set*/
   const [data, setData] = useState<T | null>(defaultValue);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     const updateState = async () => {
-      const value = await dataStore.get();
-      setData(value);
+      try {
+        const value = await dataStore.get();
+        setData(value);
+        setError(null); // Reset error state if successful
+      } catch (err) {
+        setError(err as Error); // Capture any errors
+      }
     };
 
     dataStore.subscribe(updateState); // Subscribe for updates
@@ -42,8 +51,9 @@ export function useDataFromStore<T>(dataStore: ListenableDataStore<T>, defaultVa
     };
   }, [dataStore]);
 
-  return [data] as const;
+  return [data, error] as const; // Return both data and error
 }
+
 
 
 export abstract class FullDataStore<T> extends ListenableDataStore<IndexedDBKeyValueStore<T>> {
@@ -79,8 +89,18 @@ export abstract class FullDataStore<T> extends ListenableDataStore<IndexedDBKeyV
   }
 
   async get() {
+    /* @throws {Error} if item is not of type T or IndexeDB errors */
     if (this._currentData === null) {
-      const fetchedData = await getAllDataStore(this.IndexedDBStoreName);
+      let fetchedData: IndexedDBKeyValueStore<unknown>;
+      try {
+        fetchedData = await getAllDataStore(this.IndexedDBStoreName);
+      } catch (e) {
+        if(DEBUG){
+          console.error("Error in datastore getAllData", e);
+        }
+        throw e;
+      }
+
       for (const value of Object.values(fetchedData)) {
         if (!this.isType(value.value)) {
           throw new Error(`Data in database is not of type ${this.IndexedDBStoreName}`);
@@ -100,11 +120,19 @@ export abstract class FullDataStore<T> extends ListenableDataStore<IndexedDBKeyV
 
   //TODO: should we set currentData in there?
   async set(key:string,value: T): Promise<void> {
+    /* @throws {Error} if indexedDB errors */
     //synced through background script
     const processedValue = this.setPreprocessor(value);
     //TODO: does this cause double notification since we also have a dataChanged listener?
     //this.notifySubscribers();
-    await setStorageKey(this.IndexedDBStoreName, key, processedValue);
+    try {
+      await setStorageKey(this.IndexedDBStoreName, key, processedValue);
+    } catch (e) {
+      if(DEBUG){
+        console.error("Error in datastore set", e);
+      }
+      throw e;
+    }
   }
 }
 
@@ -172,10 +200,12 @@ export abstract class LocalStorageStore<T> extends RowDataStore<T> {
     return this._currentData;
   }
   async set(value: T): Promise<void> {
+    /* @throws {Error} if indexedDB errors */
     //synced through background script
     const processedValue = this.setPreprocessor(value);
     //TODO: does this cause double notification since we also have a dataChanged listener?
     this.notifySubscribers();
+
     await setLocalStorageKey(this.key, processedValue)
   }
 }
@@ -192,24 +222,42 @@ export abstract class DatabaseStorage<T> extends RowDataStore<T> {
   }
 
   async fetchData(): Promise<T> {
-    /* @throws {Error} if item is not of type T */
-    const item = await getStorageKey(this.IndexedDBStoreName,this.key);
+    /* @throws {Error} if item is not of type T or IndexeDB errors */
+    let item: unknown;
+    try {
+      item = await getStorageKey(this.IndexedDBStoreName,this.key);
+    } catch (e) {
+      if(DEBUG){
+        console.error("Error in datastore fetchData", e);
+      }
+      throw e;
+    }
+
     if(!this.isType(item)){
       if(item === null){
         return this.defaultValue;
       }
+      //TODO: type upgrade function
       throw new Error(`Item in database is not of type ${this.key}`);
     }
     return item;
   }
 
   async set(value: T): Promise<void> {
+    /* @throws {Error} if indexedDB errors */
     //synced through background script
     const processedValue = this.setPreprocessor(value);
     //TODO: notify only if value changed?
     //TODO: does this cause double notification since we also have a dataChanged listener?
     this.notifySubscribers();
-    await setStorageKey(this.IndexedDBStoreName, this.key, processedValue);
+    try {
+      await setStorageKey(this.IndexedDBStoreName, this.key, processedValue);
+    } catch (e) {
+      if(DEBUG){
+        console.error("Error in datastore set", e);
+      }
+      throw e;
+    }
   }
 
   async clear(): Promise<void> {
