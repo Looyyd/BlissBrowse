@@ -45,6 +45,7 @@ export type Statistics = number;
 
 export class FullStatisticsDataStore extends FullDataStore<Statistics> {
   IndexedDBStoreName = WORD_STATISTICS_STORE_NAME;
+  isType = isNumber;
 }
 
 

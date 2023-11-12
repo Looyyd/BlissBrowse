@@ -9,7 +9,7 @@ import {
   RemoveDataMessage
 } from "./types";
 
-export async function getStorageKey<T>(storeName:string, key: string): Promise<T>{
+export async function getStorageKey(storeName:string, key: string): Promise<unknown>{
   return new Promise((resolve, reject) => {
     const getMessage: GetDataMessage = {
       action: ActionType.Get,
@@ -21,7 +21,7 @@ export async function getStorageKey<T>(storeName:string, key: string): Promise<T
         console.log('getStorageKey response:', response);
       }
       if (response.success) {
-        resolve(response.data as T);//TODO: should type check this?
+        resolve(response.data);
       } else {
         reject(new Error(response.error));
       }
@@ -29,7 +29,7 @@ export async function getStorageKey<T>(storeName:string, key: string): Promise<T
   });
 }
 
-export async function getAllDataStore<T>(storeName:string): Promise<IndexedDBKeyValueStore<T>>{
+export async function getAllDataStore(storeName:string): Promise<IndexedDBKeyValueStore<unknown>>{
   return new Promise((resolve, reject) => {
     const getMessage: GetAllMessage = {
       action: ActionType.GetAll,
@@ -40,7 +40,7 @@ export async function getAllDataStore<T>(storeName:string): Promise<IndexedDBKey
         console.log('getAllDataStore response:', response);
       }
       if (response.success) {
-        resolve(response.data as IndexedDBKeyValueStore<T>);
+        resolve(response.data as IndexedDBKeyValueStore<unknown>);
       } else {
         reject(new Error(response.error));
       }

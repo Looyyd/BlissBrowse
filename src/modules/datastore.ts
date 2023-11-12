@@ -49,6 +49,7 @@ export function useDataFromStore<T>(dataStore: ListenableDataStore<T>, defaultVa
 export abstract class FullDataStore<T> extends ListenableDataStore<IndexedDBKeyValueStore<T>> {
   abstract IndexedDBStoreName:string;
   protected _currentData: IndexedDBKeyValueStore<T> | null = null;
+  abstract isType: (data: unknown) => data is T;
 
   messageListener: ((request: Message<unknown>) => void) | null = null;
 
@@ -77,9 +78,15 @@ export abstract class FullDataStore<T> extends ListenableDataStore<IndexedDBKeyV
     chrome.runtime.onMessage.addListener(this.messageListener);
   }
 
-  async get(){
-    if(this._currentData === null){
-      this._currentData = await getAllDataStore<T>(this.IndexedDBStoreName);
+  async get() {
+    if (this._currentData === null) {
+      const fetchedData = await getAllDataStore(this.IndexedDBStoreName);
+      for (const value of Object.values(fetchedData)) {
+        if (!this.isType(value.value)) {
+          throw new Error(`Data in database is not of type ${this.IndexedDBStoreName}`);
+        }
+      }
+      this._currentData = fetchedData as IndexedDBKeyValueStore<T>;
     }
     return this._currentData;
   }
@@ -186,7 +193,7 @@ export abstract class DatabaseStorage<T> extends RowDataStore<T> {
 
   async fetchData(): Promise<T> {
     /* @throws {Error} if item is not of type T */
-    const item = await getStorageKey<T>(this.IndexedDBStoreName,this.key);
+    const item = await getStorageKey(this.IndexedDBStoreName,this.key);
     if(!this.isType(item)){
       if(item === null){
         return this.defaultValue;
