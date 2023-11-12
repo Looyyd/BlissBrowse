@@ -46,9 +46,9 @@ const handleGet = (storeName: string, key: string, sendResponse: SendResponseFun
     })
     .catch((error: unknown) => {
       if (error instanceof Error) {
-        sendResponse({ success: false, error: error.message } as MessageResponseError);
+        sendResponse({ success: false, error: error } as MessageResponseError);
       } else {
-        sendResponse({ success: false, error: 'An unknown error occurred.' } as MessageResponseError);
+        sendResponse({ success: false, error: new Error('An unknown error occurred.') } as MessageResponseError);
       }
     });
 };
@@ -63,9 +63,9 @@ const handleGetAll = (storeName: string, sendResponse: SendResponseFunc): void =
     })
     .catch((error: unknown) => {
       if (error instanceof Error) {
-        sendResponse({ success: false, error: error.message } as MessageResponseError);
+        sendResponse({ success: false, error: error } as MessageResponseError);
       } else {
-        sendResponse({ success: false, error: 'An unknown error occurred.' } as MessageResponseError);
+        sendResponse({ success: false, error: new Error('An unknown error occurred.') } as MessageResponseError);
       }
     });
 }
@@ -98,9 +98,9 @@ const handleSet = (storeName: string, key: string, value: unknown, sendResponse:
     })
     .catch((error: unknown) => {
       if (error instanceof Error) {
-        sendResponse({ success: false, error: error.message } as MessageResponseError);
+        sendResponse({ success: false, error: error } as MessageResponseError);
       } else {
-        sendResponse({ success: false, error: 'An unknown error occurred.' } as MessageResponseError);
+        sendResponse({ success: false, error: new Error('An unknown error occurred.') } as MessageResponseError);
       }
     });
 };
@@ -114,9 +114,9 @@ const handleRemove = (storeName: string, key: string, sendResponse: SendResponse
     })
     .catch((error: unknown) => {
       if (error instanceof Error) {
-        sendResponse({ success: false, error: error.message } as MessageResponseError);
+        sendResponse({ success: false, error: error } as MessageResponseError);
       } else {
-        sendResponse({ success: false, error: 'An unknown error occurred.' } as MessageResponseError);
+        sendResponse({ success: false, error: new Error('An unknown error occurred.') } as MessageResponseError);
       }
     });
 }
@@ -149,7 +149,7 @@ chrome.runtime.onMessage.addListener((request: Message<unknown>, sender, sendRes
       break;
     default:
       console.log("Unknown action in background listener: ", request);
-      sendResponse({ success: false, error: 'Unknown action.' } as MessageResponseError);
+      sendResponse({ success: false, error: new Error('Unknown action in message.') } as MessageResponseError);
   }
 
   return true;  // This is necessary to handle the asynchronous response

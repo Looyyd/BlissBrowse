@@ -24,7 +24,7 @@ export async function getStorageKey(storeName:string, key: string): Promise<unkn
       if (response.success) {
         resolve(response.data);
       } else {
-        reject(new Error(response.error));
+        reject(response.error);
       }
     });
   });
@@ -44,7 +44,7 @@ export async function getAllDataStore(storeName:string): Promise<IndexedDBKeyVal
       if (response.success) {
         resolve(response.data as IndexedDBKeyValueStore<unknown>);
       } else {
-        reject(new Error(response.error));
+        reject(response.error);
       }
     });
   });
@@ -66,7 +66,7 @@ export async function setStorageKey<T>(storeName: string, key: string, value: T)
         }
         resolve();
       } else {
-        reject(new Error(response.error));
+        reject(response.error);
       }
     });
   });
@@ -90,7 +90,7 @@ export async function setLocalStorageKey<T>(key: string, value: T): Promise<void
         }
         resolve();
       } else {
-        reject(new Error(response.error));
+        reject(response.error);
       }
     });
   });
@@ -111,7 +111,7 @@ export async function removeStorageKey(storeName:string, key: string): Promise<v
         }
         resolve();
       } else {
-        reject(new Error(response.error));
+        reject(response.error);
       }
     });
   });

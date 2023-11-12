@@ -105,7 +105,7 @@ export interface MessageResponseSetSuccess {
 
 export interface MessageResponseError {
   success: false;
-  error: string;
+  error: Error;
 }
 
 export interface MessageResponseGetSuccess{
