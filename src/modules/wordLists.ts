@@ -17,11 +17,12 @@ export async function addToFilterWordStatistics(word: string, countToAdd: number
 }
 
 
-export class WordStatisticsDataStore extends DatabaseStorage<number> {
+export class WordStatisticsDataStore extends DatabaseStorage<WordStatistic> {
   key: string;
   defaultValue = DEFAULT_WORD_STATISTICS;
   IndexedDBStoreName = WORD_STATISTICS_STORE_NAME;
   isType = isNumber;
+  typeUpgrade = undefined;
 
   constructor(word: string) {
     super();
@@ -41,11 +42,13 @@ export class WordStatisticsDataStore extends DatabaseStorage<number> {
 }
 
 //TODO: change into object to be able to add more statistics
-export type Statistics = number;
+export type WordStatistic = number;
 
-export class FullStatisticsDataStore extends FullDataStore<Statistics> {
+export class FullStatisticsDataStore extends FullDataStore<WordStatistic> {
   IndexedDBStoreName = WORD_STATISTICS_STORE_NAME;
   isType = isNumber;
+  defaultValue = DEFAULT_WORD_STATISTICS;
+  typeUpgrade = undefined;
 }
 
 
@@ -56,6 +59,7 @@ export class ListNamesDataStore extends DatabaseStorage<string[]> {
   IndexedDBStoreName = LIST_OF_LIST_NAMES_DATASTORE;
   defaultValue = DEFAULT_LISTNAMES_ARRAY;
   isType = isStringArray;
+  typeUpgrade = undefined;
 
   async createNewList(listName: string): Promise<void> {
     const listNames = await this.get();
@@ -82,6 +86,7 @@ export class TrieRootNodeDataStore extends DatabaseStorage<TrieNode> {
   defaultValue = new Trie([]).getRoot();
   IndexedDBStoreName = TRIE_STORE_NAME;
   isType = (obj: unknown): obj is TrieNode => (obj !== null);//TODO: make sure skipping this check is ok
+  typeUpgrade = undefined;
 
   constructor(listName: string) {
     super();

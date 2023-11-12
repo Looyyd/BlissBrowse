@@ -60,6 +60,8 @@ export abstract class FullDataStore<T> extends ListenableDataStore<IndexedDBKeyV
   abstract IndexedDBStoreName:string;
   protected _currentData: IndexedDBKeyValueStore<T> | null = null;
   abstract isType: (data: unknown) => data is T;
+  abstract typeUpgrade?: (data: unknown) => T ;
+  abstract defaultValue?: T;
 
   messageListener: ((request: Message<unknown>) => void) | null = null;
 
@@ -103,7 +105,23 @@ export abstract class FullDataStore<T> extends ListenableDataStore<IndexedDBKeyV
 
       for (const value of Object.values(fetchedData)) {
         if (!this.isType(value.value)) {
-          throw new Error(`Data in database is not of type ${this.IndexedDBStoreName}`);
+          if(value.value === null){
+            if(this.defaultValue){
+              value.value = this.defaultValue;
+            }else {
+              if (this.typeUpgrade) {
+                try {
+                  value.value = this.typeUpgrade(value.value);
+                } catch (e) {
+                  if (DEBUG) {
+                    console.error("Error in datastore typeUpgrade", e);
+                  }
+                  throw e;
+                }
+              }
+            }
+            throw new Error(`Data in database is not of type ${this.IndexedDBStoreName}`);
+          }
         }
       }
       this._currentData = fetchedData as IndexedDBKeyValueStore<T>;
@@ -145,6 +163,7 @@ export abstract class RowDataStore<T> extends ListenableDataStore<T>{
   abstract get(): T | Promise<T>;
   abstract set(value: T): Promise<void> | void;
   abstract isType: (data: unknown) => data is T;
+  abstract typeUpgrade?: (data: unknown) => T ;
   abstract fetchData(): Promise<T> | T;
 
   messageListener: ((request: Message<unknown>) => void) | null = null;
@@ -188,6 +207,16 @@ export abstract class LocalStorageStore<T> extends RowDataStore<T> {
     }
     const parsedItem = JSON.parse(item);
     if (!this.isType(parsedItem)) {
+      if(this.typeUpgrade){
+        try{
+          return this.typeUpgrade(parsedItem);
+        }catch (e) {
+          if(DEBUG){
+            console.error("Error in datastore typeUpgrade", e);
+          }
+          throw e;
+        }
+      }
       throw new Error(`Item in local storage is not of type ${this.key}`);
     }
     return parsedItem;
@@ -237,7 +266,16 @@ export abstract class DatabaseStorage<T> extends RowDataStore<T> {
       if(item === null){
         return this.defaultValue;
       }
-      //TODO: type upgrade function
+      if(this.typeUpgrade){
+        try{
+          return this.typeUpgrade(item);
+        }catch (e) {
+          if(DEBUG){
+            console.error("Error in datastore typeUpgrade", e);
+          }
+          throw e;
+        }
+      }
       throw new Error(`Item in database is not of type ${this.key}`);
     }
     return item;

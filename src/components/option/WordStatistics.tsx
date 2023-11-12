@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {
-  FullStatisticsDataStore, Statistics, TrieRootNodeDataStore
+  FullStatisticsDataStore, WordStatistic, TrieRootNodeDataStore
 } from "../../modules/wordLists";
 import {
   Table,
@@ -41,7 +41,7 @@ const WordStatistics = () => {
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "key", direction: 'asc' });
   const [selectedList, setSelectedList] = useState<string | null>(null);
   const [statistics] = useDataFromStore(statDataStore);
-  const [shownStatistics, setShownStatistics] = useState<IndexedDBKeyValueStore<Statistics>>({});
+  const [shownStatistics, setShownStatistics] = useState<IndexedDBKeyValueStore<WordStatistic>>({});
 
   //TODO: into statistics type
   const columnNames = ["Word", "Times Seen"];
@@ -73,7 +73,7 @@ const WordStatistics = () => {
         }else{
           const dataStore = new TrieRootNodeDataStore(selectedList);
           const words = await dataStore.getWordList();
-          const statisticsToShow: IndexedDBKeyValueStore<Statistics> = {};
+          const statisticsToShow: IndexedDBKeyValueStore<WordStatistic> = {};
           for(const word of words){
             //TODO: is it undefined or null?
             if(statistics[word] !== undefined){

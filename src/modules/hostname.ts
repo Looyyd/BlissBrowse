@@ -66,6 +66,7 @@ export class BlacklistDatastore extends DatabaseStorage<string[]> {
   key = BLACKLISTED_WEBSITES_KEY;
   defaultValue = DEFAULT_HOSTNAME_BLACKLIST;
   isType = isStringArray;
+  typeUpgrade = undefined;
 
   async addHostnameToBlacklist(hostname: string) {
     const blacklist = await this.get();

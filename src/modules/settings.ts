@@ -14,6 +14,7 @@ export class FilterActionStore extends DatabaseStorage<FilterAction>{
   key = FILTER_ACTION_KEY;
   defaultValue = DEFAULT_FILTER_ACTION;
   isType = isFilterAction;
+  typeUpgrade = undefined;
 }
 
 export class ColorThemeStore extends LocalStorageStore<ColorTheme>{
@@ -21,6 +22,7 @@ export class ColorThemeStore extends LocalStorageStore<ColorTheme>{
   key = COLOR_THEME_KEY;
   defaultValue = DEFAULT_COLOR_THEME;
   isType = isColorTheme;
+  typeUpgrade = undefined;
 }
 
 
@@ -36,6 +38,7 @@ export class ListSettingsStore extends DatabaseStorage<ListSettings>{
   IndexedDBStoreName = LIST_SETTINGS_STORE_NAME;
   defaultValue = {disabled: false};
   isType = (data:unknown): data is ListSettings => data !== null;//TODO: implement a funciton, but is it needed since there are null defaults?
+  typeUpgrade = undefined;
 
   constructor(public listName: string) {
     super();
@@ -52,4 +55,6 @@ export class ListSettingsStore extends DatabaseStorage<ListSettings>{
 export class FullListSettingsStore extends FullDataStore<ListSettings>{
   IndexedDBStoreName = LIST_SETTINGS_STORE_NAME;
   isType = (data:unknown): data is ListSettings => data !== null;//TODO: implement a funciton, but is it needed since there are null defaults?
+  defaultValue = DEFAULT_LIST_SETTINGS;
+  typeUpgrade = undefined;
 }
