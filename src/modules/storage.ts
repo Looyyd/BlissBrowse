@@ -5,7 +5,7 @@ import {
   GetDataMessage,
   IndexedDBKeyValueStore,
   IndexedDBSetDataMessage,
-  LocalStorageSetMessage,
+  LocalStorageSetMessage, MessageResponseGet, MessageResponseGetAll, MessageResponseSet,
   RemoveDataMessage
 } from "./types";
 
@@ -16,12 +16,12 @@ export async function getStorageKey<T>(storeName:string, key: string): Promise<T
       key: key,
       storeName: storeName
     };
-    chrome.runtime.sendMessage(getMessage, (response) => {
+    chrome.runtime.sendMessage(getMessage, (response: MessageResponseGet) => {
       if(DEBUG_MESSAGES){
         console.log('getStorageKey response:', response);
       }
       if (response.success) {
-        resolve(response.data as T);
+        resolve(response.data as T);//TODO: should type check this?
       } else {
         reject(new Error(response.error));
       }
@@ -35,7 +35,7 @@ export async function getAllDataStore<T>(storeName:string): Promise<IndexedDBKey
       action: ActionType.GetAll,
       storeName: storeName
     };
-    chrome.runtime.sendMessage(getMessage, (response) => {
+    chrome.runtime.sendMessage(getMessage, (response: MessageResponseGetAll) => {
       if(DEBUG_MESSAGES){
         console.log('getAllDataStore response:', response);
       }
@@ -56,7 +56,7 @@ export async function setStorageKey<T>(storeName: string, key: string, value: T)
       value: value,
       storeName: storeName
     };
-    chrome.runtime.sendMessage(setMessage, (response) => {
+    chrome.runtime.sendMessage(setMessage, (response: MessageResponseSet) => {
       if (response.success) {
         if(DEBUG_MESSAGES){
           console.log('setStorageKey response:', response);
@@ -79,7 +79,7 @@ export async function setLocalStorageKey<T>(key: string, value: T): Promise<void
       value: value,
       storeName:  LOCAL_STORAGE_STORE_NAME//TODO: it's kinda hacky cause it's not going to be used
     };
-    chrome.runtime.sendMessage(message, (response) => {
+    chrome.runtime.sendMessage(message, (response: MessageResponseSet) => {
       if (response.success) {
         if (DEBUG_MESSAGES) {
           console.log('localStorageSet response:', response);
@@ -99,7 +99,7 @@ export async function removeStorageKey(storeName:string, key: string): Promise<v
       key: key,
       storeName: storeName
     };
-    chrome.runtime.sendMessage(message, (response) => {
+    chrome.runtime.sendMessage(message, (response: MessageResponseSet) => {
       if (response.success) {
         if (DEBUG_MESSAGES) {
           console.log('removeStorageKey response:', response);

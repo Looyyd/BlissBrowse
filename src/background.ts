@@ -1,6 +1,13 @@
 import {DEBUG, DEBUG_MESSAGES, FIRST_INSTALL_DEFAULT_LIST_NAME} from "./constants";
 import IndexedDBModule from "./modules/IndexedDBModule";
-import {ActionType, DataChangeMessage, Message} from "./modules/types";
+import {
+  ActionType,
+  DataChangeMessage,
+  Message,
+  MessageResponseError,
+  MessageResponseGetAllSuccess, MessageResponseGetSuccess,
+  MessageResponseSetSuccess
+} from "./modules/types";
 import {ListNamesDataStore} from "./modules/wordLists";
 
 
@@ -35,13 +42,13 @@ const handleGet = (storeName: string, key: string, sendResponse: SendResponseFun
       if (DEBUG_MESSAGES) {
         console.log('Sending data from background listener data:', data);
       }
-      sendResponse({ success: true, data });
+      sendResponse({ success: true, data } as MessageResponseGetSuccess);
     })
     .catch((error: unknown) => {
       if (error instanceof Error) {
-        sendResponse({ success: false, error: error.message });
+        sendResponse({ success: false, error: error.message } as MessageResponseError);
       } else {
-        sendResponse({ success: false, error: 'An unknown error occurred.' });
+        sendResponse({ success: false, error: 'An unknown error occurred.' } as MessageResponseError);
       }
     });
 };
@@ -52,13 +59,13 @@ const handleGetAll = (storeName: string, sendResponse: SendResponseFunc): void =
       if (DEBUG_MESSAGES) {
         console.log('Sending data from background listener data:', data);
       }
-      sendResponse({ success: true, data });
+      sendResponse({ success: true, data } as MessageResponseGetAllSuccess);
     })
     .catch((error: unknown) => {
       if (error instanceof Error) {
-        sendResponse({ success: false, error: error.message });
+        sendResponse({ success: false, error: error.message } as MessageResponseError);
       } else {
-        sendResponse({ success: false, error: 'An unknown error occurred.' });
+        sendResponse({ success: false, error: 'An unknown error occurred.' } as MessageResponseError);
       }
     });
 }
@@ -87,13 +94,13 @@ const handleSet = (storeName: string, key: string, value: unknown, sendResponse:
   IndexedDBModule.setIndexedDBKey(storeName, key, value)
     .then(() => {
       sendDataChangedMessage(storeName, key, value);
-      sendResponse({ success: true });
+      sendResponse({ success: true } as MessageResponseSetSuccess);
     })
     .catch((error: unknown) => {
       if (error instanceof Error) {
-        sendResponse({ success: false, error: error.message });
+        sendResponse({ success: false, error: error.message } as MessageResponseError);
       } else {
-        sendResponse({ success: false, error: 'An unknown error occurred.' });
+        sendResponse({ success: false, error: 'An unknown error occurred.' } as MessageResponseError);
       }
     });
 };
@@ -103,13 +110,13 @@ const handleRemove = (storeName: string, key: string, sendResponse: SendResponse
   IndexedDBModule.removeIndexedDBKey(storeName, key)
     .then(() => {
       sendDataChangedMessage(storeName, key, null);//TODO: what should be sent here? default value?
-      sendResponse({ success: true });
+      sendResponse({ success: true } as MessageResponseSetSuccess);
     })
     .catch((error: unknown) => {
       if (error instanceof Error) {
-        sendResponse({ success: false, error: error.message });
+        sendResponse({ success: false, error: error.message } as MessageResponseError);
       } else {
-        sendResponse({ success: false, error: 'An unknown error occurred.' });
+        sendResponse({ success: false, error: 'An unknown error occurred.' } as MessageResponseError);
       }
     });
 }
@@ -132,17 +139,17 @@ chrome.runtime.onMessage.addListener((request: Message<unknown>, sender, sendRes
     case ActionType.LocalStorageSet:
       //only inform of change, can't set local storage from background so must be done from content script
       sendDataChangedMessage(request.storeName, request.key, request.value);
-      sendResponse({ success: true });
+      sendResponse({ success: true } as MessageResponseSetSuccess);
       break;
     case ActionType.Remove:
       handleRemove(request.storeName, request.key, sendResponse);
       break;
     case ActionType.DataChanged:
-      sendResponse({ success: true });
+      sendResponse({ success: true } as MessageResponseSetSuccess);
       break;
     default:
       console.log("Unknown action in background listener: ", request);
-      sendResponse({ success: false, error: 'Unknown action.' });
+      sendResponse({ success: false, error: 'Unknown action.' } as MessageResponseError);
   }
 
   return true;  // This is necessary to handle the asynchronous response

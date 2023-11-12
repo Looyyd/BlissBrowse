@@ -185,6 +185,7 @@ export abstract class DatabaseStorage<T> extends RowDataStore<T> {
   }
 
   async fetchData(): Promise<T> {
+    /* @throws {Error} if item is not of type T */
     const item = await getStorageKey<T>(this.IndexedDBStoreName,this.key);
     if(!this.isType(item)){
       if(item === null){

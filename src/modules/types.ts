@@ -99,6 +99,30 @@ export type Message<T> = DataChangeMessage<T>
   | GetAllMessage;
 
 
+export interface MessageResponseSetSuccess {
+  success: true;
+}
+
+export interface MessageResponseError {
+  success: false;
+  error: string;
+}
+
+export interface MessageResponseGetSuccess{
+  success: true;
+  data: unknown;
+}
+
+export interface MessageResponseGetAllSuccess {
+  success: true;
+  data: unknown;
+}
+
+export type MessageResponseSet = MessageResponseSetSuccess | MessageResponseError;
+export type MessageResponseGet = MessageResponseGetSuccess | MessageResponseError;
+export type MessageResponseGetAll = MessageResponseGetAllSuccess | MessageResponseError;
+
+
 export type IndexedDBKeyValueStore<T> = {
   [key: string]: {key:string, value: T};
 };
