@@ -10,6 +10,7 @@ import {
 } from "./types";
 
 export async function getStorageKey(storeName:string, key: string): Promise<unknown>{
+  /* @throws Error if background returns an error */
   return new Promise((resolve, reject) => {
     const getMessage: GetDataMessage = {
       action: ActionType.Get,
@@ -30,6 +31,7 @@ export async function getStorageKey(storeName:string, key: string): Promise<unkn
 }
 
 export async function getAllDataStore(storeName:string): Promise<IndexedDBKeyValueStore<unknown>>{
+  /* @throws Error if background returns an error */
   return new Promise((resolve, reject) => {
     const getMessage: GetAllMessage = {
       action: ActionType.GetAll,
@@ -49,6 +51,7 @@ export async function getAllDataStore(storeName:string): Promise<IndexedDBKeyVal
 }
 
 export async function setStorageKey<T>(storeName: string, key: string, value: T): Promise<void> {
+  /* @throws Error if background returns an error */
   return new Promise((resolve, reject) => {
     const setMessage: IndexedDBSetDataMessage<T> = {
       action: ActionType.Set,
@@ -70,6 +73,7 @@ export async function setStorageKey<T>(storeName: string, key: string, value: T)
 }
 
 export async function setLocalStorageKey<T>(key: string, value: T): Promise<void> {
+  /* @throws Error if background returns an error */
   //need to set the local storage key because background script doesn't have access to local storage
   localStorage.setItem(key, JSON.stringify(value));
   return new Promise((resolve, reject) => {
@@ -93,6 +97,7 @@ export async function setLocalStorageKey<T>(key: string, value: T): Promise<void
 }
 
 export async function removeStorageKey(storeName:string, key: string): Promise<void> {
+  /* @throws Error if background returns an error */
   return new Promise((resolve, reject) => {
     const message: RemoveDataMessage= {
       action: ActionType.Remove,
