@@ -148,7 +148,9 @@ chrome.runtime.onMessage.addListener((request: Message<unknown>, sender, sendRes
       sendResponse({ success: true } as MessageResponseSetSuccess);
       break;
     default:
-      console.log("Unknown action in background listener: ", request);
+      if(DEBUG_MESSAGES){
+        console.log("Unknown action in background listener: ", request);
+      }
       sendResponse({ success: false, error: new Error('Unknown action in message.') } as MessageResponseError);
   }
 
