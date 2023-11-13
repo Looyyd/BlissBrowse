@@ -99,8 +99,8 @@ const WordStatistics = () => {
     if (sortConfig.key !== null) {
       sortableItems.sort((a, b) => {
         // Directly access the properties of the object
-        const aValue = sortConfig.key === 'key' ? a[sortConfig.key].toLowerCase() : a[sortConfig.key];
-        const bValue = sortConfig.key === 'key' ? b[sortConfig.key].toLowerCase() : b[sortConfig.key];
+        const aValue = sortConfig.key === 'key' ? a[sortConfig.key].toLowerCase() : a[sortConfig.key].count;
+        const bValue = sortConfig.key === 'key' ? b[sortConfig.key].toLowerCase() : b[sortConfig.key].count;
 
         if (aValue < bValue) {
           return sortConfig.direction === 'asc' ? -1 : 1;
@@ -177,7 +177,7 @@ const WordStatistics = () => {
             {sortedStatistics.map((entry) => (
               <TableRow key={entry.key}>
                 <TableCell>{entry.key}</TableCell>
-                <TableCell>{entry.value}</TableCell>
+                <TableCell>{entry.value.count}</TableCell>
               </TableRow>
             ))}
           </TableBody>

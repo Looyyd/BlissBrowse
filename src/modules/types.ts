@@ -1,3 +1,5 @@
+import {WordStatistic} from "./wordLists";
+
 export enum FilterAction {
   BLUR = "blur",
   HIDE = "hide"
@@ -30,7 +32,7 @@ export function isNumber(value: unknown): value is number {
 
 export type StatisticsEntry = {
   key: string;
-  value: number;
+  value: WordStatistic;
 };
 
 export type StatisticsArray = StatisticsEntry[];

@@ -108,18 +108,19 @@ export abstract class FullDataStore<T> extends ListenableDataStore<IndexedDBKeyV
           if(value.value === null){
             if(this.defaultValue){
               value.value = this.defaultValue;
-            }else {
-              if (this.typeUpgrade) {
-                try {
-                  value.value = this.typeUpgrade(value.value);
-                } catch (e) {
-                  if (DEBUG) {
-                    console.error("Error in datastore typeUpgrade", e);
-                  }
-                  throw e;
-                }
-              }
+            } else {
+              throw new Error(`Data in database is null and no default value is set`);
             }
+          } else if (this.typeUpgrade) {
+              try {
+                value.value = this.typeUpgrade(value.value);
+              } catch (e) {
+                if (DEBUG) {
+                  console.error("Error in datastore typeUpgrade", e);
+                }
+                throw e;
+              }
+          } else {
             throw new Error(`Data in database is not of type ${this.IndexedDBStoreName}`);
           }
         }
@@ -265,18 +266,18 @@ export abstract class DatabaseStorage<T> extends RowDataStore<T> {
     if(!this.isType(item)){
       if(item === null){
         return this.defaultValue;
-      }
-      if(this.typeUpgrade){
+      } else if(this.typeUpgrade){
         try{
           return this.typeUpgrade(item);
-        }catch (e) {
+        } catch (e) {
           if(DEBUG){
             console.error("Error in datastore typeUpgrade", e);
           }
           throw e;
         }
+      } else{
+        throw new Error(`Item in database is not of type ${this.key}`);
       }
-      throw new Error(`Item in database is not of type ${this.key}`);
     }
     return item;
   }

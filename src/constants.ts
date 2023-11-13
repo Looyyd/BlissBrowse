@@ -18,7 +18,7 @@ export const ALL_LISTS_SYMBOL = 'All_LISTS_3213546516541';
 
 //INDEXEDDB RELATED CONSTANTS
 //Database default values
-export const DEFAULT_WORD_STATISTICS = 0;
+export const DEFAULT_WORD_STATISTICS = { count: 0 };
 export const DEFAULT_LISTNAMES_ARRAY = [];
 export const DEFAULT_WORDLIST = [];
 export const DEFAULT_HOSTNAME_BLACKLIST = [];

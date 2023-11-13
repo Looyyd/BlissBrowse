@@ -21,8 +21,8 @@ export class WordStatisticsDataStore extends DatabaseStorage<WordStatistic> {
   key: string;
   defaultValue = DEFAULT_WORD_STATISTICS;
   IndexedDBStoreName = WORD_STATISTICS_STORE_NAME;
-  isType = isNumber;
-  typeUpgrade = undefined;
+  isType = isWordStatistic;
+  typeUpgrade = statisticsTypeUpgrade;
 
   constructor(word: string) {
     super();
@@ -30,25 +30,44 @@ export class WordStatisticsDataStore extends DatabaseStorage<WordStatistic> {
   }
 
   async add(countToAdd: number): Promise<void> {
-    const currentCount = await this.get();
-    const value = currentCount + countToAdd;
-    await this.set(value);
+    const stat = await this.get();
+    const value = stat.count + countToAdd;
+    await this.set({...stat, count: value});
   }
   async subtract(countToSubtract: number): Promise<void> {
-    const currentCount = await this.get();
-    const value = currentCount - countToSubtract;
-    await this.set(value);
+    await this.add(-countToSubtract);
   }
 }
 
 //TODO: change into object to be able to add more statistics
-export type WordStatistic = number;
+//export type WordStatistic = number;
+export type WordStatistic = {
+  count: number;
+}
+
+export const isWordStatistic = (obj: unknown): obj is WordStatistic => {
+  if(typeof obj !== 'object') return false;
+  if(obj === null) return false;
+  if(!('count' in obj)) return false;
+  if(!isNumber(obj.count)) return false;
+  return true;
+}
+
+const statisticsTypeUpgrade = (obj: unknown): WordStatistic => {
+  console.log('statisticsTypeUpgrade', obj)
+  if(typeof obj === 'number'){
+    return {
+      count: obj
+    }
+  }
+  throw new Error('statisticsTypeUpgrade received invalid input');
+}
 
 export class FullStatisticsDataStore extends FullDataStore<WordStatistic> {
   IndexedDBStoreName = WORD_STATISTICS_STORE_NAME;
-  isType = isNumber;
+  isType = isWordStatistic;
   defaultValue = DEFAULT_WORD_STATISTICS;
-  typeUpgrade = undefined;
+  typeUpgrade = statisticsTypeUpgrade;
 }
 
 
