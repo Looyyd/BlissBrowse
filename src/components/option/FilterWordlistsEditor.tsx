@@ -87,10 +87,15 @@ const FilterWordlistsEditor = () => {
     //TODO: confirm dialog
     const list = selectedList;
     if (!list) return;
-    listNamesDataStore.deleteList(list).then(() => {
+    listNamesDataStore.deleteList(list)
+      .then(() => {
       setSelectedList("");
       showAlert('success', 'List deleted successfully!');
-    });
+    })
+      .catch((e) => {
+        showAlert('error', 'An error occurred while deleting the list');
+        console.error('Error deleting list:', e);
+      });
   }
 
   const saveWords = () => {

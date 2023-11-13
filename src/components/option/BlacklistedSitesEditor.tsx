@@ -33,9 +33,14 @@ const BlacklistedSitesEditor = () => {
   const saveHostnames = () => {
     const newBlacklist = textAreaValue.split('\n');
     const dataStore = new BlacklistDatastore();
-    dataStore.set(newBlacklist).then(() => {
+    dataStore.set(newBlacklist)
+      .then(() => {
       showAlert('success', 'Blacklist updated successfully!');
-    });
+    })
+      .catch((e) => {
+        showAlert('error', 'An error occurred while updating the blacklist');
+        console.error('Error updating blacklist:', e);
+      });
   };
 
 

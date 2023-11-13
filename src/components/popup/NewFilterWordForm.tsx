@@ -36,9 +36,13 @@ const NewFilterWordForm: React.FC = () => {
 
     setNewWord('');
     const dataStore = new TrieRootNodeDataStore(list);
-    await dataStore.addWord(newWord);
-
-    showAlert('success', 'Word added successfully!');
+    try {
+      await dataStore.addWord(newWord);
+      showAlert('success', 'Word added successfully!');
+    } catch (e) {
+      console.error('Error adding word:', e);
+      showAlert('error', 'An error occurred while adding the word');
+    }
   };
 
   return (

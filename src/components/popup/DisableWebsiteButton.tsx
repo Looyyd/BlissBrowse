@@ -7,6 +7,7 @@ import Button from "@mui/material/Button"
 import {Link, LinkOff} from "@mui/icons-material";
 import {Tooltip} from "@mui/material";
 import {useDataFromStore} from "../../modules/datastore";
+import {useAlert} from "../AlertContext";
 
 const blacklistDataStore = new BlacklistDatastore();
 
@@ -15,6 +16,8 @@ const DisableWebsiteButton: React.FC = () => {
   const [isDisabled, setIsDisabled] = useState(false);
   const [hostname, setHostname] = useState('');
   const [forbiddenSite, setForbiddenSite] = useState(false);
+  const { showAlert } = useAlert();
+
 
   useEffect(() => {
     if(blacklist === null) return;
@@ -30,12 +33,17 @@ const DisableWebsiteButton: React.FC = () => {
 
   const handleClick = async () => {
     if (!forbiddenSite) {
-      if (isDisabled) {
-        await blacklistDataStore.removeHostnameFromBlacklist(hostname);
-      } else {
-        await blacklistDataStore.addHostnameToBlacklist(hostname);
+      try {
+        if (isDisabled) {
+          await blacklistDataStore.removeHostnameFromBlacklist(hostname);
+        } else {
+          await blacklistDataStore.addHostnameToBlacklist(hostname);
+        }
+        setIsDisabled(!isDisabled);
+      } catch (e) {
+        console.error('Error toggling blacklist:', e);
+        showAlert('error', 'An error occurred while toggling the blacklist');
       }
-      setIsDisabled(!isDisabled);
     }
   };
 

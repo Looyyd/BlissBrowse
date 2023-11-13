@@ -5,6 +5,7 @@ import {Edit} from "@mui/icons-material";
 import {FullListSettingsStore} from "../../modules/settings";
 import {useDataStore} from "../DataStoreContext";
 import {useDataFromStore} from "../../modules/datastore";
+import {useAlert} from "../AlertContext";
 
 const listSettingsDataStore = new FullListSettingsStore();
 
@@ -12,6 +13,7 @@ const ListsDisplay: React.FC = () => {
   const { listNamesDataStore } = useDataStore();
   const [lists] = useDataFromStore(listNamesDataStore);
   const [listSettings] = useDataFromStore(listSettingsDataStore);
+  const { showAlert } = useAlert();
 
 
   const openListEditor = (listName: string) => {
@@ -29,7 +31,12 @@ const ListsDisplay: React.FC = () => {
     const settingsKeyValue = listSettings[listName];
     const settings = settingsKeyValue ? settingsKeyValue.value : {disabled: false};//hardcoded default
     settings.disabled = !settings.disabled;
-    await listSettingsDataStore.set(listName, settings);
+    try {
+      await listSettingsDataStore.set(listName, settings);
+    } catch (e) {
+      console.error('Error toggling list:', e);
+      showAlert('error', 'An error occurred while toggling the list');
+    }
   }
 
   return (
