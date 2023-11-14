@@ -7,3 +7,4 @@ safari/
 package-lock.json
 /dev/
 /prod/
+.DS_Store
