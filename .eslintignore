@@ -3,3 +3,4 @@ webpack.config.js
 /safari/
 /tests/e2e/
 /tests/e2e/content/pages/
+/src/modules/secrets.ts

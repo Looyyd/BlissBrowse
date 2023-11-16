@@ -3,12 +3,9 @@ dist/
 node_modules/
 safari/
 js_model/
-
-
 package-lock.json
 /dev/
 /prod/
-.DS_Store
-
 src/modules/secrets.ts
+.DS_Store
 
