@@ -41,6 +41,7 @@ export const FILTER_LIST_STORE_NAME = 'lists';
 export const TRIE_STORE_NAME = 'tries';
 export const LIST_OF_LIST_NAMES_DATASTORE = "listNames"
 export const LIST_SETTINGS_STORE_NAME = "listSettings"
+export const DEBUG_STORE_NAME = 'debug';
 
 export const STORE_NAMES =
   [SETTINGS_STORE_NAME,
@@ -48,4 +49,5 @@ export const STORE_NAMES =
     FILTER_LIST_STORE_NAME,
     TRIE_STORE_NAME,
     LIST_OF_LIST_NAMES_DATASTORE,
-    LIST_SETTINGS_STORE_NAME];
+    LIST_SETTINGS_STORE_NAME,
+    DEBUG_STORE_NAME];

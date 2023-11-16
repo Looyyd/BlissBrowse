@@ -1,18 +1,18 @@
 import {huggingFaceToken, openAIToken} from "./secrets";
-import {DEBUG} from "../constants";
-import {LocalStorageStore, RowDataStore} from "./datastore";
+import {DEBUG, DEBUG_STORE_NAME} from "../constants";
+import {DatabaseStorage} from "./datastore";
 
-class TextEmbeddingCounterStore extends LocalStorageStore<number>{
+class TextEmbeddingCounterStore extends DatabaseStorage<number>{
   defaultValue: number = 0;
-  IndexedDBStoreName: string = 'textEmbeddingCounter';
+  IndexedDBStoreName: string = DEBUG_STORE_NAME;
   key: string = 'textEmbeddingCounter';
   typeUpgrade = undefined;
   isType = (data: unknown): data is number => {
     return typeof data === 'number';
   };
 
-  add(value: number): Promise<void> | void {
-    this.set(this.get() + value);
+  async add(value: number): Promise<void> {
+    await this.set(await this.get() + value);
   }
 }
 
@@ -175,12 +175,12 @@ const addToQueue = (text: string): Promise<number[]> => {
 
 
 // Debugging function
-function logCounters() {
+async function logCounters() {
   console.log(`Total Embedding Calls: ${totalEmbeddingCalls}`);
   console.log(`Total Text Length: ${totalTextLength}`);
   console.log(`Cache Hits: ${cacheHits}`);
   const countToAdd = totalTextLength - previousTotalTextLength;
-  countDataStore.add(countToAdd);
+  await countDataStore.add(countToAdd);
   previousTotalTextLength = totalTextLength;
 }
 
