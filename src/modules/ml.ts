@@ -1,5 +1,20 @@
 import {huggingFaceToken, openAIToken} from "./secrets";
 import {DEBUG} from "../constants";
+import {LocalStorageStore, RowDataStore} from "./datastore";
+
+class TextEmbeddingCounterStore extends LocalStorageStore<number>{
+  defaultValue: number = 0;
+  IndexedDBStoreName: string = 'textEmbeddingCounter';
+  key: string = 'textEmbeddingCounter';
+  typeUpgrade = undefined;
+  isType = (data: unknown): data is number => {
+    return typeof data === 'number';
+  };
+
+  add(value: number): Promise<void> | void {
+    this.set(this.get() + value);
+  }
+}
 
 
 export interface FilterSubject{
@@ -109,6 +124,8 @@ async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
 
 let totalEmbeddingCalls = 0;
 let totalTextLength = 0;
+let previousTotalTextLength = 0;
+let countDataStore = new TextEmbeddingCounterStore();
 let cacheHits = 0;
 
 interface QueueItem {
@@ -162,6 +179,9 @@ function logCounters() {
   console.log(`Total Embedding Calls: ${totalEmbeddingCalls}`);
   console.log(`Total Text Length: ${totalTextLength}`);
   console.log(`Cache Hits: ${cacheHits}`);
+  const countToAdd = totalTextLength - previousTotalTextLength;
+  countDataStore.add(countToAdd);
+  previousTotalTextLength = totalTextLength;
 }
 
 // Set interval for every 10 seconds
