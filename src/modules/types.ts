@@ -55,6 +55,7 @@ export enum ActionType {
   LocalStorageSet = 'localStorageSet',
   Remove = 'remove',
   DataChanged = 'dataChanged',
+  ModelPredict = 'modelPredict',
 }
 
 // Message sent when data changes, to keep datastores in sync with background, sent from background
@@ -92,13 +93,19 @@ export interface GetAllMessage extends BaseMessage {
   action: ActionType.GetAll;
 }
 
+export interface ModelPredictMessage{
+  action: ActionType.ModelPredict;
+  value: string;
+}
+
 // Union type for all possible messages
 export type Message<T> = DataChangeMessage<T>
   | IndexedDBSetDataMessage<T>
   | LocalStorageSetMessage<T>
   | RemoveDataMessage
   | GetDataMessage
-  | GetAllMessage;
+  | GetAllMessage
+  | ModelPredictMessage;
 
 
 export interface MessageResponseSetSuccess {

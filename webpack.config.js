@@ -56,7 +56,7 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [
         { from: 'manifest.json', to: outputPath }, // Adjust if manifest.json is not in the root
-        { from: 'icons', to: path.join(outputPath, 'icons') } // This will copy the entire 'icons' folder
+        { from: 'icons', to: path.join(outputPath, 'icons') }, // This will copy the entire 'icons' folder
       ]
     }),
     new CleanWebpackPlugin(), // Clean the build directory for every build

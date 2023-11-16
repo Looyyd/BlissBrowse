@@ -4,6 +4,7 @@ import {
   DEBUG_PERFORMANCE,
   LIST_OF_LIST_NAMES_DATASTORE,
   LIST_SETTINGS_STORE_NAME,
+  ML_FEATURES,
   SETTINGS_STORE_NAME,
   TRIE_STORE_NAME,
 } from "./constants";
@@ -22,6 +23,7 @@ import {
   writeInMemoryStatisticsToStorage
 } from "./modules/content/filter";
 import {ActionType, Message} from "./modules/types";
+import {isTextInSubject, shouldTextBeSkippedML} from "./modules/ml";
 
 /*
 some logic taken from:
@@ -72,6 +74,7 @@ async function checkAndFilterElements() {
       node.textContent &&
       !hasAncestorTagThatShouldBeIgnored(node)) {  // Skip script and style tags
 
+      // Text based filtering
       for (const { listName, trie } of triesWithNames) {
         const filterResult = trie.shouldFilterTextContent(node.textContent);
         if (filterResult.shouldFilter && filterResult.triggeringWord) {
@@ -79,6 +82,21 @@ async function checkAndFilterElements() {
           if (ancestor instanceof HTMLElement) {
             await filterElement(ancestor, filterResult.triggeringWord, listName, filterAction);
             break;
+          }
+        }
+      }
+      // ML based filtering
+      if (ML_FEATURES) {
+        const text = node.textContent.trim();
+        if (!shouldTextBeSkippedML(text) ) {
+          const subject = {description: "Politics"};//TODO:
+          const modelPrediction = await isTextInSubject(subject, node.textContent);
+          if (modelPrediction) {
+            const ancestor = getFeedlikeAncestor(node);
+            if (ancestor instanceof HTMLElement) {
+              //TODO: filter element specialized for ML
+              await filterElement(ancestor, subject.description, 'ML', filterAction);
+            }
           }
         }
       }

@@ -42,6 +42,8 @@
     "@mui/icons-material": "^5.14.16",
     "@mui/material": "^5.14.17",
     "@playwright/test": "^1.39.0",
+    "@tensorflow/tfjs": "^4.13.0",
+    "@xenova/transformers": "^2.8.0",
     "jquery": "^3.7.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

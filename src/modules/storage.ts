@@ -6,8 +6,26 @@ import {
   IndexedDBKeyValueStore,
   IndexedDBSetDataMessage,
   LocalStorageSetMessage, MessageResponseGet, MessageResponseGetAll, MessageResponseSet,
+  ModelPredictMessage,
   RemoveDataMessage
 } from "./types";
+
+export async function getLocalModelPrediction(value: string): Promise<unknown> {
+  /* @throws Error if background returns an error */
+  return new Promise((resolve, reject) => {
+    const modelPredictMessage: ModelPredictMessage = {
+      action: ActionType.ModelPredict,
+      value: value
+    };
+    chrome.runtime.sendMessage(modelPredictMessage , (response: MessageResponseGet) => {
+      if (response.success) {
+        resolve(response.data);
+      } else {
+        reject(response.error);
+      }
+    });
+  });
+}
 
 export async function getStorageKey(storeName:string, key: string): Promise<unknown>{
   /* @throws Error if background returns an error */

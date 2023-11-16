@@ -4,6 +4,8 @@ import {ColorTheme, FilterAction} from "./modules/types";
 //GENERAL CONSTANTS
 export const EXTENSION_NAME= "BlissBrowse"
 export const FIRST_INSTALL_DEFAULT_LIST_NAME = "default"
+export const ML_FEATURES = true;
+export const ML_MODEL_PATH = "js_model/model.json"
 
 // DEBUG
 export const DEBUG = process.env.NODE_ENV === 'development'
