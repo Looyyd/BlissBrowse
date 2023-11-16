@@ -10,4 +10,5 @@ package-lock.json
 /prod/
 .DS_Store
 
-*/secrets.ts
+src/modules/secrets.ts
+
