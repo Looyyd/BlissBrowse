@@ -1,6 +1,7 @@
 import {huggingFaceToken, openAIToken} from "./secrets";
-import {DEBUG, DEBUG_STORE_NAME} from "../constants";
-import {DatabaseStorage} from "./datastore";
+import {DEBUG, DEBUG_STORE_NAME, LIST_OF_LIST_NAMES_DATASTORE, SUBJECTS_STORE_NAME} from "../constants";
+import {DatabaseStorage, FullDataStore} from "./datastore";
+import {IndexedDBKeyValueStore} from "./types";
 
 class TextEmbeddingCounterStore extends DatabaseStorage<number>{
   defaultValue: number = 0;
@@ -16,6 +17,61 @@ class TextEmbeddingCounterStore extends DatabaseStorage<number>{
   }
 }
 
+
+//TODO: why need this? to display names quickly?
+export class SubjectNamesStore extends DatabaseStorage<string[]>{
+  IndexedDBStoreName = LIST_OF_LIST_NAMES_DATASTORE;//TODO: rename the variable to explicit that ml lists are also stored here
+  key = 'subjectNames';
+  typeUpgrade = undefined;
+  isType = (data: unknown): data is string[] => {
+    return Array.isArray(data) && data.every(item => typeof item === 'string');
+  }
+  defaultValue: string[] = [];
+}
+
+export class SubjectsStore extends FullDataStore<FilterSubject> {
+  isType = (data: unknown): data is FilterSubject => {
+    return typeof data === 'object' && data !== null && 'description' in data;
+  }
+  IndexedDBStoreName = SUBJECTS_STORE_NAME;
+  key = 'subjects';
+  typeUpgrade = undefined;
+  defaultValue = undefined;
+
+  //overwrite get to populate with politics for testing
+  async get(): Promise<IndexedDBKeyValueStore<FilterSubject>> {
+    const subjects = await super.get();
+    //TODO: remove, just adding this for testing
+    if (Object.keys(subjects).length === 0) {
+      const en_pol_keywords = [
+        "politics", "government", "democracy", "election", "policy",
+        "legislation", "senate", "congress", "parliament", "voting",
+        "campaign", "candidate", "diplomacy", "international relations",
+        "political party", "ideology", "conservative", "liberal",
+        "socialism", "capitalism", "debate", "referendum", "civic",
+        "bureaucracy", "administration", "constitution", "reform",
+        "geopolitics", "diplomat", "politician", "representative",
+        "law", "rights", "governance", "political science", "civic engagement",
+        "public policy", "diplomatic", "political campaign", "voter",
+        "electorate", "political debate", "political ideology", "political reform",
+        "political leader", "political activism", "political crisis", "political discourse"
+      ]
+      const politicsSubject: FilterSubject = {
+        description: 'politics',
+        embedding_keywords: en_pol_keywords
+      }
+      subjects['politics'] = {key: 'politics', value: politicsSubject};
+    }
+    return subjects;
+  }
+}
+
+const subjectsStore = new SubjectsStore();
+export async function getSubjects(): Promise<FilterSubject[]> {
+  const keyvalues = await subjectsStore.get();
+  const answer = Object.values(keyvalues).map(keyvalue => keyvalue.value);
+  return answer;
+}
 
 export interface FilterSubject{
   description: string;
@@ -73,15 +129,7 @@ async function getEmbeddingsHuggingFace(text: string): Promise<number[]> {
 }
 
 async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
-  /*
-  curl https://api.openai.com/v1/embeddings \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $OPENAI_API_KEY" \
-  -d '{
-    "input": "Your text string goes here",
-    "model": "text-embedding-ada-002"
-  }'
-   */
+
   const fetchEmbedding = async (inputTexts: string[]): Promise<any> => {
     //TODO: handle tokens securely, remove from source code;
     const token = openAIToken;
@@ -109,11 +157,13 @@ async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
       if (jsonResponse.data === undefined ) {
         throw new Error(`'data' field is undefined or empty in the response`);
       }
-      //get .embedding for every data
       return jsonResponse.data.map((item: any) => item.embedding);
-      //return jsonResponse.data[0].embedding;
     } catch (error) {
       console.error('Error:', error);
+      console.log('inputTexts:', inputTexts);
+      if(response.json){
+        console.log('response.json:', await response.json());
+      }
       return null;
     }
   };
@@ -137,29 +187,35 @@ interface QueueItem {
 let embeddingQueue: QueueItem[] = [];
 let queueTimer: NodeJS.Timeout | null = null;
 
-const QUEUE_MAX_SIZE = 50;//TODO: what is the right size? maybe depend on the size of the text?
+const QUEUE_MAX_SIZE = 1000;//TODO: what is the right size? maybe depend on the size of the text?
 const QUEUE_TIME_LIMIT = 1000;
 
 const processQueue = async () => {
   if (embeddingQueue.length === 0) return;
 
-  const texts = embeddingQueue.map(item => item.text);
+  // Create a copy of the current queue
+  const currentQueue = [...embeddingQueue];
 
+  // Clear the original queue immediately to prevent asynchronous modification issues
+  embeddingQueue = [];
+
+  const texts = currentQueue.map(item => item.text);
   totalEmbeddingCalls++;
-  //const embeddings = await getEmbeddingsOpenAI(texts);
-  const embeddings = texts.map(() => [0, 0, 0]);//TODO: remove dummy
+  const embeddings = await getEmbeddingsOpenAI(texts);
 
+  // Process the copied queue
   embeddings.forEach((embedding, index) => {
-    const { resolve } = embeddingQueue[index];
-    resolve(embedding);
+    if (index < currentQueue.length) {
+      const { resolve } = currentQueue[index];
+      resolve(embedding);
+    }
   });
 
-  embeddingQueue = [];
   if (queueTimer) {
     clearTimeout(queueTimer);
     queueTimer = null;
   }
-};
+};;
 
 const addToQueue = (text: string): Promise<number[]> => {
     return new Promise((resolve, reject) => {
@@ -232,7 +288,7 @@ export function shouldTextBeSkippedML(text: string): boolean {
   return false;
 }
 
-async function populateSubject(subject: FilterSubject){
+async function populateSubjectAndSave(subject: FilterSubject){
   if(!subject.description){
     throw new Error('subject.description is required');
   }
@@ -241,14 +297,14 @@ async function populateSubject(subject: FilterSubject){
   }
   if(!subject.embedding){
     subject.embedding = await getEmbeddings(subject.embedding_keywords.join(' '));
+    await subjectsStore.set(subject.description, subject);//TODO: what keys to use? description could change if user edits it
   }
   return subject as PopulatedFilterSubject;
 }
 
 export async function isTextInSubject(subject:FilterSubject, text:string){
-  const threshold = 0.75;
-  const populatedSubject = await populateSubject(subject);
-  //TODO: save populatedSubject to storage
+  const threshold = 0.76;
+  const populatedSubject = await populateSubjectAndSave(subject);
   const textEmbedding = await getEmbeddings(text);
   const similarity = cosineSimilarity(populatedSubject.embedding, textEmbedding);
 

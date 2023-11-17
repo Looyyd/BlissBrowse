@@ -23,7 +23,7 @@ import {
   writeInMemoryStatisticsToStorage
 } from "./modules/content/filter";
 import {ActionType, Message} from "./modules/types";
-import {isTextInSubject, shouldTextBeSkippedML} from "./modules/ml";
+import {getSubjects, isTextInSubject, shouldTextBeSkippedML} from "./modules/ml";
 
 /*
 some logic taken from:
@@ -36,15 +36,16 @@ let timePrevious:number;
 
 
 async function checkAndFilterElements() {
-  if(DEBUG) {
+  if (DEBUG) {
     console.log('ENTERING checkAndFilterElements');
   }
-  if(DEBUG_PERFORMANCE){
-    if(timePrevious){
+  if (DEBUG_PERFORMANCE) {
+    if (timePrevious) {
       console.log('time since last checkAndFilterElements', Date.now() - timePrevious);
     }
     timePrevious = Date.now();
   }
+
   const isDisabled = await isCurrentSiteDisabled(CONTENT_CONTEXT);
   if (isDisabled) {
     await unfilterElementsIfNotInList([]);  // Unhide all
@@ -53,43 +54,39 @@ async function checkAndFilterElements() {
 
   const actionStore = new FilterActionStore();
   const filterAction = await actionStore.get();
-  const walker = document.createTreeWalker(
-    document.body,
-    NodeFilter.SHOW_TEXT,
-    null,
-  );
-
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
   const triesWithNames = await getFilterTries();
   await unfilterElementsIfNotInTries(triesWithNames.map(twn => twn.trie));
   await unfilterElementsIfWrongAction(filterAction);
 
   let node = walker.nextNode();
   while (node) {
-    if (nodeHasAProcessedParent(node) || nodeHasAIgnoredParent(node)) {
+    let textFiltered = false;
+
+    if (nodeHasAProcessedParent(node) || nodeHasAIgnoredParent(node) || node.nodeType !== Node.TEXT_NODE || !node.textContent || hasAncestorTagThatShouldBeIgnored(node)) {
       node = walker.nextNode();
       continue;
     }
 
-    if (node.nodeType === Node.TEXT_NODE &&
-      node.textContent &&
-      !hasAncestorTagThatShouldBeIgnored(node)) {  // Skip script and style tags
-
-      // Text based filtering
-      for (const { listName, trie } of triesWithNames) {
-        const filterResult = trie.shouldFilterTextContent(node.textContent);
-        if (filterResult.shouldFilter && filterResult.triggeringWord) {
-          const ancestor = getFeedlikeAncestor(node);
-          if (ancestor instanceof HTMLElement) {
-            await filterElement(ancestor, filterResult.triggeringWord, listName, filterAction);
-            break;
-          }
+    // Text based filtering
+    for (const { listName, trie } of triesWithNames) {
+      const filterResult = trie.shouldFilterTextContent(node.textContent);
+      if (filterResult.shouldFilter && filterResult.triggeringWord) {
+        const ancestor = getFeedlikeAncestor(node);
+        if (ancestor instanceof HTMLElement) {
+          await filterElement(ancestor, filterResult.triggeringWord, listName, filterAction);
+          textFiltered = true;
+          break;
         }
       }
-      // ML based filtering
-      if (ML_FEATURES) {
-        const text = node.textContent.trim();
-        if (!shouldTextBeSkippedML(text) ) {
-          const subject = {description: "Politics"};//TODO:
+    }
+
+    // Bypass ML based filtering if text filtering has occurred
+    if (ML_FEATURES && !textFiltered) {
+      const text = node.textContent.trim();
+      if (!shouldTextBeSkippedML(text)) {
+        const subjects = await getSubjects();// we fetch here because subjects could be populated, so want to get the latest
+        for(const subject of subjects){
           const modelPrediction = await isTextInSubject(subject, node.textContent);
           if (modelPrediction) {
             const ancestor = getFeedlikeAncestor(node);
@@ -101,14 +98,15 @@ async function checkAndFilterElements() {
         }
       }
     }
+
     node = walker.nextNode();
   }
 
-
-  if(DEBUG_PERFORMANCE){
+  if (DEBUG_PERFORMANCE) {
     console.log('time taken to checkandfilter', Date.now() - timePrevious);
   }
 }
+
 
 
 let debounceTimeout: NodeJS.Timeout;
@@ -117,7 +115,7 @@ async function debouncedCheckAndFilter() {
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
     checkAndFilterElements()
-  }, 100);
+  }, 1000);
 }
 
 

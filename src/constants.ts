@@ -13,7 +13,7 @@ export const DEBUG_MESSAGES = false;
 export const DEBUG_PERFORMANCE = false;
 
 //CONTENT AND COMPONENTS RELATED CONSTANTS
-export const FILTER_IGNORE_ATTRIBUTE = `data-${EXTENSION_NAME}-ignore`;
+export const FILTER_IGNORE_ATTRIBUTE = `data-${EXTENSION_NAME}-ignore`.toLowerCase();
 export const BATCH_STAT_UPDATE_INTERVAL = 10000; // 60 seconds
 // This symbol is used to represent all lists in selectors
 export const ALL_LISTS_SYMBOL = 'All_LISTS_3213546516541';
@@ -42,6 +42,7 @@ export const TRIE_STORE_NAME = 'tries';
 export const LIST_OF_LIST_NAMES_DATASTORE = "listNames"
 export const LIST_SETTINGS_STORE_NAME = "listSettings"
 export const DEBUG_STORE_NAME = 'debug';
+export const SUBJECTS_STORE_NAME = 'subjects';
 
 export const STORE_NAMES =
   [SETTINGS_STORE_NAME,
@@ -50,4 +51,5 @@ export const STORE_NAMES =
     TRIE_STORE_NAME,
     LIST_OF_LIST_NAMES_DATASTORE,
     LIST_SETTINGS_STORE_NAME,
-    DEBUG_STORE_NAME];
+    DEBUG_STORE_NAME,
+    SUBJECTS_STORE_NAME];
