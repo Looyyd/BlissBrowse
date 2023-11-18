@@ -99,9 +99,9 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
   return dotProduct(vecA, vecB) / (magnitude(vecA) * magnitude(vecB));
 }
 
-async function getEmbeddingsHuggingFace(text: string): Promise<number[]> {
+async function getEmbeddingsHuggingFace(texts: string[]): Promise<number[][]> {
 
-  async function query(data: { inputs: string }) {
+  async function query(data: { inputs: string[] }) {
     const token = huggingFaceToken;
     const response = await fetch(
       "https://v0oeqihhysznl728.eu-west-1.aws.endpoints.huggingface.cloud",
@@ -115,16 +115,16 @@ async function getEmbeddingsHuggingFace(text: string): Promise<number[]> {
       }
     );
     const result = await response.json();
+    console.log('result:', result);
     return result;
   }
 
   let embedding;
 
-  const response = await query({"inputs": text});
-  console.log(JSON.stringify(response));
-  embedding = response[0] as number[];
+  const response = await query({"inputs": texts});
+  const embeddings = response as number[][];
 
-  return embedding;
+  return embeddings;
 
 }
 
@@ -194,7 +194,8 @@ interface QueueItem {
 let embeddingQueue: QueueItem[] = [];
 let queueTimer: NodeJS.Timeout | null = null;
 
-const QUEUE_MAX_SIZE = 100;//TODO: what is the right size? maybe depend on the size of the text?
+//const QUEUE_MAX_SIZE = 100;//TODO: what is the right size? maybe depend on the size of the text?
+const QUEUE_MAX_SIZE = 20;// jinaai
 const QUEUE_TIME_LIMIT = 1000;
 
 const processQueue = async () => {
@@ -209,6 +210,7 @@ const processQueue = async () => {
   const texts = currentQueue.map(item => item.text);
   totalEmbeddingCalls++;
   const embeddings = await getEmbeddingsOpenAI(texts);
+  //const embeddings = await getEmbeddingsHuggingFace(texts)
 
   // Process the copied queue
   embeddings.forEach((embedding, index) => {
@@ -263,7 +265,7 @@ async function getEmbeddings(text: string): Promise<number[]> {
 
     totalTextLength += text.length;
     totalStringsNumber++;
-    console.log("String ", text);
+    //console.log("String ", text);
     const embedding = await addToQueue(text);
 
     embeddingCache.set(text, embedding);
@@ -313,12 +315,21 @@ export async function populateSubjectAndSave(subject: FilterSubject){
 }
 
 export async function isTextInSubject(subject:FilterSubject, text:string){
-  const threshold = 0.76;
+  //const threshold = 0.76;
+  const threshold = 0.65; //jinaai
   const populatedSubject = await populateSubjectAndSave(subject);
-  console.log("Before getEmbeddings");
   const textEmbedding = await getEmbeddings(text);
-  console.log("After getEmbeddings");
   const similarity = cosineSimilarity(populatedSubject.embedding, textEmbedding);
 
-  return similarity > threshold;
+  const result = similarity > threshold;
+
+  if(DEBUG){
+    if(result) {
+      console.log('text:', text);
+      console.log('subject:', subject);
+      console.log('similarity:', similarity);
+    }
+  }
+
+  return result;
 }
