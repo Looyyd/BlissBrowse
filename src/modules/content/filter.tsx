@@ -6,6 +6,7 @@ import React from 'react';
 import {createRoot} from "react-dom/client";
 import {FilteredElementTooltip} from "../../components/content/FilteredElementTooltip";
 import {UnfilteredElementTooltip} from "../../components/content/UnfilteredElementTooltip";
+import {getSubjects} from "../ml";
 
 
 function addTooltipStylesIfAbsent(): void {
@@ -204,6 +205,7 @@ export type FilterResult = {
   triggeringWord?: string;
 };
 
+//TODO: don't include ML filtered
 let inMemoryStatistics: MyStats = {};
 
 export function resetAndReturnStatistics(): MyStats {
@@ -256,8 +258,8 @@ const SCRIPT_NAME = EXTENSION_NAME;
 export async function filterElement(element: HTMLElement, triggeringWord: string, listName: string,  filterAction: FilterAction) {
   if (element.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true') {
     if (DEBUG) {
+      //TODO: fix this, it shouldn't be happending
       console.log('Element already processed', element, triggeringWord, filterAction);
-      throw new Error('Element already processed');
     }
     return
   }
@@ -333,8 +335,14 @@ export async function unfilterElementsIfNotInList(currentWords: string[]) {
 
 export async function unfilterElementsIfNotInTries(tries: Trie[]) {
   const hiddenElements = document.querySelectorAll(`[${PROCESSED_BY_PREFIX}${SCRIPT_NAME}="true"]`);
+  const subjects = await getSubjects();//TODO: remove, this hack
+  const subject_descriptions = subjects.map(subject => subject.description);
   hiddenElements.forEach(element => {
     const triggeringWord = element.getAttribute(TRIGGERING_WORD) || '';
+    //if it's a description of a subject, skip: TODO: have seperate solution for both
+    if (subject_descriptions.includes(triggeringWord)) {
+      return;
+    }
     let shouldUnfilter = true;
     for (const trie of tries) {
       if (trie.wordExists(triggeringWord)) {

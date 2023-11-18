@@ -137,6 +137,7 @@ async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
     const model = 'text-embedding-ada-002';
 
     try {
+      const time = Date.now();
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -148,6 +149,7 @@ async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
           model: model
         })
       });
+      console.log('time taken to fetch embeddings:', Date.now() - time);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -168,12 +170,17 @@ async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
     }
   };
 
+  //console.log('texts:', texts);
+  //return texts.map(text => [0]);//TODO: remove this line
+  const time = Date.now();
   const response = await fetchEmbedding(texts);
+  console.log('time taken to get embeddings:', Date.now() - time);
   return response as number[][];
 }
 
 let totalEmbeddingCalls = 0;
 let totalTextLength = 0;
+let totalStringsNumber = 0;
 let previousTotalTextLength = 0;
 let countDataStore = new TextEmbeddingCounterStore();
 let cacheHits = 0;
@@ -187,7 +194,7 @@ interface QueueItem {
 let embeddingQueue: QueueItem[] = [];
 let queueTimer: NodeJS.Timeout | null = null;
 
-const QUEUE_MAX_SIZE = 1000;//TODO: what is the right size? maybe depend on the size of the text?
+const QUEUE_MAX_SIZE = 100;//TODO: what is the right size? maybe depend on the size of the text?
 const QUEUE_TIME_LIMIT = 1000;
 
 const processQueue = async () => {
@@ -221,19 +228,21 @@ const addToQueue = (text: string): Promise<number[]> => {
     return new Promise((resolve, reject) => {
         embeddingQueue.push({ text, resolve, reject });
 
-        if (embeddingQueue.length >= QUEUE_MAX_SIZE || !queueTimer) {
+        if (embeddingQueue.length >= QUEUE_MAX_SIZE) {
             processQueue();
-        } else if (!queueTimer) {
+        }
+
+        if (!queueTimer) {
             queueTimer = setTimeout(processQueue, QUEUE_TIME_LIMIT);
         }
     });
 };
 
-
 // Debugging function
 async function logCounters() {
   console.log(`Total Embedding Calls: ${totalEmbeddingCalls}`);
   console.log(`Total Text Length: ${totalTextLength}`);
+  console.log(`Total Strings Number: ${totalStringsNumber}`);
   console.log(`Cache Hits: ${cacheHits}`);
   const countToAdd = totalTextLength - previousTotalTextLength;
   await countDataStore.add(countToAdd);
@@ -253,6 +262,8 @@ async function getEmbeddings(text: string): Promise<number[]> {
     }
 
     totalTextLength += text.length;
+    totalStringsNumber++;
+    console.log("String ", text);
     const embedding = await addToQueue(text);
 
     embeddingCache.set(text, embedding);
@@ -281,14 +292,13 @@ async function getKeywordsForSubject(subject: string): Promise<string[]> {
 }
 
 export function shouldTextBeSkippedML(text: string): boolean {
-  //skip if less that 10 characters long after whitespace trimming
-  if (text.trim().length < 10) {
+  if (text.trim().length < 20) {
     return true;
   }
   return false;
 }
 
-async function populateSubjectAndSave(subject: FilterSubject){
+export async function populateSubjectAndSave(subject: FilterSubject){
   if(!subject.description){
     throw new Error('subject.description is required');
   }
@@ -305,7 +315,9 @@ async function populateSubjectAndSave(subject: FilterSubject){
 export async function isTextInSubject(subject:FilterSubject, text:string){
   const threshold = 0.76;
   const populatedSubject = await populateSubjectAndSave(subject);
+  console.log("Before getEmbeddings");
   const textEmbedding = await getEmbeddings(text);
+  console.log("After getEmbeddings");
   const similarity = cosineSimilarity(populatedSubject.embedding, textEmbedding);
 
   return similarity > threshold;

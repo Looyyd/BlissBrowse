@@ -22,8 +22,8 @@ import {
   unfilterElementsIfWrongAction,
   writeInMemoryStatisticsToStorage
 } from "./modules/content/filter";
-import {ActionType, Message} from "./modules/types";
-import {getSubjects, isTextInSubject, shouldTextBeSkippedML} from "./modules/ml";
+import {ActionType, FilterAction, Message} from "./modules/types";
+import {FilterSubject, getSubjects, isTextInSubject, populateSubjectAndSave, shouldTextBeSkippedML} from "./modules/ml";
 
 /*
 some logic taken from:
@@ -36,6 +36,10 @@ let timePrevious:number;
 
 
 async function checkAndFilterElements() {
+  // Collect nodes into batches
+  const nodeBatch = [];
+  let batchSize = 200; // Example batch size, adjust based on your needs
+
   if (DEBUG) {
     console.log('ENTERING checkAndFilterElements');
   }
@@ -48,7 +52,8 @@ async function checkAndFilterElements() {
 
   const isDisabled = await isCurrentSiteDisabled(CONTENT_CONTEXT);
   if (isDisabled) {
-    await unfilterElementsIfNotInList([]);  // Unhide all
+    //TODO: unfilter ml elements
+    await unfilterElementsIfNotInList([]);  // Unhide all//TODO: rename to unfilterALL
     return;
   }
 
@@ -56,8 +61,10 @@ async function checkAndFilterElements() {
   const filterAction = await actionStore.get();
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
   const triesWithNames = await getFilterTries();
+  //TODO: unfilter ml elements
   await unfilterElementsIfNotInTries(triesWithNames.map(twn => twn.trie));
   await unfilterElementsIfWrongAction(filterAction);
+
 
   let node = walker.nextNode();
   while (node) {
@@ -84,8 +91,30 @@ async function checkAndFilterElements() {
     // Bypass ML based filtering if text filtering has occurred
     if (ML_FEATURES && !textFiltered) {
       const text = node.textContent.trim();
-      if (!shouldTextBeSkippedML(text)) {
-        const subjects = await getSubjects();// we fetch here because subjects could be populated, so want to get the latest
+        if (!shouldTextBeSkippedML(text)) {
+          nodeBatch.push(node);
+          if (nodeBatch.length >= batchSize) {
+            // Process batch in parallel
+            await processNodeBatch(nodeBatch);
+            nodeBatch.length = 0; // Clear the batch after processing
+          }
+        }
+      }
+
+
+    /*
+  const text = node.textContent.trim();
+  if (!shouldTextBeSkippedML(text)) {
+    //const subjects = await getSubjects();// we fetch here because subjects could be populated, so want to get the latest
+    nodeBatch.push(node);
+    if (nodeBatch.length >= batchSize) {
+      // Process batch in parallel
+      await processNodeBatch(nodeBatch);
+      nodeBatch.length = 0; // Clear the batch after processing
+    }
+     */
+
+        /*
         for(const subject of subjects){
           const modelPrediction = await isTextInSubject(subject, node.textContent);
           if (modelPrediction) {
@@ -96,15 +125,94 @@ async function checkAndFilterElements() {
             }
           }
         }
-      }
-    }
+         */
 
     node = walker.nextNode();
+  }
+
+  // Process any remaining nodes
+  if (nodeBatch.length > 0) {
+    await processNodeBatch(nodeBatch);
   }
 
   if (DEBUG_PERFORMANCE) {
     console.log('time taken to checkandfilter', Date.now() - timePrevious);
   }
+}
+
+/*
+async function processAncestorBatch(ancestors: HTMLElement[]){
+  // Create a Promise for each node processing
+  const actionStore = new FilterActionStore();
+  const filterAction = await actionStore.get();
+  const subjects = await getSubjects();
+  const populatedSubjectsPromises = subjects.map(subject => populateSubjectAndSave(subject));
+  const populatedSubjects = await Promise.all(populatedSubjectsPromises);
+
+  const processingPromises =
+    ancestors.map(ancestor => processSingleAncestor(ancestor, populatedSubjects, filterAction));
+
+  // Wait for all nodes in the batch to be processed in parallel
+  await Promise.all(processingPromises);
+}
+*/
+
+async function processNodeBatch(nodes: Node[]) {
+  // Create a Promise for each node processing
+  const actionStore = new FilterActionStore();
+  const filterAction = await actionStore.get();
+  const subjects = await getSubjects();
+  const populatedSubjectsPromises = subjects.map(subject => populateSubjectAndSave(subject));
+  const populatedSubjects = await Promise.all(populatedSubjectsPromises);
+
+  const processingPromises =
+    nodes.map(node => processSingleNode(node, populatedSubjects, filterAction));
+
+  // Wait for all nodes in the batch to be processed in parallel
+  await Promise.all(processingPromises);
+}
+
+async function processSingleAncestor(ancestor: HTMLElement, subjects: FilterSubject[], filterAction:FilterAction) {
+  const text = ancestor.innerText.trim();
+  const modelPredictions = await Promise.all(
+    subjects.map(subject => isTextInSubject(subject, text))
+  );
+
+  modelPredictions.forEach(async (modelPrediction, index) => {
+    if (modelPrediction) {
+      const subject = subjects[index];
+      if (ancestor instanceof HTMLElement) {
+        //TODO: filter element specialized for ML
+        //TODO: can't filter in batches,
+        await filterElement(ancestor, subject.description, 'ML', filterAction);
+      }
+    }
+  });
+}
+
+async function processSingleNode(node: Node, subjects: FilterSubject[], filterAction:FilterAction) {
+  if (node.textContent === null) {
+    return
+  }
+  const text = node.textContent.trim();
+
+  const modelPredictions = await Promise.all(
+    subjects.map(subject => isTextInSubject(subject, text))
+  );
+
+  modelPredictions.forEach(async (modelPrediction, index) => {
+    if (modelPrediction) {
+      const subject = subjects[index];
+      const ancestor = getFeedlikeAncestor(node);
+      if (ancestor instanceof HTMLElement) {
+
+        //TODO: filter element specialized for ML
+        //TODO: can't filter in batches,
+        // too likely to have issues if elements are done in parralel, or need to change logic
+        await filterElement(ancestor, subject.description, 'ML', filterAction);
+      }
+    }
+  });
 }
 
 
