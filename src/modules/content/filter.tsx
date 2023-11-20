@@ -381,7 +381,7 @@ export function hasAncestorTagThatShouldBeIgnored(node: Node) {
 }
 
 const trieDataStores: { [key: string]: TrieRootNodeDataStore} = {};
-interface ListTriePair {
+export interface ListTriePair {
   listName: string;
   trie: Trie;
 }

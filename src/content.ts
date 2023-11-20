@@ -24,6 +24,7 @@ import {
 } from "./modules/content/filter";
 import {ActionType, FilterAction, Message} from "./modules/types";
 import {FilterSubject, getSubjects, isTextInSubject, populateSubjectAndSave, shouldTextBeSkippedML} from "./modules/ml";
+import {checkAndFilterElementsRewrite} from "./modules/content_rewrite";
 
 /*
 some logic taken from:
@@ -222,8 +223,9 @@ let debounceTimeout: NodeJS.Timeout;
 async function debouncedCheckAndFilter() {
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
-    checkAndFilterElements()
-  }, 1000);
+    //checkAndFilterElements()
+    checkAndFilterElementsRewrite();
+  }, 100);
 }
 
 
