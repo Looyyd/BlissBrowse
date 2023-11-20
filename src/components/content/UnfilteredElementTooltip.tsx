@@ -1,24 +1,22 @@
 import React from "react";
 import FilterIgnore from "./FilterIgnore";
 import {Button} from "@mui/material";
-import {refilterElement} from "../../modules/content/filter";
 import TooltipBox from "./TooltipBox";
 import ExtensionTitle from "../ExtensionTitle";
+import {reAllowFilterElement} from "../../modules/content/filter";
 
 
 type UnfilteredElementTooltip = {
   element: HTMLElement;
-  listName: string;
-  word: string;
 }
 
-export const UnfilteredElementTooltip: React.FC<UnfilteredElementTooltip> = ({element, listName, word}) => {
+export const UnfilteredElementTooltip: React.FC<UnfilteredElementTooltip> = ({element}) => {
 
   return (
     <FilterIgnore>
       <TooltipBox>
         <ExtensionTitle />
-        <Button onClick={() => refilterElement(element, listName, word)} id="refilterElementButton" variant="contained">
+        <Button onClick={() => reAllowFilterElement(element)} id="refilterElementButton" variant="contained">
           Refilter element
         </Button>
       </TooltipBox>

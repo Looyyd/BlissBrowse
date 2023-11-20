@@ -29,8 +29,8 @@ export class SubjectNamesStore extends DatabaseStorage<string[]>{
   defaultValue: string[] = [];
 }
 
-export class SubjectsStore extends FullDataStore<FilterSubject> {
-  isType = (data: unknown): data is FilterSubject => {
+export class SubjectsStore extends FullDataStore<MLSubject> {
+  isType = (data: unknown): data is MLSubject => {
     return typeof data === 'object' && data !== null && 'description' in data;
   }
   IndexedDBStoreName = SUBJECTS_STORE_NAME;
@@ -39,7 +39,7 @@ export class SubjectsStore extends FullDataStore<FilterSubject> {
   defaultValue = undefined;
 
   //overwrite get to populate with politics for testing
-  async get(): Promise<IndexedDBKeyValueStore<FilterSubject>> {
+  async get(): Promise<IndexedDBKeyValueStore<MLSubject>> {
     const subjects = await super.get();
     //TODO: remove, just adding this for testing
     if (Object.keys(subjects).length === 0) {
@@ -56,7 +56,7 @@ export class SubjectsStore extends FullDataStore<FilterSubject> {
         "electorate", "political debate", "political ideology", "political reform",
         "political leader", "political activism", "political crisis", "political discourse"
       ]
-      const politicsSubject: FilterSubject = {
+      const politicsSubject: MLSubject = {
         description: 'politics',
         embedding_keywords: en_pol_keywords
       }
@@ -67,18 +67,18 @@ export class SubjectsStore extends FullDataStore<FilterSubject> {
 }
 
 const subjectsStore = new SubjectsStore();
-export async function getSubjects(): Promise<FilterSubject[]> {
+export async function getSubjects(): Promise<MLSubject[]> {
   const keyvalues = await subjectsStore.get();
   const answer = Object.values(keyvalues).map(keyvalue => keyvalue.value);
   return answer;
 }
 
-export interface FilterSubject{
+export interface MLSubject {
   description: string;
   embedding_keywords?: string[];
   embedding?: number[];
 }
-interface PopulatedFilterSubject extends FilterSubject{
+interface PopulatedFilterSubject extends MLSubject{
   embedding_keywords: string[];
   embedding: number[];
 }
@@ -119,7 +119,6 @@ async function getEmbeddingsHuggingFace(texts: string[]): Promise<number[][]> {
     return result;
   }
 
-  let embedding;
 
   const response = await query({"inputs": texts});
   const embeddings = response as number[][];
@@ -300,7 +299,7 @@ export function shouldTextBeSkippedML(text: string): boolean {
   return false;
 }
 
-export async function populateSubjectAndSave(subject: FilterSubject){
+export async function populateSubjectAndSave(subject: MLSubject){
   if(!subject.description){
     throw new Error('subject.description is required');
   }
@@ -314,7 +313,7 @@ export async function populateSubjectAndSave(subject: FilterSubject){
   return subject as PopulatedFilterSubject;
 }
 
-export async function isTextInSubject(subject:FilterSubject, text:string){
+export async function isTextInSubject(subject:MLSubject, text:string){
   //const threshold = 0.76;
   const threshold = 0.65; //jinaai
   const populatedSubject = await populateSubjectAndSave(subject);

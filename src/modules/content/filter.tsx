@@ -6,7 +6,8 @@ import React from 'react';
 import {createRoot} from "react-dom/client";
 import {FilteredElementTooltip} from "../../components/content/FilteredElementTooltip";
 import {UnfilteredElementTooltip} from "../../components/content/UnfilteredElementTooltip";
-import {getSubjects} from "../ml";
+import {MLSubject} from "../ml";
+import {FilteredElement, FilteredMLElement, FilteredTextElement} from "../content_rewrite";
 
 
 function addTooltipStylesIfAbsent(): void {
@@ -156,28 +157,49 @@ export function addComponentTooltip(element: HTMLElement, tooltipElement: React.
 }
 
 // Function to add a FilterTooltip specifically, using the addComponentTooltip function
-export function addFilterTooltipToFilteredElement(
-  element: HTMLElement,
-  triggeredByWord: string,
-  triggeredByList: string
+export function addFilterTooltipToTextFilteredElement(
+  fe: FilteredTextElement,
 ): void {
+  const tooltipText = (
+    <>
+      Filter triggered by word: <span style={{color: 'blue'}}>{fe.triggeringWord}</span> in list:
+      <span style={{color: 'green'}}>{fe.listName}</span>
+    </>
+  );
   const tooltipElement = (
     <FilteredElementTooltip
-      word={triggeredByWord}
-      listName={triggeredByList}
-      element={element}
+      element={fe}
+      tooltipText={tooltipText}
     />
   );
 
-  addComponentTooltip(element, tooltipElement);
+  addComponentTooltip(fe.element, tooltipElement);
 }
 
-function addUnfilteredElementTooltip(element: HTMLElement, listName:string, word:string): void {
+export function addFilterTooltipToMLFilteredElement(
+  fe: FilteredMLElement,
+): void {
+  const tooltipText = (
+    <>
+      Filter triggered by subject: <span style={{color: 'blue'}}>{fe.subject}</span>
+    </>
+  );
   const tooltipElement = (
-    <UnfilteredElementTooltip element={element} listName={listName} word={word} />
+    <FilteredElementTooltip
+      element={fe}
+      tooltipText={tooltipText}
+    />
   );
 
-  addComponentTooltip(element, tooltipElement);
+  addComponentTooltip(fe.element, tooltipElement);
+}
+
+function addUnfilteredElementTooltip(fe: FilteredElement): void {
+  const tooltipElement = (
+    <UnfilteredElementTooltip element={fe.element} />
+  );
+
+  addComponentTooltip(fe.element, tooltipElement);
 }
 
 export function removeTooltipFromElement(element: HTMLElement) {
@@ -249,56 +271,62 @@ export function shouldFilterTextContent(textContent: string, wordsToFilter: stri
 }
 
 const PROCESSED_BY_PREFIX = 'processed-by-';
-const TRIGGERING_WORD = 'triggering-word';
-const APPLIED_ACTION = 'applied-action';
-const ORIGINAL_FILTER_PREFIX = 'original-filter-';
-const ORIGINAL_DISPLAY_PREFIX = 'original-display-';
 const SCRIPT_NAME = EXTENSION_NAME;
 
-export async function filterElement(element: HTMLElement, triggeringWord: string, listName: string,  filterAction: FilterAction) {
+export async function filterElementCommon<T extends FilteredElement>(filterElement: T): Promise<T> {
+  const element = filterElement.element;
+  const filterAction = filterElement.filterAction;
   if (element.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true') {
     if (DEBUG) {
       //TODO: fix this, it shouldn't be happending
-      console.log('Element already processed', element, triggeringWord, filterAction);
+      console.log('Element already processed', element);
     }
-    return
+    throw new Error('Element already processed');
   }
   element.setAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`, 'true');
-  element.setAttribute(TRIGGERING_WORD, triggeringWord);
-  element.setAttribute(APPLIED_ACTION, filterAction);
-
-  inMemoryStatistics[triggeringWord] = (inMemoryStatistics[triggeringWord] || 0) + 1;
 
   if (filterAction === FilterAction.BLUR) {
-    const originalFilter = element.style.filter;
-    element.setAttribute(`${ORIGINAL_FILTER_PREFIX}${SCRIPT_NAME}`, originalFilter);
+    filterElement.originalAttribueValue = element.style.filter;
     element.style.filter = 'blur(8px)';
   } else if (filterAction === FilterAction.HIDE) {
-    const originalDisplay = element.style.display;
-    element.setAttribute(`${ORIGINAL_DISPLAY_PREFIX}${SCRIPT_NAME}`, originalDisplay);
+    filterElement.originalAttribueValue = element.style.display;
     element.style.display = 'none';
   }
+  return filterElement;
 
-  addFilterTooltipToFilteredElement(element, triggeringWord, listName);
 }
 
-export async function unfilterElement(element: HTMLElement) {
-  const action = element.getAttribute(APPLIED_ACTION);
-  element.removeAttribute(APPLIED_ACTION);
+export async function filterTextElement(fe: FilteredTextElement): Promise<FilteredTextElement> {
+  const filterElement = await filterElementCommon(fe);
+  const textElement = filterElement as FilteredTextElement;
+  const triggeringWord = textElement.triggeringWord;
+  addFilterTooltipToTextFilteredElement(textElement);
+  inMemoryStatistics[triggeringWord] = (inMemoryStatistics[triggeringWord] || 0) + 1;
+  return filterElement;
+}
+
+export async function filterMLElement(fe: FilteredMLElement): Promise<FilteredMLElement> {
+  const filterElement = await filterElementCommon(fe);
+  const mlElement = filterElement as FilteredMLElement;
+  addFilterTooltipToMLFilteredElement(mlElement);
+  return filterElement;
+}
+
+export async function unfilterElement(fe: FilteredElement) {
+  const element = fe.element;
   element.removeAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`);
-  const triggeringWord = element.getAttribute(TRIGGERING_WORD) || '';
-  element.removeAttribute(TRIGGERING_WORD);
 
-  inMemoryStatistics[triggeringWord] = (inMemoryStatistics[triggeringWord] || 0) - 1;
-
+  const action = fe.filterAction;
   if (action === FilterAction.BLUR) {
-    element.style.filter = element.getAttribute(`${ORIGINAL_FILTER_PREFIX}${SCRIPT_NAME}`) || '';
-    element.removeAttribute(`${ORIGINAL_FILTER_PREFIX}${SCRIPT_NAME}`);
+    element.style.filter = fe.originalAttribueValue || '';
   } else if (action === FilterAction.HIDE) {
-    element.style.display = element.getAttribute(`${ORIGINAL_DISPLAY_PREFIX}${SCRIPT_NAME}`) || '';
-    element.removeAttribute(`${ORIGINAL_DISPLAY_PREFIX}${SCRIPT_NAME}`);
+    element.style.display = fe.originalAttribueValue || '';
   }
 
+  if(fe.type === 'text') {
+    const triggeringWord = (fe as FilteredTextElement).triggeringWord;
+    inMemoryStatistics[triggeringWord] = (inMemoryStatistics[triggeringWord] || 0) - 1;
+  }
   removeTooltipFromElement(element);
 }
 
@@ -314,39 +342,26 @@ export function unmarkElementAsIgnored(element: HTMLElement) {
   element.removeAttribute(FILTER_IGNORE_ATTRIBUTE);
 }
 
-export async function unfilterAndIgnoreElement(element: HTMLElement, listName: string, word: string) {
-  markElementAsIgnored(element);
-  await unfilterElement(element);
-  addUnfilteredElementTooltip(element, listName, word);
+export function isElementProcessed(element: HTMLElement) {
+  return element.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true';
 }
 
-export async function refilterElement(element: HTMLElement, listName: string, word: string) {
-  removeTooltipFromElement(element);
-  //TODO: filter action should be saved in tooltip
-  await filterElement(element, word, listName, FilterAction.BLUR);
+export async function unfilterAndIgnoreElement(fe: FilteredElement) {
+  markElementAsIgnored(fe.element);
+  await unfilterElement(fe);
+  addUnfilteredElementTooltip(fe);
 }
 
-export async function unfilterElementsIfNotInList(currentWords: string[]) {
-  //TODO: can this be more efficient?
-  const hiddenElements = document.querySelectorAll(`[${PROCESSED_BY_PREFIX}${SCRIPT_NAME}="true"]`);
-  hiddenElements.forEach(element => {
-    const triggeringWord = element.getAttribute(TRIGGERING_WORD) || '';
-    if (!currentWords.includes(triggeringWord) && element instanceof HTMLElement) {
-      unfilterElement(element);
-    }
-  });
+export async function reAllowFilterElement(element: HTMLElement) {
+  unmarkElementAsIgnored(element);
+  removeTooltipFromElement(element)
 }
 
-export async function unfilterElementsIfNotInTries(tries: Trie[]) {
-  const hiddenElements = document.querySelectorAll(`[${PROCESSED_BY_PREFIX}${SCRIPT_NAME}="true"]`);
-  const subjects = await getSubjects();//TODO: remove, this hack
-  const subject_descriptions = subjects.map(subject => subject.description);
-  hiddenElements.forEach(element => {
-    const triggeringWord = element.getAttribute(TRIGGERING_WORD) || '';
-    //if it's a description of a subject, skip: TODO: have seperate solution for both
-    if (subject_descriptions.includes(triggeringWord)) {
-      return;
-    }
+
+export async function unfilterElementsIfNotInTries(tries: Trie[], filteredElements: FilteredTextElement[]) : Promise<FilteredTextElement[]> {
+  const remainingElements: FilteredTextElement[] = [];
+  filteredElements.forEach(filteredElement => {
+    const triggeringWord = filteredElement.triggeringWord;
     let shouldUnfilter = true;
     for (const trie of tries) {
       if (trie.wordExists(triggeringWord)) {
@@ -354,20 +369,39 @@ export async function unfilterElementsIfNotInTries(tries: Trie[]) {
         break;
       }
     }
-    if (shouldUnfilter && element instanceof HTMLElement) {
-      unfilterElement(element);
+    if (shouldUnfilter) {
+      unfilterElement(filteredElement);
+    } else {
+      remainingElements.push(filteredElement);
     }
   });
+  return remainingElements;
 }
 
-export async function unfilterElementsIfWrongAction(currentAction: FilterAction) {
-  const hiddenElements = document.querySelectorAll(`[${PROCESSED_BY_PREFIX}${SCRIPT_NAME}="true"]`);
-  hiddenElements.forEach(element => {
-    const action = element.getAttribute(APPLIED_ACTION);
-    if (action !== currentAction && element instanceof HTMLElement) {
-      unfilterElement(element);
+export async function unfilterElementIfNotInSubjects(subjects: MLSubject[], filteredElements: FilteredMLElement[]) : Promise<FilteredMLElement[]> {
+  const remainingElements: FilteredMLElement[] = [];
+  const subjectDescriptions = subjects.map(subject => subject.description);
+  filteredElements.forEach(filteredElement => {
+    if (subjectDescriptions.includes(filteredElement.subject)) {
+      remainingElements.push(filteredElement);
+    } else {
+      unfilterElement(filteredElement);
     }
   });
+  return remainingElements;
+}
+
+export async function unfilterElementsIfWrongAction(currentAction: FilterAction, filteredElements: FilteredElement[]) {
+  const remainingElements: FilteredElement[] = [];
+  filteredElements.forEach(fe => {
+    const action = fe.filterAction;
+    if (action !== currentAction) {
+      unfilterElement(fe);
+    } else {
+      remainingElements.push(fe);
+    }
+  });
+  return remainingElements;
 }
 
 export function hasAncestorTagThatShouldBeIgnored(node: Node) {
