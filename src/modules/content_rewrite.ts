@@ -10,7 +10,7 @@ import {
   unfilterElementsIfWrongAction
 } from "./content/filter";
 import {FilterActionStore} from "./settings";
-import {getSubjects, MLSubject, shouldTextBeSkippedML} from "./ml";
+import {getSubjects, isTextInSubject, MLSubject, shouldTextBeSkippedML} from "./ml";
 import {FilterAction} from "./types";
 
 const CONTENT_CONTEXT = "content";
@@ -44,10 +44,30 @@ async function elementToCheckShouldBeSkipped(element: HTMLElement): Promise<bool
   return false;
 }
 
-async function shouldTextBeFilteredML(text: string): Promise<boolean> {
-  //TODO
-  return false;
+interface MLFilterResult {
+  shouldFilter: boolean;
+  subjects?: MLSubject[];
 }
+
+async function shouldTextBeFilteredML(text: string, subjects: MLSubject[]): Promise<MLFilterResult> {
+  let filterSubjects : MLSubject[] = [];
+  const results = await Promise.all(subjects.map(async (subject, index) => {
+    const res = await isTextInSubject(subject, text);
+    if (res) {
+      filterSubjects.push(subjects[index]);
+    }
+    return res;
+  }));
+
+  return {
+    shouldFilter: filterSubjects.length > 0,
+    subjects: filterSubjects.length > 0 ? filterSubjects : undefined
+  };
+}
+
+
+
+
 
 async function unfilterElements(elements: FilteredElement[]) {
   elements.map(async (element) => {
@@ -83,7 +103,7 @@ export interface FilteredTextElement extends FilteredElement {
 
 export interface FilteredMLElement extends FilteredElement {
   type: "ml";
-  subject: string;
+  subject_description: string;
 }
 
 
@@ -109,7 +129,7 @@ export async function checkAndFilterElementsRewrite() {
 
   await checkAndUnfilterPreviouslyFiltered(filterAction, triesWithNames, subjects);
 
-  elementsToCheck.map(async (element) => {
+  const promises = elementsToCheck.map(async (element) => {
     let textFiltered = false;
     if (await elementToCheckShouldBeSkipped(element)) {
       return;
@@ -134,11 +154,12 @@ export async function checkAndFilterElementsRewrite() {
     if (ML_FEATURES && !textFiltered) {
       const text = element.innerText.trim();
       if (!shouldTextBeSkippedML(text)) {
-        if (await shouldTextBeFilteredML(text)) {
+        const filterResult = await shouldTextBeFilteredML(text, subjects);
+        if (filterResult.shouldFilter && filterResult.subjects && filterResult.subjects.length > 0) {
           const filteredMLElement: FilteredMLElement = {
             element: element,
             type: "ml",
-            subject: text,
+            subject_description: filterResult.subjects[0].description,//TODO: implement multiple subjects
             filterAction: filterAction
           };
           await filterMLElement(filteredMLElement)
@@ -147,4 +168,6 @@ export async function checkAndFilterElementsRewrite() {
       }
     }
   });
+
+  await Promise.all(promises);
 }

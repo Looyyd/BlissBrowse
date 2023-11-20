@@ -96,6 +96,9 @@ function magnitude(vec: number[]): number {
 }
 
 function cosineSimilarity(vecA: number[], vecB: number[]): number {
+  if(vecA.length !== vecB.length){
+    throw new Error('vectors have different lengths');
+  }
   return dotProduct(vecA, vecB) / (magnitude(vecA) * magnitude(vecB));
 }
 
@@ -264,7 +267,6 @@ async function getEmbeddings(text: string): Promise<number[]> {
 
     totalTextLength += text.length;
     totalStringsNumber++;
-    //console.log("String ", text);
     const embedding = await addToQueue(text);
 
     embeddingCache.set(text, embedding);
@@ -314,8 +316,8 @@ export async function populateSubjectAndSave(subject: MLSubject){
 }
 
 export async function isTextInSubject(subject:MLSubject, text:string){
-  //const threshold = 0.76;
-  const threshold = 0.65; //jinaai
+  const threshold = 0.76;
+  //const threshold = 0.65; //jinaai
   const populatedSubject = await populateSubjectAndSave(subject);
   const textEmbedding = await getEmbeddings(text);
   const similarity = cosineSimilarity(populatedSubject.embedding, textEmbedding);
@@ -327,6 +329,7 @@ export async function isTextInSubject(subject:MLSubject, text:string){
       console.log('text:', text);
       console.log('subject:', subject);
       console.log('similarity:', similarity);
+      console.log('Embedding lengths:', populatedSubject.embedding.length, textEmbedding.length);
     }
   }
 

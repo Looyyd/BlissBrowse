@@ -181,7 +181,7 @@ export function addFilterTooltipToMLFilteredElement(
 ): void {
   const tooltipText = (
     <>
-      Filter triggered by subject: <span style={{color: 'blue'}}>{fe.subject}</span>
+      Filter triggered by subject: <span style={{color: 'blue'}}>{fe.subject_description}</span>
     </>
   );
   const tooltipElement = (
@@ -382,7 +382,7 @@ export async function unfilterElementIfNotInSubjects(subjects: MLSubject[], filt
   const remainingElements: FilteredMLElement[] = [];
   const subjectDescriptions = subjects.map(subject => subject.description);
   filteredElements.forEach(filteredElement => {
-    if (subjectDescriptions.includes(filteredElement.subject)) {
+    if (subjectDescriptions.includes(filteredElement.subject_description)) {
       remainingElements.push(filteredElement);
     } else {
       unfilterElement(filteredElement);
