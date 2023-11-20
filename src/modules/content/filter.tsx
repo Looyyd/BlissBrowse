@@ -282,7 +282,7 @@ export async function filterElement(element: HTMLElement, triggeringWord: string
   addFilterTooltipToFilteredElement(element, triggeringWord, listName);
 }
 
-async function unfilterElement(element: HTMLElement) {
+export async function unfilterElement(element: HTMLElement) {
   const action = element.getAttribute(APPLIED_ACTION);
   element.removeAttribute(APPLIED_ACTION);
   element.removeAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`);
@@ -306,13 +306,17 @@ export function markElementAsIgnored(element: HTMLElement) {
   element.setAttribute(FILTER_IGNORE_ATTRIBUTE, 'true');
 }
 
+export function isElementIgnored(element: HTMLElement) {
+  return element.getAttribute(FILTER_IGNORE_ATTRIBUTE) === 'true';
+}
+
 export function unmarkElementAsIgnored(element: HTMLElement) {
   element.removeAttribute(FILTER_IGNORE_ATTRIBUTE);
 }
 
 export async function unfilterAndIgnoreElement(element: HTMLElement, listName: string, word: string) {
-  await unfilterElement(element);
   markElementAsIgnored(element);
+  await unfilterElement(element);
   addUnfilteredElementTooltip(element, listName, word);
 }
 

@@ -1,8 +1,13 @@
-import {DEBUG, DEBUG_PERFORMANCE, ML_FEATURES} from "../constants";
+import {DEBUG, DEBUG_PERFORMANCE, FILTER_IGNORE_ATTRIBUTE, ML_FEATURES} from "../constants";
 import {currentTabHostname, isCurrentSiteDisabled} from "./hostname";
 import {
   filterElement,
-  getFilterTries, hasAncestorTagThatShouldBeIgnored, ListTriePair, nodeHasAIgnoredParent, nodeHasAProcessedParent,
+  getFilterTries,
+  hasAncestorTagThatShouldBeIgnored, isElementIgnored,
+  ListTriePair,
+  nodeHasAIgnoredParent,
+  nodeHasAProcessedParent,
+  unfilterElement,
   unfilterElementsIfNotInList,
   unfilterElementsIfNotInTries,
   unfilterElementsIfWrongAction
@@ -34,7 +39,9 @@ async function getElementsToCheck(): Promise<HTMLElement[]> {
 }
 
 async function elementToCheckShouldBeSkipped(element: HTMLElement): Promise<boolean> {
-  //TODO
+ if ( isElementIgnored(element) ) {
+   return true;
+ }
   return false;
 }
 
@@ -44,8 +51,9 @@ async function shouldTextBeFilteredML(element: HTMLElement, text: string, filter
 }
 
 async function unfilterElements(elements: HTMLElement[]) {
-  //TODO, rewrite and add a unfilter ML elements
-  await unfilterElementsIfNotInList([]);
+  elements.map(async (element) => {
+    await unfilterElement(element);
+  });
 }
 
 async function checkAndUnfilterPreviouslyFiltered(filterAction: FilterAction, triesWithNames: ListTriePair[]) {
