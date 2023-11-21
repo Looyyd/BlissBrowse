@@ -166,8 +166,7 @@ export class SubjectsStore extends FullDataStore<MLSubject> {
 const subjectsStore = new SubjectsStore();
 export async function getSubjects(): Promise<MLSubject[]> {
   const keyvalues = await subjectsStore.get();
-  const answer = Object.values(keyvalues).map(keyvalue => keyvalue.value);
-  return answer;
+  return Object.values(keyvalues).map(keyvalue => keyvalue.value);
 }
 
 export interface MLSubject {
