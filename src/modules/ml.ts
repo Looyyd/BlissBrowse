@@ -26,13 +26,8 @@ let gptTokensUsed = 0;
 //TODO: don't allow multiple calls for the same text, wait for the first one to finish
 async function getOpenAICompletion(userMessage: string, systemPrompt: string) {
   const cacheKey = `userMessage:${userMessage}|systemPrompt:${systemPrompt}`;
-  console.log('cacheKey:', cacheKey);
 
-  // Check if a promise is already stored in the cache
   if (completionCache.has(cacheKey)) {
-    if (DEBUG) {
-      console.log('waiting for cached promise');
-    }
     // Wait for the promise to resolve and return its result
     const cachedResult = await completionCache.get(cacheKey);
     if(!cachedResult){
@@ -86,7 +81,10 @@ async function getGPTClassification(text: string, subject:MLSubject){
   const systemPrompt = `You are a system that tells if the user input is about the topic of ${subject.description} or not by answering "Yes" or "No"`;
   const userMessage = `"${text}"`;
   const response = await getOpenAICompletion(userMessage, systemPrompt);
-  console.log('GPT response:', response);
+  if(DEBUG){
+    console.log('GPT response:', response);
+    console.log("Text:", text);
+  }
   const res_msg = response;
   if( res_msg === null){
     throw new Error('res_msg is null');
@@ -360,23 +358,37 @@ async function logCounters() {
 // Set interval for every 10 seconds
 setInterval(logCounters, 10000);
 
-const embeddingCache = new Map();
+const embeddingCache = new Map<string, Promise<number[]>>();
 
 async function getEmbeddings(text: string): Promise<number[]> {
-    // Check if the cache already has the embedding for this text
-    if (embeddingCache.has(text)) {
-        cacheHits++;
-        return embeddingCache.get(text) as number[];
+  // Check if the cache already has a promise for the embedding of this text
+  if (embeddingCache.has(text)) {
+    cacheHits++;
+    // Await the resolved value from the promise
+    const embedding = await embeddingCache.get(text);
+    if(!embedding){
+      throw new Error('embedding is undefined');
     }
-
-    totalTextLength += text.length;
-    totalStringsNumber++;
-    const embedding = await addToQueue(text);
-
-    embeddingCache.set(text, embedding);
-
     return embedding;
+  }
+
+  totalTextLength += text.length;
+  totalStringsNumber++;
+
+  // Create a new promise for the embedding calculation and store it in the cache
+  const embeddingPromise = addToQueue(text).then(embedding => {
+    // Once resolved, replace the promise in the cache with the actual value
+    embeddingCache.set(text, Promise.resolve(embedding));
+    return embedding;
+  });
+
+  // Initially store the promise in the cache
+  embeddingCache.set(text, embeddingPromise);
+
+  // Await and return the embedding
+  return await embeddingPromise;
 }
+
 
 
 
@@ -431,9 +443,9 @@ export async function isTextInSubject(subject:MLSubject, text:string){
   if(DEBUG){
     if(result) {
       console.log('text:', text);
-      console.log('subject:', subject);
+      //console.log('subject:', subject);
       console.log('similarity:', similarity);
-      console.log('Embedding lengths:', populatedSubject.embedding.length, textEmbedding.length);
+      //console.log('Embedding lengths:', populatedSubject.embedding.length, textEmbedding.length);
     }
   }
   if(result){
