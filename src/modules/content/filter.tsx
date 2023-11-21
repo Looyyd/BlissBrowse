@@ -485,7 +485,4 @@ export async function writeInMemoryStatisticsToStorage() {
       await addToFilterWordStatistics(key, value);
     }
   }
-  if(DEBUG) {
-    console.log('wrote in memory statistics to storage', stats);
-  }
 }

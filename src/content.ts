@@ -57,9 +57,6 @@ const listener = async (request: Message<unknown>) => {
     ];
     return impactedStores.includes(dataStore);
   }
-  if(DEBUG) {
-    console.log('message received in content listener', request);
-  }
   //TODO: add e2e tests? to make sure that refreshes are happening when they should
   if (request.action === ActionType.DataChanged && dataStoreImpactsContents(request.storeName)) {
     await debouncedCheckAndFilter();
