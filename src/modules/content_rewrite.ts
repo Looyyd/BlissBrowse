@@ -34,6 +34,28 @@ async function getElementsToCheck(): Promise<HTMLElement[]> {
   }
 }
 
+async function getTwitterElementText(element: HTMLElement): Promise<string> {
+  // tweetText is the first element with the attribute 'data-testid="tweetText"'
+  const tweetText = element.querySelector('[data-testid="tweetText"]');
+  // If tweetText is null, return an empty string
+  if (!tweetText || !(tweetText instanceof HTMLElement)){
+    return "";
+  }
+  // Return the text of tweetText
+  return tweetText.innerText;
+}
+
+async function getElementText(element: HTMLElement): Promise<string> {
+  const website = await currentTabHostname(CONTENT_CONTEXT);
+  switch (website) {
+    case "twitter.com":
+      return await getTwitterElementText(element);
+    default:
+      //TODO: maybe something smarter to rmeove video counters and other stuff that is useless for embeddings
+      return element.innerText;
+  }
+}
+
 async function elementToCheckShouldBeSkipped(element: HTMLElement): Promise<boolean> {
  if ( isElementIgnored(element) ) {
    return true;
@@ -134,8 +156,9 @@ export async function checkAndFilterElementsRewrite() {
     if (await elementToCheckShouldBeSkipped(element)) {
       return;
     }
+    const elementText = await getElementText(element);
     for (const {listName, trie} of triesWithNames) {
-      const filterResult = trie.shouldFilterTextContent(element.innerText);
+      const filterResult = trie.shouldFilterTextContent(elementText);
       if (filterResult.shouldFilter && filterResult.triggeringWord) {
         let filteredTextElement: FilteredTextElement = {
           element: element,
@@ -152,7 +175,7 @@ export async function checkAndFilterElementsRewrite() {
     }
     // Bypass ML based filtering if text filtering has occurred
     if (ML_FEATURES && !textFiltered) {
-      const text = element.innerText.trim();
+      const text = elementText;
       if (!shouldTextBeSkippedML(text)) {
         const filterResult = await shouldTextBeFilteredML(text, subjects);
         if (filterResult.shouldFilter && filterResult.subjects && filterResult.subjects.length > 0) {

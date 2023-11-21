@@ -45,6 +45,7 @@
     "@tensorflow/tfjs": "^4.13.0",
     "@xenova/transformers": "^2.8.0",
     "jquery": "^3.7.1",
+    "openai": "^4.19.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   }

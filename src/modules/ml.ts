@@ -2,11 +2,94 @@ import {huggingFaceToken, openAIToken} from "./secrets";
 import {DEBUG, DEBUG_STORE_NAME, LIST_OF_LIST_NAMES_DATASTORE, SUBJECTS_STORE_NAME} from "../constants";
 import {DatabaseStorage, FullDataStore} from "./datastore";
 import {IndexedDBKeyValueStore} from "./types";
+import OpenAI from "openai";
 
-class TextEmbeddingCounterStore extends DatabaseStorage<number>{
+
+let openai:OpenAI;
+if (DEBUG) {
+  openai = new OpenAI({
+    apiKey: openAIToken, dangerouslyAllowBrowser: true
+  });
+} else {
+  openai = new OpenAI({
+    apiKey: openAIToken,
+  });
+}
+
+
+interface cacheValue {
+  content: string;
+}
+const completionCache: Map<string, cacheValue> = new Map();
+let gptTokensUsed = 0;
+
+//TODO: don't allow multiple calls for the same text, wait for the first one to finish
+async function getOpenAICompletion(userMessage: string, systemPrompt: string) {
+  const cacheKey = `userMessage:${userMessage}|systemPrompt:${systemPrompt}`;
+  console.log('cacheKey:', cacheKey);
+  if(completionCache.has(cacheKey)){
+    if(DEBUG){
+      console.log('cache hit');
+    }
+    const content = completionCache.get(cacheKey)?.content;
+    if(!content){
+      throw new Error('content is undefined');
+    }
+    return content;
+  } else{
+    if(DEBUG){
+      console.log('cache miss');
+    }
+  }
+  const response = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo",
+    messages: [
+      {
+        "role": "system",
+        "content": systemPrompt
+      },
+      {
+        "role": "user",
+        "content": userMessage
+      }
+    ],
+    temperature: 0,
+    max_tokens: 256,
+    top_p: 1,
+    frequency_penalty: 0,
+    presence_penalty: 0,
+  });
+  const content = response.choices[0].message.content;
+  gptTokensUsed += response.usage?.total_tokens || 0;
+  if(content === null){
+    throw new Error('content is null');
+  }
+  completionCache.set(cacheKey, {content});
+  return content;
+}
+
+async function getGPTClassification(text: string, subject:MLSubject){
+  const systemPrompt = `You are a system that tells if the user input is about the topic of ${subject.description} or not by answering "Yes" or "No"`;
+  const userMessage = `"${text}"`;
+  const response = await getOpenAICompletion(userMessage, systemPrompt);
+  console.log('GPT response:', response);
+  const res_msg = response;
+  if( res_msg === null){
+    throw new Error('res_msg is null');
+  }
+  if (res_msg.includes('Yes')) {
+    return true;
+  } if (res_msg.includes('No')) {
+    return false;
+  } else {
+    throw new Error('unexpected response from gpt');
+  }
+}
+
+class TotalCostStore extends DatabaseStorage<number>{
   defaultValue: number = 0;
   IndexedDBStoreName: string = DEBUG_STORE_NAME;
-  key: string = 'textEmbeddingCounter';
+  key: string = 'apiCost';
   typeUpgrade = undefined;
   isType = (data: unknown): data is number => {
     return typeof data === 'number';
@@ -130,6 +213,8 @@ async function getEmbeddingsHuggingFace(texts: string[]): Promise<number[][]> {
 
 }
 
+let embeddingTokensUsed = 0;
+
 async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
 
   const fetchEmbedding = async (inputTexts: string[]): Promise<any> => {
@@ -158,6 +243,8 @@ async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
       }
 
       const jsonResponse = await response.json();
+      const tokensUsed = jsonResponse.usage.total_tokens || 0;
+      embeddingTokensUsed += tokensUsed;
       if (jsonResponse.data === undefined ) {
         throw new Error(`'data' field is undefined or empty in the response`);
       }
@@ -184,7 +271,7 @@ let totalEmbeddingCalls = 0;
 let totalTextLength = 0;
 let totalStringsNumber = 0;
 let previousTotalTextLength = 0;
-let countDataStore = new TextEmbeddingCounterStore();
+let costStore = new TotalCostStore();
 let cacheHits = 0;
 
 interface QueueItem {
@@ -248,8 +335,11 @@ async function logCounters() {
   console.log(`Total Text Length: ${totalTextLength}`);
   console.log(`Total Strings Number: ${totalStringsNumber}`);
   console.log(`Cache Hits: ${cacheHits}`);
-  const countToAdd = totalTextLength - previousTotalTextLength;
-  await countDataStore.add(countToAdd);
+  console.log("GPT Tokens Used:", gptTokensUsed);
+  console.log("Embedding Tokens Used:", embeddingTokensUsed);
+  const totalCost = gptTokensUsed* 0.001 / 1000 + embeddingTokensUsed * 0.0001 / 1000;
+  console.log("Total cost $:", totalCost);
+  await costStore.add(totalCost);
   previousTotalTextLength = totalTextLength;
 }
 
@@ -330,6 +420,16 @@ export async function isTextInSubject(subject:MLSubject, text:string){
       console.log('subject:', subject);
       console.log('similarity:', similarity);
       console.log('Embedding lengths:', populatedSubject.embedding.length, textEmbedding.length);
+    }
+  }
+  if(result){
+    //confirm with gpt
+    const gptResult = await getGPTClassification(text, subject);
+    if(gptResult){
+      return true;
+    }
+    else{
+      return false;
     }
   }
 
