@@ -15,6 +15,24 @@ import {FilterAction} from "./types";
 
 const CONTENT_CONTEXT = "content";
 
+function preprocessText(text:string): string {
+  // Convert to lowercase
+  text = text.toLowerCase();
+  // Remove URLs
+  text = text.replace(/https?:\/\/\S+/g, '');
+  // Remove numbers
+  text = text.replace(/\d+/g, '');
+  // Remove punctuation (excluding apostrophes for contractions)
+  text = text.replace(/[^\w\s']|_/g, '');
+  // Replace multiple whitespaces with a single space
+  text = text.replace(/\s\s+/g, ' ');
+  // Trim leading and trailing spaces
+  text = text.trim();
+  return text;
+}
+
+
+
 async function getTwitterElementsToCheck(): Promise<HTMLElement[]> {
   // Use querySelectorAll to find all elements with the attribute 'data-testid="cellInnerDiv"'
   const elements = document.querySelectorAll('[data-testid="cellInnerDiv"]');
@@ -23,12 +41,21 @@ async function getTwitterElementsToCheck(): Promise<HTMLElement[]> {
   return Array.from(elements).filter(e => e instanceof HTMLElement) as HTMLElement[];
 }
 
+async function getYoutubeElementsToCheck(): Promise<HTMLElement[]> {
+  const homePageVideos = document.querySelectorAll("#content.ytd-rich-item-renderer");
+  const elementsSearchReels = document.querySelectorAll("ytd-video-renderer");
+  const elementsSearchVideos = document.querySelectorAll("ytd-video-renderer");
+  const elements = [...Array.from(homePageVideos), ...Array.from(elementsSearchReels), ...Array.from(elementsSearchVideos)];
+  return Array.from(elements).filter(e => e instanceof HTMLElement) as HTMLElement[];
+}
 
 async function getElementsToCheck(): Promise<HTMLElement[]> {
   const website = await currentTabHostname(CONTENT_CONTEXT);
   switch (website) {
     case "twitter.com":
       return await getTwitterElementsToCheck();
+    case "youtube.com":
+      return await getYoutubeElementsToCheck();
     default:
       return [];
   }
@@ -45,16 +72,25 @@ async function getTwitterElementText(element: HTMLElement): Promise<string> {
   return tweetText.innerText;
 }
 
+
 async function getElementText(element: HTMLElement): Promise<string> {
   const website = await currentTabHostname(CONTENT_CONTEXT);
+  let text: string;
+
   switch (website) {
     case "twitter.com":
-      return await getTwitterElementText(element);
+      text = await getTwitterElementText(element);
+      break;
     default:
-      //TODO: maybe something smarter to rmeove video counters and other stuff that is useless for embeddings
-      return element.innerText;
+      // Using innerText by default; change to innerHTML if needed
+      text = element.innerText;
+      break;
   }
+  // Preprocess text before returning
+  return preprocessText(text);
 }
+
+
 
 async function elementToCheckShouldBeSkipped(element: HTMLElement): Promise<boolean> {
  if ( isElementIgnored(element) ) {
