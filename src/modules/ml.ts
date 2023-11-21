@@ -270,8 +270,8 @@ async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
 let totalEmbeddingCalls = 0;
 let totalTextLength = 0;
 let totalStringsNumber = 0;
-let previousTotalTextLength = 0;
 let costStore = new TotalCostStore();
+let previousTotalCost = 0;
 let cacheHits = 0;
 
 interface QueueItem {
@@ -339,8 +339,9 @@ async function logCounters() {
   console.log("Embedding Tokens Used:", embeddingTokensUsed);
   const totalCost = gptTokensUsed* 0.001 / 1000 + embeddingTokensUsed * 0.0001 / 1000;
   console.log("Total cost $:", totalCost);
-  await costStore.add(totalCost);
-  previousTotalTextLength = totalTextLength;
+  const costToAdd = totalCost - previousTotalCost;
+  await costStore.add(costToAdd);
+  previousTotalCost = totalCost;
 }
 
 // Set interval for every 10 seconds
