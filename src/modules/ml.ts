@@ -20,53 +20,67 @@ if (DEBUG) {
 interface cacheValue {
   content: string;
 }
-const completionCache: Map<string, cacheValue> = new Map();
+const completionCache: Map<string, Promise<cacheValue>> = new Map();
 let gptTokensUsed = 0;
 
 //TODO: don't allow multiple calls for the same text, wait for the first one to finish
 async function getOpenAICompletion(userMessage: string, systemPrompt: string) {
   const cacheKey = `userMessage:${userMessage}|systemPrompt:${systemPrompt}`;
   console.log('cacheKey:', cacheKey);
-  if(completionCache.has(cacheKey)){
-    if(DEBUG){
-      console.log('cache hit');
+
+  // Check if a promise is already stored in the cache
+  if (completionCache.has(cacheKey)) {
+    if (DEBUG) {
+      console.log('waiting for cached promise');
     }
-    const content = completionCache.get(cacheKey)?.content;
-    if(!content){
+    // Wait for the promise to resolve and return its result
+    const cachedResult = await completionCache.get(cacheKey);
+    if(!cachedResult){
+      throw new Error('cachedResult is undefined');
+    }
+    if (!cachedResult.content) {
       throw new Error('content is undefined');
     }
-    return content;
-  } else{
-    if(DEBUG){
-      console.log('cache miss');
+    return cachedResult.content;
+  } else {
+    if (DEBUG) {
+      console.log('cache miss, creating new promise');
     }
-  }
-  const response = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
-    messages: [
-      {
-        "role": "system",
-        "content": systemPrompt
-      },
-      {
-        "role": "user",
-        "content": userMessage
+
+    // Store a new promise in the cache immediately to handle concurrent calls
+    const promise = openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        { "role": "system", "content": systemPrompt },
+        { "role": "user", "content": userMessage }
+      ],
+      temperature: 0,
+      max_tokens: 256,
+      top_p: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0,
+    }).then(response => {
+      const content = response.choices[0].message.content;
+      gptTokensUsed += response.usage?.total_tokens || 0;
+      if (content === null) {
+        throw new Error('content is null');
       }
-    ],
-    temperature: 0,
-    max_tokens: 256,
-    top_p: 1,
-    frequency_penalty: 0,
-    presence_penalty: 0,
-  });
-  const content = response.choices[0].message.content;
-  gptTokensUsed += response.usage?.total_tokens || 0;
-  if(content === null){
-    throw new Error('content is null');
+      // Update the cache with the final result
+      const cacheValue: cacheValue = { content };
+      completionCache.set(cacheKey, Promise.resolve(cacheValue));
+
+      return {content};
+    }).catch(error => {
+      // Remove the cache entry if an error occurs
+      completionCache.delete(cacheKey);
+      throw error;
+    });
+
+    completionCache.set(cacheKey, promise);
+    return (await promise).content;
   }
-  completionCache.set(cacheKey, {content});
-  return content;
 }
+
 
 async function getGPTClassification(text: string, subject:MLSubject){
   const systemPrompt = `You are a system that tells if the user input is about the topic of ${subject.description} or not by answering "Yes" or "No"`;
