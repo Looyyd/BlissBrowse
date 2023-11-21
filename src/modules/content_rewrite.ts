@@ -17,13 +17,13 @@ const CONTENT_CONTEXT = "content";
 
 function preprocessText(text:string): string {
   // Convert to lowercase
-  text = text.toLowerCase();
+  //text = text.toLowerCase();
   // Remove URLs
   text = text.replace(/https?:\/\/\S+/g, '');
   // Remove numbers
   text = text.replace(/\d+/g, '');
   // Remove punctuation (excluding apostrophes for contractions)
-  text = text.replace(/[^\w\s']|_/g, '');
+  //text = text.replace(/[^\w\s']|_/g, '');
   // Replace multiple whitespaces with a single space
   text = text.replace(/\s\s+/g, ' ');
   // Trim leading and trailing spaces
@@ -43,7 +43,7 @@ async function getTwitterElementsToCheck(): Promise<HTMLElement[]> {
 
 async function getYoutubeElementsToCheck(): Promise<HTMLElement[]> {
   const homePageVideos = document.querySelectorAll("#content.ytd-rich-item-renderer");
-  const elementsSearchReels = document.querySelectorAll("ytd-video-renderer");
+  const elementsSearchReels = document.querySelectorAll("ytd-reel-item-renderer");
   const elementsSearchVideos = document.querySelectorAll("ytd-video-renderer");
   const elements = [...Array.from(homePageVideos), ...Array.from(elementsSearchReels), ...Array.from(elementsSearchVideos)];
   return Array.from(elements).filter(e => e instanceof HTMLElement) as HTMLElement[];
