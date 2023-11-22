@@ -153,6 +153,11 @@ export abstract class FullDataStore<T> extends ListenableDataStore<IndexedDBKeyV
       throw e;
     }
   }
+
+  async clearKey(key:string): Promise<void> {
+    this._currentData = null;
+    await removeStorageKey(this.IndexedDBStoreName,key);
+  }
 }
 
 export abstract class RowDataStore<T> extends ListenableDataStore<T>{

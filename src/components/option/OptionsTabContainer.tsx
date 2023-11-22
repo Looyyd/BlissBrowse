@@ -6,6 +6,8 @@ import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import GlobalSettings from "./GlobalSettings";
 import WordStatistics from "./WordStatistics";
+import {ML_FEATURES} from "../../constants";
+import MachineLearningSettings from "./MachineLearningSettings";
 
 const TabContainer = () => {
   const [activeTab, setActiveTab] = useState(() => {
@@ -53,6 +55,12 @@ const TabContainer = () => {
     }
      */
   ];
+  if (ML_FEATURES) {
+    tabContentMapping.push({
+      tab: 'Machine Learning',
+      content: <MachineLearningSettings />,
+    });
+  }
 
   return (
     <div>
