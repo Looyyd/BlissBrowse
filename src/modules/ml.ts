@@ -179,6 +179,16 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
   return dotProduct(vecA, vecB) / (magnitude(vecA) * magnitude(vecB));
 }
 
+function averageEmbeddings(embeddings: number[][]): number[] {
+  const average = embeddings.reduce((sum, embedding) => {
+    for (let i = 0; i < embedding.length; i++) {
+      sum[i] += embedding[i];
+    }
+    return sum;
+  }, embeddings[0].map(() => 0));
+  return average.map(val => val / embeddings.length);
+}
+
 async function getEmbeddingsHuggingFace(texts: string[]): Promise<number[][]> {
 
   async function query(data: { inputs: string[] }) {
@@ -400,7 +410,11 @@ export async function populateSubjectAndSave(subject: MLSubject){
     subject.embedding_keywords = await getKeywordsForSubject(subject.description);
   }
   if(!subject.embedding){
-    subject.embedding = await getEmbeddings(subject.embedding_keywords.join(' '));//TODO: don't join, but average the embeddings
+    const embedding_promises = subject.embedding_keywords.map(async keyword => await getEmbeddings(keyword));
+    // wait for all promises to resolve
+    const embeddings = await Promise.all(embedding_promises);
+    //average the embeddings
+    subject.embedding = averageEmbeddings(embeddings);
     await subjectsStore.set(subject.description, subject);//TODO: what keys to use? description could change if user edits it
   }
   return subject as PopulatedFilterSubject;
