@@ -134,11 +134,11 @@ async function unfilterElements(elements: FilteredElement[]) {
 }
 
 async function checkAndUnfilterPreviouslyFiltered(filterAction: FilterAction, triesWithNames: ListTriePair[], subjects:MLSubject[]) {
+  //TODO: check if preprocessed text content has changed and unfilter if yes
   filteredElements = await unfilterElementsIfWrongAction(filterAction, filteredElements);
 
   const filteredTextElements = filteredElements.filter(fe => fe.type === "text") as FilteredTextElement[];
   const remainingtextElements = await unfilterElementsIfNotInTries(triesWithNames.map(twn => twn.trie), filteredTextElements);
-  //TODO: unfilter ml elements
   const filteredMLElements = filteredElements.filter(fe => fe.type === "ml") as FilteredMLElement[];
   const remainingMLElements = await unfilterElementIfNotInSubjects(subjects, filteredMLElements);
 
