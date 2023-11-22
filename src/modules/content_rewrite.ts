@@ -15,7 +15,7 @@ import {FilterAction} from "./types";
 
 const CONTENT_CONTEXT = "content";
 
-function preprocessText(text:string): string {
+export function preprocessTextBeforeEmbedding(text:string): string {
   // Convert to lowercase
   //text = text.toLowerCase();
   // Remove URLs
@@ -87,7 +87,7 @@ async function getElementText(element: HTMLElement): Promise<string> {
       break;
   }
   // Preprocess text before returning
-  return preprocessText(text);
+  return preprocessTextBeforeEmbedding(text);
 }
 
 

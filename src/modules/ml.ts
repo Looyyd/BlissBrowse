@@ -3,6 +3,7 @@ import {DEBUG, DEBUG_STORE_NAME, LIST_OF_LIST_NAMES_DATASTORE, SUBJECTS_STORE_NA
 import {DatabaseStorage, FullDataStore} from "./datastore";
 import {IndexedDBKeyValueStore} from "./types";
 import OpenAI from "openai";
+import {preprocessTextBeforeEmbedding} from "./content_rewrite";
 
 
 let openai:OpenAI;
@@ -113,6 +114,14 @@ class TotalCostStore extends DatabaseStorage<number>{
 }
 
 
+export async function createNewSubject(description: string): Promise<void>{
+  const subject: MLSubject = {
+    description,
+  }
+  await populateSubjectAndSave(subject);
+}
+
+/*
 //TODO: why need this? to display names quickly?
 export class SubjectNamesStore extends DatabaseStorage<string[]>{
   IndexedDBStoreName = LIST_OF_LIST_NAMES_DATASTORE;//TODO: rename the variable to explicit that ml lists are also stored here
@@ -123,6 +132,7 @@ export class SubjectNamesStore extends DatabaseStorage<string[]>{
   }
   defaultValue: string[] = [];
 }
+ */
 
 export class SubjectsStore extends FullDataStore<MLSubject> {
   isType = (data: unknown): data is MLSubject => {
@@ -132,33 +142,6 @@ export class SubjectsStore extends FullDataStore<MLSubject> {
   key = 'subjects';
   typeUpgrade = undefined;
   defaultValue = undefined;
-
-  //overwrite get to populate with politics for testing
-  async get(): Promise<IndexedDBKeyValueStore<MLSubject>> {
-    const subjects = await super.get();
-    //TODO: remove, just adding this for testing
-    if (Object.keys(subjects).length === 0) {
-      const en_pol_keywords = [
-        "politics", "government", "democracy", "election", "policy",
-        "legislation", "senate", "congress", "parliament", "voting",
-        "campaign", "candidate", "diplomacy", "international relations",
-        "political party", "ideology", "conservative", "liberal",
-        "socialism", "capitalism", "debate", "referendum", "civic",
-        "bureaucracy", "administration", "constitution", "reform",
-        "geopolitics", "diplomat", "politician", "representative",
-        "law", "rights", "governance", "political science", "civic engagement",
-        "public policy", "diplomatic", "political campaign", "voter",
-        "electorate", "political debate", "political ideology", "political reform",
-        "political leader", "political activism", "political crisis", "political discourse"
-      ]
-      const politicsSubject: MLSubject = {
-        description: 'politics',
-        embedding_keywords: en_pol_keywords
-      }
-      subjects['politics'] = {key: 'politics', value: politicsSubject};
-    }
-    return subjects;
-  }
 }
 
 const subjectsStore = new SubjectsStore();
@@ -390,24 +373,16 @@ async function getEmbeddings(text: string): Promise<number[]> {
 }
 
 
-
-
 async function getKeywordsForSubject(subject: string): Promise<string[]> {
-  //TODO: implement
-  const en_pol_keywords = [
-    "politics", "government", "democracy", "election", "policy",
-    "legislation", "senate", "congress", "parliament", "voting",
-    "campaign", "candidate", "diplomacy", "international relations",
-    "political party", "ideology", "conservative", "liberal",
-    "socialism", "capitalism", "debate", "referendum", "civic",
-    "bureaucracy", "administration", "constitution", "reform",
-    "geopolitics", "diplomat", "politician", "representative",
-    "law", "rights", "governance", "political science", "civic engagement",
-    "public policy", "diplomatic", "political campaign", "voter",
-    "electorate", "political debate", "political ideology", "political reform",
-    "political leader", "political activism", "political crisis", "political discourse"
-]
-  return en_pol_keywords;
+  const systemPrompt = "You are an assistant that sends back around 10 strings that are related to the user description of a subject. Give 1 string per line. Make sure the strings are diverse in style but keep them all related to the user subject. Make it diverse, some can be casual others !"
+  const userMessage = `"${subject}"`;
+  const response = await getOpenAICompletion(userMessage, systemPrompt);
+  //TODO: check if response is valid
+  const sentences = response.split('\n').map(sentence => preprocessTextBeforeEmbedding(sentence));
+  if(DEBUG){
+    console.log('Sentence creation response preprocessed output:', sentences);
+  }
+  return sentences;
 }
 
 export function shouldTextBeSkippedML(text: string): boolean {
@@ -425,7 +400,7 @@ export async function populateSubjectAndSave(subject: MLSubject){
     subject.embedding_keywords = await getKeywordsForSubject(subject.description);
   }
   if(!subject.embedding){
-    subject.embedding = await getEmbeddings(subject.embedding_keywords.join(' '));
+    subject.embedding = await getEmbeddings(subject.embedding_keywords.join(' '));//TODO: don't join, but average the embeddings
     await subjectsStore.set(subject.description, subject);//TODO: what keys to use? description could change if user edits it
   }
   return subject as PopulatedFilterSubject;

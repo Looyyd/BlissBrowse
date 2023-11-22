@@ -15,6 +15,8 @@ import {lightTheme} from "./themes";
 import ExtensionTitle from "./components/ExtensionTitle";
 import {DataStoreProvider} from "./components/DataStoreContext";
 import {useDataFromStore} from "./modules/datastore";
+import {ML_FEATURES} from "./constants";
+import NewMLSubjectForm from "./components/popup/NewMLSubjectForm";
 
 
 const Popup: React.FC = () => {
@@ -34,6 +36,7 @@ const Popup: React.FC = () => {
         </Box>
         <NewFilterWordForm />
         <NewListForm />
+        {ML_FEATURES ? <NewMLSubjectForm />: <></> }
         <ListsDisplay />
       </Container>
   );

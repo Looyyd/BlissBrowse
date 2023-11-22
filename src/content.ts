@@ -3,7 +3,7 @@ import {
   DEBUG,
   LIST_OF_LIST_NAMES_DATASTORE,
   LIST_SETTINGS_STORE_NAME,
-  SETTINGS_STORE_NAME,
+  SETTINGS_STORE_NAME, SUBJECTS_STORE_NAME,
   TRIE_STORE_NAME,
 } from "./constants";
 import {
@@ -53,7 +53,8 @@ const listener = async (request: Message<unknown>) => {
       SETTINGS_STORE_NAME,
       TRIE_STORE_NAME,
       LIST_OF_LIST_NAMES_DATASTORE,
-      LIST_SETTINGS_STORE_NAME
+      LIST_SETTINGS_STORE_NAME,
+      SUBJECTS_STORE_NAME
     ];
     return impactedStores.includes(dataStore);
   }
