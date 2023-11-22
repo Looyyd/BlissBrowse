@@ -56,6 +56,11 @@ async function getRedditElementsToCheck(): Promise<HTMLElement[]> {
   return Array.from(elements).filter(e => e instanceof HTMLElement) as HTMLElement[];
 }
 
+async function getHackerNewsElementsToCheck(): Promise<HTMLElement[]> {
+  const elements = document.querySelectorAll(".athing");
+  return Array.from(elements).filter(e => e instanceof HTMLElement) as HTMLElement[];
+}
+
 //TODO: language detection, only support english for now, for ml features
 async function getElementsToCheck(): Promise<HTMLElement[]> {
   const website = await currentTabHostname(CONTENT_CONTEXT);
@@ -66,6 +71,8 @@ async function getElementsToCheck(): Promise<HTMLElement[]> {
       return await getYoutubeElementsToCheck();
     case "reddit.com":
       return await getRedditElementsToCheck();
+    case "news.ycombinator.com":
+      return await getHackerNewsElementsToCheck();
     default:
       return [];
   }
