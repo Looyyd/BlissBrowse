@@ -50,6 +50,7 @@ async function getYoutubeElementsToCheck(): Promise<HTMLElement[]> {
 }
 
 async function getRedditElementsToCheck(): Promise<HTMLElement[]> {
+  //TODO: seems like it doesn't work anymore
   const feedPosts= document.querySelectorAll("shreddit-post");
   const faceplatePosts =  document.querySelectorAll("faceplate-tracker");
   const elements = [...Array.from(feedPosts), ...Array.from(faceplatePosts)];
@@ -111,6 +112,7 @@ async function getElementText(element: HTMLElement): Promise<string> {
       break;
   }
   // Preprocess text before returning
+  //TODO: should not preprocess for filtering features
   return preprocessTextBeforeEmbedding(text);
 }
 
