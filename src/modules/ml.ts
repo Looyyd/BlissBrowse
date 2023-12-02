@@ -13,9 +13,10 @@ import {preprocessTextBeforeEmbedding} from "./content_rewrite";
 
 
 let openai:OpenAI;
+//TODO: remove api key and change to local server with baseURL
 if (DEBUG) {
   openai = new OpenAI({
-    apiKey: openAIToken, dangerouslyAllowBrowser: true
+    apiKey: openAIToken, dangerouslyAllowBrowser: true,
   });
 } else {
   openai = new OpenAI({
@@ -44,6 +45,7 @@ export class InferenseServerSettingsStore extends DatabaseStorage<inferenseServe
   defaultValue = DEFAULT_INFERENCE_SERVER_SETTINGS;
 }
 
+
 interface cacheValue {
   content: string;
 }
@@ -51,7 +53,9 @@ const completionCache: Map<string, Promise<cacheValue>> = new Map();
 let gptTokensUsed = 0;
 
 //TODO: don't allow multiple calls for the same text, wait for the first one to finish
-async function getOpenAICompletion(userMessage: string, systemPrompt: string) {
+async function getOpenAICompletion(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[], json_mode = true) {
+  const userMessage = messages[1].content as string
+  const systemPrompt = messages[0].content as string;
   const cacheKey = `userMessage:${userMessage}|systemPrompt:${systemPrompt}`;
 
   if (completionCache.has(cacheKey)) {
@@ -71,11 +75,9 @@ async function getOpenAICompletion(userMessage: string, systemPrompt: string) {
 
     // Store a new promise in the cache immediately to handle concurrent calls
     const promise = openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        { "role": "system", "content": systemPrompt },
-        { "role": "user", "content": userMessage }
-      ],
+      model: "gpt-3.5-turbo-1106", //need model that supports json mode
+      messages: messages,
+      response_format: json_mode ? { "type": "json_object" } : undefined,
       temperature: 0,
       max_tokens: 256,
       top_p: 1,
@@ -104,25 +106,85 @@ async function getOpenAICompletion(userMessage: string, systemPrompt: string) {
 }
 
 
-async function getGPTClassification(text: string, subject:MLSubject){
-  const systemPrompt = `You are a system that tells if the user input is about the topic of ${subject.description} or not by answering "Yes" or "No"`;
-  const userMessage = `"${text}"`;
-  const response = await getOpenAICompletion(userMessage, systemPrompt);
-  if(DEBUG){
-    console.log('GPT response:', response);
-    console.log("Text:", text);
-  }
-  const res_msg = response;
-  if( res_msg === null){
-    throw new Error('res_msg is null');
-  }
-  if (res_msg.includes('Yes')) {
-    return true;
-  } if (res_msg.includes('No')) {
-    return false;
+function createPrompt(text: string, descriptions: string[]):  OpenAI.Chat.Completions.ChatCompletionMessageParam[]{
+  const systemPrompt = "You are a helpful assistant.";
+  let userMsg = "For each description, say if the text given fits the description. " +
+                "Answer with JSON, with the key being the description number and the value being \"YES\" (yes it matches the description) or \"NO\" (no it doesn't match) or \"IDK\" (unsure if it matches the description):";
+
+  descriptions.forEach((description, index) => {
+    userMsg += `\nDescription ${index}. ${description}`;
+  });
+
+  let expectedOutputFormat = "\nExpected output format: \n{\n";
+  descriptions.forEach((_, index) => {
+    expectedOutputFormat += `"${index}": "ANSWER"`;
+    if (index < descriptions.length - 1) {
+      expectedOutputFormat += ",\n";
+    }
+  });
+  expectedOutputFormat += "\n}\n";
+
+  userMsg += expectedOutputFormat;
+  userMsg += `\nTEXT: ${text}`;
+
+  return [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: userMsg }
+  ];
+}
+
+function extractAndParseJSON(mixedString: string): any | null {
+  // Regular expression to extract JSON from the mixed content
+  // It matches a JSON-like structure with numeric keys and uppercase string values
+  const regex = /\{\s*"[0-9]":\s*"[A-Z]+"(,\s*"[0-9]":\s*"[A-Z]+")*\s*\}/;
+  const match = mixedString.match(regex);
+
+  if (match) {
+    try {
+      // Parse the matched string into a JavaScript object
+      const data = JSON.parse(match[0]);
+      return data;
+    } catch (e) {
+      console.error(`Error parsing JSON: ${e}`);
+      return null;
+    }
   } else {
-    throw new Error('unexpected response from gpt');
+    console.log("No JSON found in the string");
+    return null;
   }
+}
+
+async function getGPTClassification(text: string, subject:MLSubject){
+  // TODO: multiple descriptions at once
+  const messages = createPrompt(text, [subject.description]);
+  const response = await getOpenAICompletion(messages);
+  // Assuming response is a JSON string, parse it to a JavaScript object
+  const resObj = extractAndParseJSON(response);
+  if(resObj === null){
+    throw new Error('Couldnt find json in gpt output');//TODO: have retries setup
+  }
+
+  // Initialize the answers array
+  const answers = [];
+
+  // Iterate through the keys in the JSON object
+  for (const key in resObj) {
+    if (resObj.hasOwnProperty(key)) {
+      const value = resObj[key].toString().toLowerCase();
+
+      // Check for 'yes', 'no', or 'idk'
+      if (value.includes('yes')) {
+        answers.push(1);
+      } else if (value.includes('no')) {
+        answers.push(-1);
+      } else if (value.includes('idk')) {
+        answers.push(0);
+      } else {
+        throw new Error("line doesn't contain yes, no or idk");
+      }
+    }
+  }
+  return answers[0] === 1;//TODO: handle multiple descriptions
 }
 
 class TotalCostStore extends DatabaseStorage<number>{
@@ -412,7 +474,11 @@ async function getEmbeddings(text: string): Promise<number[]> {
 async function getKeywordsForSubject(subject: string): Promise<string[]> {
   const systemPrompt = "You are an assistant that sends back around 10 strings that are related to the user description of a subject. Give 1 string per line. Make sure the strings are diverse in style but keep them all related to the user subject. Make it diverse, some can be casual others !"
   const userMessage = `"${subject}"`;
-  const response = await getOpenAICompletion(userMessage, systemPrompt);
+  const messages = [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: userMessage }
+  ] as OpenAI.Chat.Completions.ChatCompletionMessageParam[];
+  const response = await getOpenAICompletion(messages, false);
   //TODO: check if response is valid
   const sentences = response.split('\n').map(sentence => preprocessTextBeforeEmbedding(sentence));
   if(DEBUG){
