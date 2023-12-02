@@ -1,4 +1,4 @@
-import {huggingFaceToken, openAIToken} from "./secrets";
+import {huggingFaceToken} from "./secrets";
 import {
   DEBUG,
   DEBUG_STORE_NAME,
@@ -11,18 +11,6 @@ import {IndexedDBKeyValueStore} from "./types";
 import OpenAI from "openai";
 import {preprocessTextBeforeEmbedding} from "./content_rewrite";
 
-
-let openai:OpenAI;
-//TODO: remove api key and change to local server with baseURL
-if (DEBUG) {
-  openai = new OpenAI({
-    apiKey: openAIToken, dangerouslyAllowBrowser: true,
-  });
-} else {
-  openai = new OpenAI({
-    apiKey: openAIToken,
-  });
-}
 
 export type inferenseServerType = 'openai' | 'local' |  'none';
 
@@ -45,6 +33,38 @@ export class InferenseServerSettingsStore extends DatabaseStorage<inferenseServe
   defaultValue = DEFAULT_INFERENCE_SERVER_SETTINGS;
 }
 
+const settingsStore = new InferenseServerSettingsStore()
+
+/*
+let openai:OpenAI;
+// a new client is created after every reload
+if (DEBUG) {
+  console.log("NEW CLIENT CREATED")
+  openai = new OpenAI({
+    apiKey: openAIToken, dangerouslyAllowBrowser: true,
+  });
+} else {
+  openai = new OpenAI({
+    apiKey: openAIToken,
+  });
+}
+*/
+
+function openAIClientFromSettings(settings: inferenseServerSettings): OpenAI {
+  if (settings.type === 'openai') {
+    if(!settings.token){
+      throw new Error('token is required');
+    }
+    return new OpenAI({
+      apiKey: settings.token,
+      dangerouslyAllowBrowser: true,//this is a security check to avoid that companies but their api key in the source code
+                                        // it's ok, because the token is user submitted
+    });
+  } else {
+    throw new Error('invalid settings type');
+  }
+}
+
 
 interface cacheValue {
   content: string;
@@ -52,7 +72,6 @@ interface cacheValue {
 const completionCache: Map<string, Promise<cacheValue>> = new Map();
 let gptTokensUsed = 0;
 
-//TODO: don't allow multiple calls for the same text, wait for the first one to finish
 async function getOpenAICompletion(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[], json_mode = true) {
   const userMessage = messages[1].content as string
   const systemPrompt = messages[0].content as string;
@@ -73,6 +92,7 @@ async function getOpenAICompletion(messages: OpenAI.Chat.Completions.ChatComplet
       console.log('cache miss, creating new promise');
     }
 
+    const openai = openAIClientFromSettings(await settingsStore.get());
     // Store a new promise in the cache immediately to handle concurrent calls
     const promise = openai.chat.completions.create({
       model: "gpt-3.5-turbo-1106", //need model that supports json mode
@@ -311,7 +331,14 @@ async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
 
   const fetchEmbedding = async (inputTexts: string[]): Promise<any> => {
     //TODO: handle tokens securely, remove from source code;
-    const token = openAIToken;
+    const settings = await settingsStore.get();
+    if( settings.type !== 'openai'){
+      throw new Error('getting embeddings from openai but settings.type is not openai');
+    }
+    if(!settings.token){
+      throw new Error('OpenAI token is required');
+    }
+    const token = settings.token;
     const url = 'https://api.openai.com/v1/embeddings';
     const model = 'text-embedding-ada-002';
 
