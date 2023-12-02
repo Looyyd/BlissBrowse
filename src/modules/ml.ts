@@ -220,14 +220,14 @@ function createPromptSingleDescription(text: string, description: string):  Open
 
 function createPrompt(text: string, descriptions: string[]):  OpenAI.Chat.Completions.ChatCompletionMessageParam[]{
   const systemPrompt = "You are a helpful assistant.";
-  let userMsg = "For each description, say if the text given fits the description. " +
+  let userMsg = "For each description, say if the given text fits the description. " +
                 "Answer with JSON, with the key being the description number and the value being \"YES\" (yes it matches the description) or \"NO\" (no it doesn't match) or \"IDK\" (unsure if it matches the description):";
 
   descriptions.forEach((description, index) => {
-    userMsg += `\nDescription ${index + 1}. ${description}`;
+    userMsg += `\nDescription ${index + 1}: ${description}`;
   });
 
-  let expectedOutputFormat = "\n###Expected output format: \n{\n";
+  let expectedOutputFormat = "\nExpected output format: \n{\n";
   descriptions.forEach((_, index) => {
     expectedOutputFormat += `"${index + 1}": "ANSWER"`;
     if (index < descriptions.length - 1) {
@@ -237,11 +237,11 @@ function createPrompt(text: string, descriptions: string[]):  OpenAI.Chat.Comple
   expectedOutputFormat += "\n}\n";
 
   userMsg += expectedOutputFormat;
-  userMsg += `\n###TEXT:\n${text}`;
+  userMsg += `\nText to analyse:\n${text}`;
 
   return [
     { role: "system", content: systemPrompt },
-    { role: "user", content: userMsg }
+    { role: "user", content: userMsg },
   ];
 }
 
@@ -274,20 +274,32 @@ async function getGPTClassification(text: string, subject:MLSubject){
   //const messages = createPromptSingleDescription(text, subject.description);
   //return response.toLowerCase().includes('yes');
 
-  const settings = await settingsStore.get();
-  let response: string;
-  if (settings.type === 'openai') {
-    response = await getOpenAICompletion(messages);
-  } else if(settings.type === 'local'){
-    response = await getLocalCompletion(messages);
-  } else {
-    throw new Error('invalid settings type');
-  }
 
-  // Assuming response is a JSON string, parse it to a JavaScript object
-  const resObj = extractAndParseJSON(response);
-  if(resObj === null){
-    throw new Error('Couldnt find json in gpt output');//TODO: have retries setup
+  const settings = await settingsStore.get();
+
+  let retries = 0
+  const maxRetries = 2;
+  let response: string;
+  let resObj: any;
+  while(retries < maxRetries){
+    if (settings.type === 'openai') {
+      response = await getOpenAICompletion(messages);
+    } else if(settings.type === 'local'){
+      response = await getLocalCompletion(messages);
+    } else {
+      throw new Error('invalid settings type');
+    }
+
+    // Assuming response is a JSON string, parse it to a JavaScript object
+    resObj = extractAndParseJSON(response);
+    if(resObj === null){
+      retries++;
+      console.log('resObj is null, retrying');
+    }
+  }
+  if(retries === maxRetries){
+    console.log('max retries reached, returning false');
+    return false;
   }
 
   // Initialize the answers array
