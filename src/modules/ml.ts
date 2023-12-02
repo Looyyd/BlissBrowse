@@ -1,5 +1,11 @@
 import {huggingFaceToken, openAIToken} from "./secrets";
-import {DEBUG, DEBUG_STORE_NAME, LIST_OF_LIST_NAMES_DATASTORE, SUBJECTS_STORE_NAME} from "../constants";
+import {
+  DEBUG,
+  DEBUG_STORE_NAME,
+  LIST_OF_LIST_NAMES_DATASTORE,
+  SETTINGS_STORE_NAME,
+  SUBJECTS_STORE_NAME
+} from "../constants";
 import {DatabaseStorage, FullDataStore} from "./datastore";
 import {IndexedDBKeyValueStore} from "./types";
 import OpenAI from "openai";
@@ -17,6 +23,26 @@ if (DEBUG) {
   });
 }
 
+export type inferenseServerType = 'openai' | 'local' |  'none';
+
+export interface inferenseServerSettings {
+  type: inferenseServerType;
+  url?: string;
+  token?: string;
+}
+
+const DEFAULT_INFERENCE_SERVER_SETTINGS: inferenseServerSettings = {
+  type: 'none',
+};
+
+
+export class InferenseServerSettingsStore extends DatabaseStorage<inferenseServerSettings> {
+  IndexedDBStoreName = SETTINGS_STORE_NAME;
+  key = 'inferenseServerSettings'; //TODO: global
+  typeUpgrade = undefined;
+  isType = (data: unknown): data is inferenseServerSettings => { return data!== null && data !== undefined; }; //TODO: typecheck
+  defaultValue = DEFAULT_INFERENCE_SERVER_SETTINGS;
+}
 
 interface cacheValue {
   content: string;

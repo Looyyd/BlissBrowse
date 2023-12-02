@@ -1,11 +1,12 @@
 import {ListNamesDataStore} from "../modules/wordLists";
 import React, {useContext} from "react";
-import {SubjectsStore} from "../modules/ml";
+import {InferenseServerSettingsStore, SubjectsStore} from "../modules/ml";
 
 
 const DataStoreContext = React.createContext({
   listNamesDataStore: new ListNamesDataStore(), // providing a default value
   subjectsDataStore: new SubjectsStore(),
+  inferenceSettingsDataStore: new InferenseServerSettingsStore(),
 });
 
 type DataStoreProviderProps = {
@@ -15,9 +16,10 @@ type DataStoreProviderProps = {
 export const DataStoreProvider: React.FC<DataStoreProviderProps> = ({ children }) => {
   const listNamesDataStore = new ListNamesDataStore();
   const subjectsDataStore = new SubjectsStore();
+  const inferenceSettingsDataStore = new InferenseServerSettingsStore();
 
   return (
-    <DataStoreContext.Provider value={{listNamesDataStore, subjectsDataStore }}>
+    <DataStoreContext.Provider value={{listNamesDataStore, subjectsDataStore, inferenceSettingsDataStore }}>
       {children}
     </DataStoreContext.Provider>
   );
