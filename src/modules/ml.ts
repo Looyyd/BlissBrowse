@@ -1,7 +1,7 @@
 import {huggingFaceToken} from "./secrets";
 import {
   DEBUG,
-  DEBUG_STORE_NAME,
+  DEBUG_STORE_NAME, DEBUG_TOKEN_COST,
   LIST_OF_LIST_NAMES_DATASTORE,
   SETTINGS_STORE_NAME,
   SUBJECTS_STORE_NAME
@@ -60,6 +60,16 @@ function openAIClientFromSettings(settings: inferenseServerSettings): OpenAI {
       dangerouslyAllowBrowser: true,//this is a security check to avoid that companies but their api key in the source code
                                         // it's ok, because the token is user submitted
     });
+  } else if(settings.type === 'local'){
+    if(!settings.url){
+      throw new Error('url is required');
+    }
+    return new OpenAI({
+      baseURL: settings.url,
+      apiKey: 'local',
+      dangerouslyAllowBrowser: true,//this is a security check to avoid that companies but their api key in the source code
+      // it's ok, because the token is user submitted
+    });
   } else {
     throw new Error('invalid settings type');
   }
@@ -84,7 +94,7 @@ async function getOpenAICompletion(messages: OpenAI.Chat.Completions.ChatComplet
       throw new Error('cachedResult is undefined');
     }
     if (!cachedResult.content) {
-      throw new Error('content is undefined');
+      throw new Error('content is undefined' );
     }
     return cachedResult.content;
   } else {
@@ -125,6 +135,88 @@ async function getOpenAICompletion(messages: OpenAI.Chat.Completions.ChatComplet
   }
 }
 
+// TODO: this can be blocked by brave adblocker
+async function getLocalCompletion(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[], json_mode = true) {
+  const userMessage = messages[1].content as string
+  const systemPrompt = messages[0].content as string;
+  const cacheKey = `userMessage:${userMessage}|systemPrompt:${systemPrompt}`;
+
+  if (completionCache.has(cacheKey)) {
+    // Wait for the promise to resolve and return its result
+    const cachedResult = await completionCache.get(cacheKey);
+    console.log('cachedResult:', cachedResult)
+    if(!cachedResult){
+      throw new Error('cachedResult is undefined');
+    }
+    if (cachedResult.content === undefined) {
+      throw new Error('content is undefined');
+    }
+    return cachedResult.content;
+  } else {
+    if (DEBUG) {
+      console.log('cache miss, creating new promise');
+    }
+
+    const openai = openAIClientFromSettings(await settingsStore.get());
+    // Store a new promise in the cache immediately to handle concurrent calls
+    const time = Date.now();
+    const promise = openai.chat.completions.create({
+      model: "local", //need model that supports json mode
+      messages: messages,
+      response_format: json_mode ? { "type": "json_object" } : undefined,
+      temperature: 0,
+      max_tokens: 256,
+      top_p: 1,
+      stop: ["}"],//stop at the end of the json
+      frequency_penalty: 0,
+      presence_penalty: 0,
+    }).then(response => {
+      let content = response.choices[0].message.content;
+      if(DEBUG){
+        console.log("Local completion content:", content);
+        console.log(messages);
+        console.log('time taken to get local completion:', Date.now() - time);
+      }
+      if (content === null ) {
+        throw new Error('content is null');
+      }
+      if (content === "") {
+        throw new Error('content is empty');
+      }
+
+      content += '}';//add the last bracket because it's removed by the stop parameter
+
+      // Update the cache with the final result
+      const cacheValue: cacheValue = { content };
+      completionCache.set(cacheKey, Promise.resolve(cacheValue));
+
+      return {content};
+    }).catch(error => {
+      // Remove the cache entry if an error occurs
+      completionCache.delete(cacheKey);
+      throw error;
+    });
+
+    completionCache.set(cacheKey, promise);
+    return (await promise).content;
+  }
+}
+
+
+function createPromptSingleDescription(text: string, description: string):  OpenAI.Chat.Completions.ChatCompletionMessageParam[]{
+  const systemPrompt = "You are a helpful assistant.";
+  let userMsg = "Does the description match the text?" +
+                "Answer with only 1 word: \"YES\" (yes it matches the description) or \"NO\" (no it doesn't match) or \"IDK\" (unsure if it matches the description):";
+
+  userMsg += `\n###Description:\n${description}`;
+
+  userMsg += `\n###TEXT:\n${text}`;
+
+  return [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: userMsg }
+  ];
+}
 
 function createPrompt(text: string, descriptions: string[]):  OpenAI.Chat.Completions.ChatCompletionMessageParam[]{
   const systemPrompt = "You are a helpful assistant.";
@@ -132,12 +224,12 @@ function createPrompt(text: string, descriptions: string[]):  OpenAI.Chat.Comple
                 "Answer with JSON, with the key being the description number and the value being \"YES\" (yes it matches the description) or \"NO\" (no it doesn't match) or \"IDK\" (unsure if it matches the description):";
 
   descriptions.forEach((description, index) => {
-    userMsg += `\nDescription ${index}. ${description}`;
+    userMsg += `\nDescription ${index + 1}. ${description}`;
   });
 
-  let expectedOutputFormat = "\nExpected output format: \n{\n";
+  let expectedOutputFormat = "\n###Expected output format: \n{\n";
   descriptions.forEach((_, index) => {
-    expectedOutputFormat += `"${index}": "ANSWER"`;
+    expectedOutputFormat += `"${index + 1}": "ANSWER"`;
     if (index < descriptions.length - 1) {
       expectedOutputFormat += ",\n";
     }
@@ -145,7 +237,7 @@ function createPrompt(text: string, descriptions: string[]):  OpenAI.Chat.Comple
   expectedOutputFormat += "\n}\n";
 
   userMsg += expectedOutputFormat;
-  userMsg += `\nTEXT: ${text}`;
+  userMsg += `\n###TEXT:\n${text}`;
 
   return [
     { role: "system", content: systemPrompt },
@@ -169,7 +261,7 @@ function extractAndParseJSON(mixedString: string): any | null {
       return null;
     }
   } else {
-    console.log("No JSON found in the string");
+    console.log("No JSON found in the string", mixedString);
     return null;
   }
 }
@@ -177,7 +269,21 @@ function extractAndParseJSON(mixedString: string): any | null {
 async function getGPTClassification(text: string, subject:MLSubject){
   // TODO: multiple descriptions at once
   const messages = createPrompt(text, [subject.description]);
-  const response = await getOpenAICompletion(messages);
+
+  //code to get single token response, the issues is that without json constraints llm be yapping frfr
+  //const messages = createPromptSingleDescription(text, subject.description);
+  //return response.toLowerCase().includes('yes');
+
+  const settings = await settingsStore.get();
+  let response: string;
+  if (settings.type === 'openai') {
+    response = await getOpenAICompletion(messages);
+  } else if(settings.type === 'local'){
+    response = await getLocalCompletion(messages);
+  } else {
+    throw new Error('invalid settings type');
+  }
+
   // Assuming response is a JSON string, parse it to a JavaScript object
   const resObj = extractAndParseJSON(response);
   if(resObj === null){
@@ -200,7 +306,8 @@ async function getGPTClassification(text: string, subject:MLSubject){
       } else if (value.includes('idk')) {
         answers.push(0);
       } else {
-        throw new Error("line doesn't contain yes, no or idk");
+        console.log(`Unexpected value: ${value}`)
+        throw new Error("json value doesn't contain yes, no or idk");
       }
     }
   }
@@ -464,7 +571,9 @@ async function logCounters() {
 }
 
 // Set interval for every 10 seconds
-setInterval(logCounters, 10000);
+if(DEBUG_TOKEN_COST){
+  setInterval(logCounters, 10000);
+}
 
 const embeddingCache = new Map<string, Promise<number[]>>();
 
@@ -539,7 +648,7 @@ export async function populateSubjectAndSave(subject: MLSubject){
   return subject as PopulatedFilterSubject;
 }
 
-export async function isTextInSubject(subject:MLSubject, text:string){
+export async function isTextInSubjectOpenAI(subject:MLSubject, text:string){
   const threshold = 0.76;
   //const threshold = 0.65; //jinaai
   const populatedSubject = await populateSubjectAndSave(subject);
@@ -568,4 +677,25 @@ export async function isTextInSubject(subject:MLSubject, text:string){
   }
 
   return result;
+}
+
+export async function isTextInSubjectLocal(subject:MLSubject, text:string){
+  const gptResult = await getGPTClassification(text, subject);
+  if(gptResult){
+    return true;
+  }
+  else{
+    return false;
+  }
+}
+
+export async function isTextInSubject(subject:MLSubject, text:string){
+  const settings = await settingsStore.get();
+  if(settings.type === 'openai'){
+    return await isTextInSubjectOpenAI(subject, text);
+  } else if(settings.type === 'local'){
+    return await isTextInSubjectLocal(subject, text);
+  } else {
+    throw new Error('invalid settings type');
+  }
 }

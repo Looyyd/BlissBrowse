@@ -10,6 +10,7 @@ import {
   RemoveDataMessage
 } from "./types";
 
+
 export async function getLocalModelPrediction(value: string): Promise<unknown> {
   /* @throws Error if background returns an error */
   return new Promise((resolve, reject) => {

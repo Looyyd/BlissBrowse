@@ -1,5 +1,5 @@
 import {FilterAction} from "../types";
-import {DEBUG, EXTENSION_NAME, FILTER_IGNORE_ATTRIBUTE} from "../../constants";
+import {DEBUG, DEBUG_FILTERING, EXTENSION_NAME, FILTER_IGNORE_ATTRIBUTE} from "../../constants";
 import {addToFilterWordStatistics, ListNamesDataStore, TrieRootNodeDataStore} from "../wordLists";
 import {Trie} from "../trie";
 import React from 'react';
@@ -277,7 +277,7 @@ export async function filterElementCommon<T extends FilteredElement>(filterEleme
   const element = filterElement.element;
   const filterAction = filterElement.filterAction;
   if (element.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true') {
-    if (DEBUG) {
+    if (DEBUG_FILTERING) {
       //TODO: fix this, it shouldn't be happending
       console.log('Element already processed', element);
     }
