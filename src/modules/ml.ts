@@ -295,6 +295,8 @@ async function getGPTClassification(text: string, subject:MLSubject){
     if(resObj === null){
       retries++;
       console.log('resObj is null, retrying');
+    } else {
+      break;
     }
   }
   if(retries === maxRetries){
