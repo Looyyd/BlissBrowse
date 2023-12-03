@@ -11,7 +11,7 @@ import {
   FilteredMLElement,
   FilteredTextElement, removeElementFromCaches,
 } from "../content_rewrite";
-import {MLSubject} from "../mlTypes";
+import {MLSubject} from "../ml/mlTypes";
 
 
 function addTooltipStylesIfAbsent(): void {

@@ -1,7 +1,7 @@
 import {ListNamesDataStore} from "../modules/wordLists";
 import React, {useContext} from "react";
 
-import {InferenseServerSettingsStore, SubjectsStore} from "../modules/mlTypes";
+import {InferenseServerSettingsStore, SubjectsStore} from "../modules/ml/mlTypes";
 
 
 const DataStoreContext = React.createContext({

@@ -1,5 +1,5 @@
-import {DatabaseStorage, FullDataStore} from "./datastore";
-import {DEBUG_STORE_NAME, INFERENCE_SETTINGS_KEY, SETTINGS_STORE_NAME, SUBJECTS_STORE_NAME} from "../constants";
+import {DatabaseStorage, FullDataStore} from "../datastore";
+import {DEBUG_STORE_NAME, INFERENCE_SETTINGS_KEY, SETTINGS_STORE_NAME, SUBJECTS_STORE_NAME} from "../../constants";
 
 export type inferenseServerType = 'openai' | 'local' | 'none';
 

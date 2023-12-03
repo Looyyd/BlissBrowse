@@ -3,7 +3,7 @@ import {useDataStore} from "../DataStoreContext";
 import {useAlert} from "../AlertContext";
 import {Button, FormControl, TextField, Typography} from "@mui/material";
 import {Add} from "@mui/icons-material";
-import {createNewSubject} from "../../modules/ml";
+import {createNewSubject} from "../../modules/ml/ml";
 
 
 const NewMLSubjectForm: React.FC = () => {

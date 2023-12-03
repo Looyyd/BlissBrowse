@@ -1,5 +1,5 @@
 import {TotalCostStore} from "./mlTypes";
-import {DEBUG} from "../constants";
+import {DEBUG} from "../../constants";
 
 export let embeddingTokensUsed = 0;
 export let gptTokensUsed = 0;
