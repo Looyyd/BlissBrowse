@@ -35,7 +35,7 @@ const MLSubjectList = () => {
         <Typography variant="h6" style={{ marginBottom: '1rem' }}>Your Subjects</Typography>
         <List>
           {Object.keys(subjects).map((subjectDescription) => (
-            <ListItem style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <ListItem key={subjectDescription} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <ListItemText primary={<Typography variant="subtitle1" style={{ fontWeight: 'bold' }}>{subjectDescription}</Typography>} />
               <Button
                 variant="contained"
