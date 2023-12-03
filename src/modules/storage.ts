@@ -12,23 +12,9 @@ import {
 import {DatabaseNotInitError} from "./IndexedDBModule";
 
 
-export async function getLocalModelPrediction(value: string): Promise<unknown> {
-  /* @throws Error if background returns an error */
-  return new Promise((resolve, reject) => {
-    const modelPredictMessage: ModelPredictMessage = {
-      action: ActionType.ModelPredict,
-      value: value
-    };
-    chrome.runtime.sendMessage(modelPredictMessage , (response: MessageResponseGet) => {
-      if (response.success) {
-        resolve(response.data);
-      } else {
-        reject(response.error);
-      }
-    });
-  });
-}
 
+
+// The retries for databsenotinit error aren't really needed anymore because the database will init when first used, but it's still here just in case
 export async function getStorageKey(storeName: string, key: string): Promise<unknown> {
   // Define a helper function for the actual operation
   async function attemptGetStorageKey(attemptCount: number): Promise<unknown> {
@@ -45,8 +31,11 @@ export async function getStorageKey(storeName: string, key: string): Promise<unk
         if (response.success) {
           resolve(response.data);
         } else {
+          console.log('Error encountered:', response.error);
+          console.log('Error type:', response.error.constructor.name);
+
           // Check for DatabaseNotInitError and if attempts are left
-          if(response.error instanceof DatabaseNotInitError && attemptCount > 0){
+          if(response.error.name === 'DatabaseNotInitError' && attemptCount > 0){
             console.log('Retrying due to DatabaseNotInitError...');
             resolve(attemptGetStorageKey(attemptCount - 1));
           } else {
@@ -61,47 +50,66 @@ export async function getStorageKey(storeName: string, key: string): Promise<unk
 }
 
 
-export async function getAllDataStore(storeName:string): Promise<IndexedDBKeyValueStore<unknown>>{
-  /* @throws Error if background returns an error */
-  return new Promise((resolve, reject) => {
-    const getMessage: GetAllMessage = {
-      action: ActionType.GetAll,
-      storeName: storeName
-    };
-    chrome.runtime.sendMessage(getMessage, (response: MessageResponseGetAll) => {
-      if(DEBUG_MESSAGES){
-        console.log('getAllDataStore response:', response);
-      }
-      if (response.success) {
-        resolve(response.data as IndexedDBKeyValueStore<unknown>);
-      } else {
-        reject(response.error);
-      }
+export async function getAllDataStore(storeName: string): Promise<IndexedDBKeyValueStore<unknown>> {
+  async function attemptGetAllDataStore(attemptCount: number): Promise<IndexedDBKeyValueStore<unknown>> {
+    return new Promise((resolve, reject) => {
+      const getMessage: GetAllMessage = {
+        action: ActionType.GetAll,
+        storeName: storeName
+      };
+      chrome.runtime.sendMessage(getMessage, (response: MessageResponseGetAll) => {
+        if(DEBUG_MESSAGES){
+          console.log('getAllDataStore response:', response);
+        }
+        if (response.success) {
+          resolve(response.data as IndexedDBKeyValueStore<unknown>);
+        } else {
+          if(response.error.name === 'DatabaseNotInitError' && attemptCount > 0){
+            console.log('Retrying getAllDataStore due to DatabaseNotInitError...');
+            resolve(attemptGetAllDataStore(attemptCount - 1));
+          } else {
+            reject(response.error);
+          }
+        }
+      });
     });
-  });
+  }
+
+  return attemptGetAllDataStore(1);
 }
 
+
 export async function setStorageKey<T>(storeName: string, key: string, value: T): Promise<void> {
-  /* @throws Error if background returns an error */
-  return new Promise((resolve, reject) => {
-    const setMessage: IndexedDBSetDataMessage<T> = {
-      action: ActionType.Set,
-      key: key,
-      value: value,
-      storeName: storeName
-    };
-    chrome.runtime.sendMessage(setMessage, (response: MessageResponseSet) => {
-      if (response.success) {
-        if(DEBUG_MESSAGES){
-          console.log('setStorageKey response:', response);
+  async function attemptSetStorageKey(attemptCount: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const setMessage: IndexedDBSetDataMessage<T> = {
+        action: ActionType.Set,
+        key: key,
+        value: value,
+        storeName: storeName
+      };
+      chrome.runtime.sendMessage(setMessage, (response: MessageResponseSet) => {
+        if (response.success) {
+          if(DEBUG_MESSAGES){
+            console.log('setStorageKey response:', response);
+          }
+          resolve();
+        } else {
+          if(response.error.name === 'DatabaseNotInitError' && attemptCount > 0){
+            console.log('Retrying setStorageKey due to DatabaseNotInitError...');
+            resolve(attemptSetStorageKey(attemptCount - 1));
+          } else {
+            reject(response.error);
+          }
         }
-        resolve();
-      } else {
-        reject(response.error);
-      }
+      });
     });
-  });
+  }
+
+  return attemptSetStorageKey(1);
 }
+
+
 
 export async function setLocalStorageKey<T>(key: string, value: T): Promise<void> {
   /* @throws Error if background returns an error */
@@ -127,24 +135,33 @@ export async function setLocalStorageKey<T>(key: string, value: T): Promise<void
   });
 }
 
-export async function removeStorageKey(storeName:string, key: string): Promise<void> {
-  /* @throws Error if background returns an error */
-  return new Promise((resolve, reject) => {
-    const message: RemoveDataMessage= {
-      action: ActionType.Remove,
-      key: key,
-      storeName: storeName
-    };
-    chrome.runtime.sendMessage(message, (response: MessageResponseSet) => {
-      if (response.success) {
-        if (DEBUG_MESSAGES) {
-          console.log('removeStorageKey response:', response);
+export async function removeStorageKey(storeName: string, key: string): Promise<void> {
+  async function attemptRemoveStorageKey(attemptCount: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const message: RemoveDataMessage = {
+        action: ActionType.Remove,
+        key: key,
+        storeName: storeName
+      };
+      chrome.runtime.sendMessage(message, (response: MessageResponseSet) => {
+        if (response.success) {
+          if (DEBUG_MESSAGES) {
+            console.log('removeStorageKey response:', response);
+          }
+          resolve();
+        } else {
+          if(response.error.name === 'DatabaseNotInitError' && attemptCount > 0){
+            console.log('Retrying removeStorageKey due to DatabaseNotInitError...');
+            resolve(attemptRemoveStorageKey(attemptCount - 1));
+          } else {
+            reject(response.error);
+          }
         }
-        resolve();
-      } else {
-        reject(response.error);
-      }
+      });
     });
-  });
+  }
+
+  return attemptRemoveStorageKey(1);
 }
+
 

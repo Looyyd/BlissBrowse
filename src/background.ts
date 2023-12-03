@@ -10,85 +10,6 @@ import {
 } from "./modules/types";
 import {ListNamesDataStore} from "./modules/wordLists";
 
-import { AutoModel, AutoTokenizer, PreTrainedTokenizer, PreTrainedModel, TokenizerModel } from "@xenova/transformers";
-
-let inMemoryModel: PreTrainedModel | null = null;
-let inMemoryTokenizer: PreTrainedTokenizer | null = null;
-
-const loadModel = async () => {
-  const path = "/jinaai/jina-embeddings-v2-small-en/";
-  const model = await AutoModel.from_pretrained(path,
-    {local_files_only: true});
-  return model;
-}
-const loadTokenizer = async () => {
-  const path = "/jinaai/jina-embeddings-v2-small-en/";
-  const tokenizer = await AutoTokenizer.from_pretrained(path,
-    {local_files_only: true});
-  return tokenizer;
-}
-
-const handlePredict = async (value: string, sendResponse: SendResponseFunc): Promise<void> => {
-  if (!inMemoryModel) {
-    inMemoryModel = await loadModel();
-  }
-  if (!inMemoryTokenizer) {
-    inMemoryTokenizer = await loadTokenizer();
-  }
-  // Make a prediction
-  const inputTokens = await inMemoryTokenizer(value);
-  const output = await inMemoryModel(inputTokens);
-  console.log("Output: ", output);
-  sendResponse({ success: true, data: output as unknown } as MessageResponseGetAllSuccess);
-}
-  
-
-/*
-import { AutoTokenizer, PreTrainedTokenizer, Tensor } from '@xenova/transformers';
-import * as tf from '@tensorflow/tfjs';
-let inMemoryModel: tf.GraphModel | null = null;
-let inMemoryTokenizer: PreTrainedTokenizer | null = null;
-async function loadModel() {
-  const model = await tf.loadGraphModel(ML_MODEL_PATH);
-  return model;
-}
-async function loadTokenizer() : Promise<PreTrainedTokenizer> {
-  let tokenizer = await AutoTokenizer.from_pretrained('jinaai/jina-embeddings-v2-small-en');
-  return tokenizer;
-}
-const handlePredict = async (value: string, sendResponse: SendResponseFunc): Promise<void> => {
-  if (!inMemoryModel) {
-    inMemoryModel = await loadModel();
-  }
-  if (!inMemoryTokenizer) {
-    inMemoryTokenizer = await loadTokenizer();
-  }
-  // Tokenize the input text.
-  const inputText = value.padEnd(512, ' ');
-  let { input_ids }: { input_ids: Tensor } = await inMemoryTokenizer(inputText);
-  console.log(input_ids);
-  console.log("Data :", input_ids.data)
-  //const dataArray = Array.from(input_ids.data, (n) => Number(n));
-  // pad to 512
-  const dataArray = Array.from(input_ids.data, (n) => Number(n)).concat(Array(512 - input_ids.data.length).fill(0));
-  console.log("Converted Data :", dataArray);
-
-  //put to int32
-
-  let inputTensor = tf.tensor(dataArray, undefined, 'int32');
-
-  let reshapedTensor = inputTensor.reshape([1, 512]);
-
-  // Make a prediction
-  inMemoryModel.executeAsync(reshapedTensor).then(output => {
-    // Handle the output tensor here
-    // The output is a tf.Tensor or an array of tf.Tensors
-    console.log("Output: ", output);
-    sendResponse({ success: true, data: output as unknown } as MessageResponseGetAllSuccess);
-  });
-}
-*/
-
 
 (async () => {
   await IndexedDBModule.init();
@@ -225,9 +146,6 @@ chrome.runtime.onMessage.addListener((request: Message<unknown>, sender, sendRes
       break;
     case ActionType.DataChanged:
       sendResponse({ success: true } as MessageResponseSetSuccess);
-      break;
-    case ActionType.ModelPredict:
-      handlePredict(request.value, sendResponse);
       break;
     default:
       if(DEBUG_MESSAGES){

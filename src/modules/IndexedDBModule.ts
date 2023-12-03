@@ -61,6 +61,9 @@ class IndexedDBModule {
     /* @throws IndexeDBRequestError
     *  @throws DatabaseNotInitError
     *  */
+    if (!this.db) {
+      await this.init();
+    }
     return new Promise((resolve, reject) => {
       if (this.db) {
         const transaction = this.db.transaction([storeName], 'readonly');
@@ -78,11 +81,14 @@ class IndexedDBModule {
     /* @throws IndexeDBRequestError
     *  @throws DatabaseNotInitError
     *  */
+    if (!this.db) {
+      await this.init();
+    }
     return new Promise((resolve, reject) => {
       if (this.db) {
         const transaction = this.db.transaction([storeName], 'readwrite');
         const objectStore = transaction.objectStore(storeName);
-        const request = objectStore.put({ key, value });
+        const request = objectStore.put({key, value});
         request.onsuccess = () => resolve();
         request.onerror = () => reject(new IndexedDBRequestError(`Error setting data for key ${key}`));
       } else {
@@ -95,6 +101,9 @@ class IndexedDBModule {
     /* @throws IndexeDBRequestError
     *  @throws DatabaseNotInitError
     *  */
+    if (!this.db) {
+      await this.init();
+    }
     return new Promise((resolve, reject) => {
       if (this.db) {
         const transaction = this.db.transaction([storeName], 'readwrite');
@@ -112,6 +121,9 @@ class IndexedDBModule {
     /* @throws IndexeDBRequestError
     *  @throws DatabaseNotInitError
     *  */
+    if (!this.db) {
+      await this.init();
+    }
     return new Promise((resolve, reject) => {
       if (this.db) {
         const transaction = this.db.transaction([storeName], 'readonly');
