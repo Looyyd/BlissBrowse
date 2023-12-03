@@ -6,12 +6,12 @@ import React from 'react';
 import {createRoot} from "react-dom/client";
 import {FilteredElementTooltip} from "../../components/content/FilteredElementTooltip";
 import {UnfilteredElementTooltip} from "../../components/content/UnfilteredElementTooltip";
-import {MLSubject} from "../ml";
 import {
   FilteredElement,
   FilteredMLElement,
   FilteredTextElement, removeElementFromCaches,
 } from "../content_rewrite";
+import {MLSubject} from "../mlTypes";
 
 
 function addTooltipStylesIfAbsent(): void {

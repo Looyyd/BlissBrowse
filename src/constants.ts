@@ -32,6 +32,7 @@ export const DEFAULT_COLOR_THEME = ColorTheme.LIGHT;
 export const BLACKLISTED_WEBSITES_KEY = 'blacklist';
 export const FILTER_ACTION_KEY = 'actionToApplyOnFilter';
 export const COLOR_THEME_KEY = 'colorTheme';
+export const INFERENCE_SETTINGS_KEY = "inferenseServerSettings";
 
 //hack store name, it's not a real storage but it's used by listeners
 export const LOCAL_STORAGE_STORE_NAME = 'localStorage';

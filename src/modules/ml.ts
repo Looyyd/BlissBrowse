@@ -1,35 +1,17 @@
 import {huggingFaceToken} from "./secrets";
-import {
-  DEBUG,
-  DEBUG_STORE_NAME, DEBUG_TOKEN_COST,
-  SETTINGS_STORE_NAME,
-  SUBJECTS_STORE_NAME
-} from "../constants";
-import {DatabaseStorage, FullDataStore} from "./datastore";
+import {DEBUG, DEBUG_TOKEN_COST} from "../constants";
 import OpenAI from "openai";
 import {preprocessTextBeforeEmbedding} from "./content_rewrite";
+import {averageEmbeddings, cosineSimilarity, extractAndParseJSON, getAnswerFromJSON} from "./mlHelpers";
+import {
+  inferenseServerSettings,
+  InferenseServerSettingsStore,
+  MLSubject,
+  PopulatedFilterSubject,
+  SubjectsStore,
+  TotalCostStore
+} from "./mlTypes";
 
-
-export type inferenseServerType = 'openai' | 'local' |  'none';
-
-export interface inferenseServerSettings {
-  type: inferenseServerType;
-  url?: string;
-  token?: string;
-}
-
-const DEFAULT_INFERENCE_SERVER_SETTINGS: inferenseServerSettings = {
-  type: 'none',
-};
-
-
-export class InferenseServerSettingsStore extends DatabaseStorage<inferenseServerSettings> {
-  IndexedDBStoreName = SETTINGS_STORE_NAME;
-  key = 'inferenseServerSettings'; //TODO: global
-  typeUpgrade = undefined;
-  isType = (data: unknown): data is inferenseServerSettings => { return data!== null && data !== undefined; }; //TODO: typecheck
-  defaultValue = DEFAULT_INFERENCE_SERVER_SETTINGS;
-}
 
 const settingsStore = new InferenseServerSettingsStore()
 
@@ -52,7 +34,7 @@ function openAIClientFromSettings(settings: inferenseServerSettings): OpenAI {
       baseURL: settings.url,
       apiKey: 'local',
       dangerouslyAllowBrowser: true,//this is a security check to avoid that companies but their api key in the source code
-      // it's ok, because the token is user submitted
+      // it's ok, because there is no api key for local
     });
   } else {
     throw new Error('invalid settings type');
@@ -187,22 +169,7 @@ async function getLocalCompletion(messages: OpenAI.Chat.Completions.ChatCompleti
 }
 
 
-function createPromptSingleDescription(text: string, description: string):  OpenAI.Chat.Completions.ChatCompletionMessageParam[]{
-  const systemPrompt = "You are a helpful assistant.";
-  let userMsg = "Does the description match the text?" +
-                "Answer with only 1 word: \"YES\" (yes it matches the description) or \"NO\" (no it doesn't match) or \"IDK\" (unsure if it matches the description):";
-
-  userMsg += `\n###Description:\n${description}`;
-
-  userMsg += `\n###TEXT:\n${text}`;
-
-  return [
-    { role: "system", content: systemPrompt },
-    { role: "user", content: userMsg }
-  ];
-}
-
-function createPrompt(text: string, descriptions: string[]):  OpenAI.Chat.Completions.ChatCompletionMessageParam[]{
+function createClassificationPrompt(text: string, descriptions: string[]):  OpenAI.Chat.Completions.ChatCompletionMessageParam[]{
   const systemPrompt = "You are a helpful assistant.";
   let userMsg = "For each description, say if the given text fits the description. " +
                 "Answer with JSON, with the key being the description number and the value being \"YES\" (yes it matches the description) or \"NO\" (no it doesn't match) or \"IDK\" (unsure if it matches the description):";
@@ -229,35 +196,9 @@ function createPrompt(text: string, descriptions: string[]):  OpenAI.Chat.Comple
   ];
 }
 
-function extractAndParseJSON(mixedString: string): any | null {
-  // Regular expression to extract JSON from the mixed content
-  // It matches a JSON-like structure with numeric keys and uppercase string values
-  const regex = /\{\s*"[0-9]":\s*"[A-Z]+"(,\s*"[0-9]":\s*"[A-Z]+")*\s*\}/;
-  const match = mixedString.match(regex);
-
-  if (match) {
-    try {
-      // Parse the matched string into a JavaScript object
-      const data = JSON.parse(match[0]);
-      return data;
-    } catch (e) {
-      console.error(`Error parsing JSON: ${e}`);
-      return null;
-    }
-  } else {
-    console.log("No JSON found in the string", mixedString);
-    return null;
-  }
-}
-
 async function getGPTClassification(text: string, subject:MLSubject){
   // TODO: multiple descriptions at once
-  const messages = createPrompt(text, [subject.description]);
-
-  //code to get single token response, the issues is that without json constraints llm be yapping frfr
-  //const messages = createPromptSingleDescription(text, subject.description);
-  //return response.toLowerCase().includes('yes');
-
+  const messages = createClassificationPrompt(text, [subject.description]);
 
   const settings = await settingsStore.get();
 
@@ -289,41 +230,9 @@ async function getGPTClassification(text: string, subject:MLSubject){
   }
 
   // Initialize the answers array
-  const answers = [];
+  const answers = getAnswerFromJSON(resObj);
 
-  // Iterate through the keys in the JSON object
-  for (const key in resObj) {
-    if (resObj.hasOwnProperty(key)) {
-      const value = resObj[key].toString().toLowerCase();
-
-      // Check for 'yes', 'no', or 'idk'
-      if (value.includes('yes')) {
-        answers.push(1);
-      } else if (value.includes('no')) {
-        answers.push(-1);
-      } else if (value.includes('idk')) {
-        answers.push(0);
-      } else {
-        console.log(`Unexpected value: ${value}`)
-        throw new Error("json value doesn't contain yes, no or idk");
-      }
-    }
-  }
   return answers[0] === 1;//TODO: handle multiple descriptions
-}
-
-class TotalCostStore extends DatabaseStorage<number>{
-  defaultValue: number = 0;
-  IndexedDBStoreName: string = DEBUG_STORE_NAME;
-  key: string = 'apiCost';
-  typeUpgrade = undefined;
-  isType = (data: unknown): data is number => {
-    return typeof data === 'number';
-  };
-
-  async add(value: number): Promise<void> {
-    await this.set(await this.get() + value);
-  }
 }
 
 
@@ -336,59 +245,10 @@ export async function createNewSubject(description: string): Promise<void>{
 }
 
 
-export class SubjectsStore extends FullDataStore<MLSubject> {
-  isType = (data: unknown): data is MLSubject => {
-    return typeof data === 'object' && data !== null && 'description' in data;
-  }
-  IndexedDBStoreName = SUBJECTS_STORE_NAME;
-  key = 'subjects';
-  typeUpgrade = undefined;
-  defaultValue = undefined;
-}
-
 const subjectsStore = new SubjectsStore();
 export async function getSubjects(): Promise<MLSubject[]> {
   const keyvalues = await subjectsStore.get();
   return Object.values(keyvalues).map(keyvalue => keyvalue.value);
-}
-
-export interface MLSubject {
-  description: string;
-  embedding_keywords?: string[];
-  embedding?: number[];
-}
-interface PopulatedFilterSubject extends MLSubject{
-  embedding_keywords: string[];
-  embedding: number[];
-}
-
-function dotProduct(vecA: number[], vecB: number[]): number {
-  let product = 0;
-  for (let i = 0; i < vecA.length; i++) {
-    product += vecA[i] * vecB[i];
-  }
-  return product;
-}
-
-function magnitude(vec: number[]): number {
-  return Math.sqrt(vec.reduce((sum, val) => sum + val * val, 0));
-}
-
-function cosineSimilarity(vecA: number[], vecB: number[]): number {
-  if(vecA.length !== vecB.length){
-    throw new Error('vectors have different lengths');
-  }
-  return dotProduct(vecA, vecB) / (magnitude(vecA) * magnitude(vecB));
-}
-
-function averageEmbeddings(embeddings: number[][]): number[] {
-  const average = embeddings.reduce((sum, embedding) => {
-    for (let i = 0; i < embedding.length; i++) {
-      sum[i] += embedding[i];
-    }
-    return sum;
-  }, embeddings[0].map(() => 0));
-  return average.map(val => val / embeddings.length);
 }
 
 async function getEmbeddingsHuggingFace(texts: string[]): Promise<number[][]> {
@@ -424,7 +284,6 @@ let embeddingTokensUsed = 0;
 async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
 
   const fetchEmbedding = async (inputTexts: string[]): Promise<any> => {
-    //TODO: handle tokens securely, remove from source code;
     const settings = await settingsStore.get();
     if( settings.type !== 'openai'){
       throw new Error('getting embeddings from openai but settings.type is not openai');
@@ -472,8 +331,6 @@ async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
     }
   };
 
-  //console.log('texts:', texts);
-  //return texts.map(text => [0]);//TODO: remove this line
   const time = Date.now();
   const response = await fetchEmbedding(texts);
   console.log('time taken to get embeddings:', Date.now() - time);

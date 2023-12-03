@@ -3,9 +3,9 @@ import {useDataStore} from "../DataStoreContext";
 import {useDataFromStore} from "../../modules/datastore";
 import {useAlert} from "../AlertContext";
 import {Button, FormControl, InputLabel, MenuItem, Select, TextField} from "@mui/material";
-import {inferenseServerSettings, inferenseServerType} from "../../modules/ml";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 import {Save} from "@mui/icons-material";
+import {inferenseServerType} from "../../modules/mlTypes";
 
 
 //TODO: can remove hard-coded and get from type definition?

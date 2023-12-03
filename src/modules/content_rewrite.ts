@@ -10,8 +10,9 @@ import {
   unfilterElementsIfWrongAction
 } from "./content/filter";
 import {FilterActionStore} from "./settings";
-import {getSubjects, isTextInSubject, MLSubject, shouldTextBeSkippedML} from "./ml";
+import {getSubjects, isTextInSubject, shouldTextBeSkippedML} from "./ml";
 import {FilterAction} from "./types";
+import {MLSubject} from "./mlTypes";
 
 const CONTENT_CONTEXT = "content";
 
