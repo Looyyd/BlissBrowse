@@ -117,17 +117,6 @@ async function getElementText(element: HTMLElement): Promise<string> {
 }
 
 
-
-async function elementToCheckShouldBeSkipped(element: HTMLElement): Promise<boolean> {
- if ( isElementIgnored(element) ) {
-   return true;
- }
- if (isElementProcessed(element)) {
-    return true;
- }
-  return false;
-}
-
 interface MLFilterResult {
   shouldFilter: boolean;
   subjects?: MLSubject[];
@@ -192,6 +181,7 @@ export interface FilteredMLElement extends FilteredElement {
 
 
 let filteredElements : FilteredElement[] = [];
+let processedElements : HTMLElement[] = [];
 
 export async function checkAndFilterElementsRewrite() {
   if (DEBUG) {
@@ -203,6 +193,7 @@ export async function checkAndFilterElementsRewrite() {
   if (isDisabled) {
     await unfilterElements(filteredElements);
     filteredElements.length = 0;
+    processedElements.length = 0;
     return;
   }
 
@@ -214,10 +205,14 @@ export async function checkAndFilterElementsRewrite() {
   await checkAndUnfilterPreviouslyFiltered(filterAction, triesWithNames, subjects);
 
   const promises = elementsToCheck.map(async (element) => {
-    let textFiltered = false;
-    if (await elementToCheckShouldBeSkipped(element)) {
+    if(processedElements.includes(element)){
       return;
     }
+    processedElements.push(element);
+    if (isElementIgnored(element)) {
+      return;
+    }
+    let textFiltered = false;
     const elementText = await getElementText(element);
     for (const {listName, trie} of triesWithNames) {
       const filterResult = trie.shouldFilterTextContent(elementText);
