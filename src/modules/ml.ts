@@ -8,9 +8,13 @@ import {
   InferenseServerSettingsStore,
   MLSubject,
   PopulatedFilterSubject,
-  SubjectsStore,
-  TotalCostStore
+  SubjectsStore
 } from "./mlTypes";
+import {
+  addEmbeddingTokensUsed,
+  addGPTTokensUsed,
+  logCost,
+} from "./mlCosts";
 
 
 const settingsStore = new InferenseServerSettingsStore()
@@ -46,7 +50,6 @@ interface cacheValue {
   content: string;
 }
 const completionCache: Map<string, Promise<cacheValue>> = new Map();
-let gptTokensUsed = 0;
 
 async function getOpenAICompletion(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[], json_mode = true) {
   const userMessage = messages[1].content as string
@@ -81,7 +84,7 @@ async function getOpenAICompletion(messages: OpenAI.Chat.Completions.ChatComplet
       presence_penalty: 0,
     }).then(response => {
       const content = response.choices[0].message.content;
-      gptTokensUsed += response.usage?.total_tokens || 0;
+      addGPTTokensUsed(response.usage?.total_tokens || 0);
       if (content === null) {
         throw new Error('content is null');
       }
@@ -279,8 +282,6 @@ async function getEmbeddingsHuggingFace(texts: string[]): Promise<number[][]> {
 
 }
 
-let embeddingTokensUsed = 0;
-
 async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
 
   const fetchEmbedding = async (inputTexts: string[]): Promise<any> => {
@@ -316,7 +317,7 @@ async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
 
       const jsonResponse = await response.json();
       const tokensUsed = jsonResponse.usage.total_tokens || 0;
-      embeddingTokensUsed += tokensUsed;
+      addEmbeddingTokensUsed(tokensUsed)
       if (jsonResponse.data === undefined ) {
         throw new Error(`'data' field is undefined or empty in the response`);
       }
@@ -336,13 +337,6 @@ async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
   console.log('time taken to get embeddings:', Date.now() - time);
   return response as number[][];
 }
-
-let totalEmbeddingCalls = 0;
-let totalTextLength = 0;
-let totalStringsNumber = 0;
-let costStore = new TotalCostStore();
-let previousTotalCost = 0;
-let cacheHits = 0;
 
 interface QueueItem {
     text: string;
@@ -367,7 +361,6 @@ const processQueue = async () => {
   embeddingQueue = [];
 
   const texts = currentQueue.map(item => item.text);
-  totalEmbeddingCalls++;
   const embeddings = await getEmbeddingsOpenAI(texts);
   //const embeddings = await getEmbeddingsHuggingFace(texts)
 
@@ -399,24 +392,9 @@ const addToQueue = (text: string): Promise<number[]> => {
     });
 };
 
-// Debugging function
-async function logCounters() {
-  console.log(`Total Embedding Calls: ${totalEmbeddingCalls}`);
-  console.log(`Total Text Length: ${totalTextLength}`);
-  console.log(`Total Strings Number: ${totalStringsNumber}`);
-  console.log(`Cache Hits: ${cacheHits}`);
-  console.log("GPT Tokens Used:", gptTokensUsed);
-  console.log("Embedding Tokens Used:", embeddingTokensUsed);
-  const totalCost = gptTokensUsed* 0.001 / 1000 + embeddingTokensUsed * 0.0001 / 1000;
-  console.log("Total cost $:", totalCost);
-  const costToAdd = totalCost - previousTotalCost;
-  await costStore.add(costToAdd);
-  previousTotalCost = totalCost;
-}
-
 // Set interval for every 10 seconds
 if(DEBUG_TOKEN_COST){
-  setInterval(logCounters, 10000);
+  setInterval(logCost, 10000);
 }
 
 const embeddingCache = new Map<string, Promise<number[]>>();
@@ -424,7 +402,6 @@ const embeddingCache = new Map<string, Promise<number[]>>();
 async function getEmbeddings(text: string): Promise<number[]> {
   // Check if the cache already has a promise for the embedding of this text
   if (embeddingCache.has(text)) {
-    cacheHits++;
     // Await the resolved value from the promise
     const embedding = await embeddingCache.get(text);
     if(!embedding){
@@ -432,9 +409,6 @@ async function getEmbeddings(text: string): Promise<number[]> {
     }
     return embedding;
   }
-
-  totalTextLength += text.length;
-  totalStringsNumber++;
 
   // Create a new promise for the embedding calculation and store it in the cache
   const embeddingPromise = addToQueue(text).then(embedding => {
