@@ -5,6 +5,7 @@ import {useAlert} from "../AlertContext";
 import {Button, FormControl, InputLabel, MenuItem, Select, TextField} from "@mui/material";
 import {inferenseServerSettings, inferenseServerType} from "../../modules/ml";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
+import {Save} from "@mui/icons-material";
 
 
 //TODO: can remove hard-coded and get from type definition?
@@ -93,7 +94,7 @@ const MLInferenceSettings = () => {
         fullWidth
         margin="normal"
       />
-      <Button variant="contained" color="primary" onClick={handleSave} style={{ marginTop: '20px' }}>
+      <Button variant="contained" color="primary" onClick={handleSave} style={{ marginTop: '20px' }} startIcon={<Save/>}>
         Save
       </Button>
     </div>
