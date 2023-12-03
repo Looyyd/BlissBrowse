@@ -174,11 +174,17 @@ export interface FilteredMLElement extends FilteredElement {
 
 
 let filteredElements : FilteredElement[] = [];
-let processedElements : HTMLElement[] = [];
+//let processedElements : HTMLElement[] = [];
+// try with hashes
+interface ProcessedElement {
+  element: HTMLElement;
+  hash: number;
+}
+let processedElements : ProcessedElement[] = [];
 
 export function removeElementFromCaches(element: HTMLElement) {
   console.log("removeElementFromProcessedElements");
-  const index = processedElements.indexOf(element);
+  const index = processedElements.findIndex(pe => pe.element === element);
   if (index > -1) {
     processedElements.splice(index, 1);
   }
@@ -189,6 +195,13 @@ export function removeElementFromCaches(element: HTMLElement) {
 }
 
 export async function checkAndFilterElementsRewrite() {
+  function hashCode(s: string): number {
+    return s.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+  }
+
   if (DEBUG) {
     console.log("checkAndFilterElementsRewrite");
   }
@@ -210,13 +223,35 @@ export async function checkAndFilterElementsRewrite() {
   await checkAndUnfilterPreviouslyFiltered(filterAction, triesWithNames, subjects);
 
   const promises = elementsToCheck.map(async (element) => {
-    if(processedElements.includes(element)){
-      return;
+    const elementHash = hashCode(element.innerText); // Assuming 'text' property holds the content
+
+    const processed = processedElements.find(p => p.element === element);
+
+    if (processed) {
+      if(processed.hash === elementHash){
+        return; // Element is in cache and has not changed
+      }
+      // Element is in cache but has changed, remove from cache
+      const index = processedElements.findIndex(pe => pe.element === element);
+      if (index > -1) {
+        processedElements.splice(index, 1);
+      }
+      // if filtered, unfilter
+      const filteredElement = filteredElements.find(fe => fe.element === element);
+      if (filteredElement) {
+        await unfilterElement(filteredElement);
+        const index = filteredElements.findIndex(fe => fe.element === element);
+        if (index > -1) {
+          filteredElements.splice(index, 1);
+        }
+      }
     }
-    processedElements.push(element);
+
+    processedElements.push({element, hash: elementHash});
     if (isElementIgnored(element)) {
       return;
     }
+
     let textFiltered = false;
     const elementText = await getElementText(element);
     for (const {listName, trie} of triesWithNames) {
