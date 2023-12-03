@@ -196,16 +196,24 @@ export async function getGPTClassification(text: string, settings:inferenseServe
 }
 
 export async function getKeywordsForSubject(subject: string, inferenceSettings:inferenseServerSettings): Promise<string[]> {
-  const systemPrompt = "You are an assistant that sends back around 10 strings that are related to the user description of a subject. Give 1 string per line. Make sure the strings are diverse in style but keep them all related to the user subject. Make it diverse, some can be casual others formal !"
-  const userMessage = `"${subject}"`;
+  let systemPrompt = "You are a helpful assistant."
+  let userMessage = "That sends back around 10 strings that are related to the description of the given subject. Make sure the strings are diverse in style but keep them all related to the user subject!"
+  userMessage += `Send back a JSON string with key "sentences" and value being an array of strings.`;
+  userMessage += `\nSubject:\n"${subject}"`;
   const messages = [
     {role: "system", content: systemPrompt},
     {role: "user", content: userMessage}
   ] as OpenAI.Chat.Completions.ChatCompletionMessageParam[];
   const openai = openAIClientFromSettings(inferenceSettings);
-  const response = await getOpenAICompletion(messages, openai, false);
-  //TODO: check if response is valid
-  const sentences = response.split('\n').map(sentence => preprocessTextBeforeEmbedding(sentence));
+  const response = await getOpenAICompletion(messages, openai, true);
+  const resObj = JSON.parse(response);
+  if(resObj === null){
+    throw new Error('resObj is null');
+  }
+  if (resObj.sentences === undefined) {
+    throw new Error(`'sentences' field is undefined or empty in the response`);
+  }
+  const sentences = resObj.sentences as string[];
   if (DEBUG) {
     console.log('Sentence creation response preprocessed output:', sentences);
   }
