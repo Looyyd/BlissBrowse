@@ -7,7 +7,11 @@ import {createRoot} from "react-dom/client";
 import {FilteredElementTooltip} from "../../components/content/FilteredElementTooltip";
 import {UnfilteredElementTooltip} from "../../components/content/UnfilteredElementTooltip";
 import {MLSubject} from "../ml";
-import {FilteredElement, FilteredMLElement, FilteredTextElement} from "../content_rewrite";
+import {
+  FilteredElement,
+  FilteredMLElement,
+  FilteredTextElement, removeElementFromCaches,
+} from "../content_rewrite";
 
 
 function addTooltipStylesIfAbsent(): void {
@@ -351,12 +355,14 @@ export function isElementProcessed(element: HTMLElement) {
 }
 
 export async function unfilterAndIgnoreElement(fe: FilteredElement) {
+  removeElementFromCaches(fe.element);
   markElementAsIgnored(fe.element);
   await unfilterElement(fe);
   addUnfilteredElementTooltip(fe);
 }
 
 export async function reAllowFilterElement(element: HTMLElement) {
+  removeElementFromCaches(element);
   unmarkElementAsIgnored(element);
   removeTooltipFromElement(element)
 }

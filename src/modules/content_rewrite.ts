@@ -123,13 +123,12 @@ interface MLFilterResult {
 }
 
 async function shouldTextBeFilteredML(text: string, subjects: MLSubject[]): Promise<MLFilterResult> {
-  let filterSubjects : MLSubject[] = [];
-  const results = await Promise.all(subjects.map(async (subject, index) => {
-    const res = await isTextInSubject(subject, text);
-    if (res) {
-      filterSubjects.push(subjects[index]);
+  let filterSubjects: MLSubject[] = [];
+
+  await Promise.all(subjects.map(async (subject) => {
+    if (await isTextInSubject(subject, text)) {
+      filterSubjects.push(subject);
     }
-    return res;
   }));
 
   return {
@@ -137,10 +136,6 @@ async function shouldTextBeFilteredML(text: string, subjects: MLSubject[]): Prom
     subjects: filterSubjects.length > 0 ? filterSubjects : undefined
   };
 }
-
-
-
-
 
 async function unfilterElements(elements: FilteredElement[]) {
   elements.map(async (element) => {
@@ -182,6 +177,18 @@ export interface FilteredMLElement extends FilteredElement {
 
 let filteredElements : FilteredElement[] = [];
 let processedElements : HTMLElement[] = [];
+
+export function removeElementFromCaches(element: HTMLElement) {
+  console.log("removeElementFromProcessedElements");
+  const index = processedElements.indexOf(element);
+  if (index > -1) {
+    processedElements.splice(index, 1);
+  }
+  const filteredElementIndex = filteredElements.findIndex(fe => fe.element === element);
+  if (filteredElementIndex > -1) {
+    filteredElements.splice(filteredElementIndex, 1);
+  }
+}
 
 export async function checkAndFilterElementsRewrite() {
   if (DEBUG) {
