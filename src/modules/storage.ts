@@ -9,6 +9,7 @@ import {
   ModelPredictMessage,
   RemoveDataMessage
 } from "./types";
+import {DatabaseNotInitError} from "./IndexedDBModule";
 
 
 export async function getLocalModelPrediction(value: string): Promise<unknown> {
@@ -28,26 +29,37 @@ export async function getLocalModelPrediction(value: string): Promise<unknown> {
   });
 }
 
-export async function getStorageKey(storeName:string, key: string): Promise<unknown>{
-  /* @throws Error if background returns an error */
-  return new Promise((resolve, reject) => {
-    const getMessage: GetDataMessage = {
-      action: ActionType.Get,
-      key: key,
-      storeName: storeName
-    };
-    chrome.runtime.sendMessage(getMessage, (response: MessageResponseGet) => {
-      if(DEBUG_MESSAGES){
-        console.log('getStorageKey response:', response);
-      }
-      if (response.success) {
-        resolve(response.data);
-      } else {
-        reject(response.error);
-      }
+export async function getStorageKey(storeName: string, key: string): Promise<unknown> {
+  // Define a helper function for the actual operation
+  async function attemptGetStorageKey(attemptCount: number): Promise<unknown> {
+    return new Promise((resolve, reject) => {
+      const getMessage: GetDataMessage = {
+        action: ActionType.Get,
+        key: key,
+        storeName: storeName
+      };
+      chrome.runtime.sendMessage(getMessage, (response: MessageResponseGet) => {
+        if(DEBUG_MESSAGES){
+          console.log('getStorageKey response:', response);
+        }
+        if (response.success) {
+          resolve(response.data);
+        } else {
+          // Check for DatabaseNotInitError and if attempts are left
+          if(response.error instanceof DatabaseNotInitError && attemptCount > 0){
+            console.log('Retrying due to DatabaseNotInitError...');
+            resolve(attemptGetStorageKey(attemptCount - 1));
+          } else {
+            reject(response.error);
+          }
+        }
+      });
     });
-  });
+  }
+  // Call the helper function with the number of retries (1 in this case)
+  return attemptGetStorageKey(1);
 }
+
 
 export async function getAllDataStore(storeName:string): Promise<IndexedDBKeyValueStore<unknown>>{
   /* @throws Error if background returns an error */

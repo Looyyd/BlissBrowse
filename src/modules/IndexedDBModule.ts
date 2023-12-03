@@ -1,7 +1,7 @@
 import {STORE_NAMES} from "../constants";
 import {IndexedDBKeyValueStore} from "./types";
 
-class DatabaseNotInitError extends Error {
+export class DatabaseNotInitError extends Error {
   constructor() {
     super("Database is not initialized");
     this.name = "DatabaseNotInitError";
