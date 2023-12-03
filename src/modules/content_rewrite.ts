@@ -3,7 +3,7 @@ import {currentTabHostname, isCurrentSiteDisabled} from "./hostname";
 import {
   filterMLElement, filterTextElement,
   getFilterTries,
-  isElementIgnored, isElementProcessed,
+  isElementIgnored,
   ListTriePair,
   unfilterElement, unfilterElementIfNotInSubjects,
   unfilterElementsIfNotInTries,
@@ -111,9 +111,7 @@ async function getElementText(element: HTMLElement): Promise<string> {
       text = element.innerText;
       break;
   }
-  // Preprocess text before returning
-  //TODO: should not preprocess for filtering features
-  return preprocessTextBeforeEmbedding(text);
+  return text;
 }
 
 
@@ -237,9 +235,10 @@ export async function checkAndFilterElementsRewrite() {
         break;
       }
     }
+
     // Bypass ML based filtering if text filtering has occurred
     if (ML_FEATURES && !textFiltered) {
-      const text = elementText;
+      const text = preprocessTextBeforeEmbedding(elementText);
       if (!shouldTextBeSkippedML(text)) {
         const filterResult = await shouldTextBeFilteredML(text, subjects);
         if (filterResult.shouldFilter && filterResult.subjects && filterResult.subjects.length > 0) {

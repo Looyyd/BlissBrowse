@@ -2,12 +2,10 @@ import {huggingFaceToken} from "./secrets";
 import {
   DEBUG,
   DEBUG_STORE_NAME, DEBUG_TOKEN_COST,
-  LIST_OF_LIST_NAMES_DATASTORE,
   SETTINGS_STORE_NAME,
   SUBJECTS_STORE_NAME
 } from "../constants";
 import {DatabaseStorage, FullDataStore} from "./datastore";
-import {IndexedDBKeyValueStore} from "./types";
 import OpenAI from "openai";
 import {preprocessTextBeforeEmbedding} from "./content_rewrite";
 
@@ -35,20 +33,6 @@ export class InferenseServerSettingsStore extends DatabaseStorage<inferenseServe
 
 const settingsStore = new InferenseServerSettingsStore()
 
-/*
-let openai:OpenAI;
-// a new client is created after every reload
-if (DEBUG) {
-  console.log("NEW CLIENT CREATED")
-  openai = new OpenAI({
-    apiKey: openAIToken, dangerouslyAllowBrowser: true,
-  });
-} else {
-  openai = new OpenAI({
-    apiKey: openAIToken,
-  });
-}
-*/
 
 function openAIClientFromSettings(settings: inferenseServerSettings): OpenAI {
   if (settings.type === 'openai') {
@@ -351,18 +335,6 @@ export async function createNewSubject(description: string): Promise<void>{
   await subjectsStore.set(subject.description, subject);//TODO: what keys to use? description could change if user edits it
 }
 
-/*
-//TODO: why need this? to display names quickly?
-export class SubjectNamesStore extends DatabaseStorage<string[]>{
-  IndexedDBStoreName = LIST_OF_LIST_NAMES_DATASTORE;//TODO: rename the variable to explicit that ml lists are also stored here
-  key = 'subjectNames';
-  typeUpgrade = undefined;
-  isType = (data: unknown): data is string[] => {
-    return Array.isArray(data) && data.every(item => typeof item === 'string');
-  }
-  defaultValue: string[] = [];
-}
- */
 
 export class SubjectsStore extends FullDataStore<MLSubject> {
   isType = (data: unknown): data is MLSubject => {
@@ -554,7 +526,7 @@ const processQueue = async () => {
     clearTimeout(queueTimer);
     queueTimer = null;
   }
-};;
+};
 
 const addToQueue = (text: string): Promise<number[]> => {
     return new Promise((resolve, reject) => {
