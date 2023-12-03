@@ -347,7 +347,8 @@ export async function createNewSubject(description: string): Promise<void>{
   const subject: MLSubject = {
     description,
   }
-  await populateSubjectAndSave(subject);
+  //save without embeddings, they will be populated on first use
+  await subjectsStore.set(subject.description, subject);//TODO: what keys to use? description could change if user edits it
 }
 
 /*
@@ -622,7 +623,7 @@ async function getEmbeddings(text: string): Promise<number[]> {
 
 
 async function getKeywordsForSubject(subject: string): Promise<string[]> {
-  const systemPrompt = "You are an assistant that sends back around 10 strings that are related to the user description of a subject. Give 1 string per line. Make sure the strings are diverse in style but keep them all related to the user subject. Make it diverse, some can be casual others !"
+  const systemPrompt = "You are an assistant that sends back around 10 strings that are related to the user description of a subject. Give 1 string per line. Make sure the strings are diverse in style but keep them all related to the user subject. Make it diverse, some can be casual others formal !"
   const userMessage = `"${subject}"`;
   const messages = [
     { role: "system", content: systemPrompt },
