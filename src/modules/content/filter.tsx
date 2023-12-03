@@ -50,18 +50,22 @@ function createShowTooltipHandler(element: HTMLElement, tooltip: HTMLElement) {
     const viewportHeight = window.innerHeight;
     const tooltipHeight = tooltip.offsetHeight;
 
-    // Check if there is enough space above the element for the tooltip
-    // If not, display the tooltip below the element
-    const topPosition = rect.top - tooltipHeight;
-    const bottomPosition = rect.bottom + tooltipHeight;
+    // Calculate the top position for the tooltip, preferring above the element
+    let topPosition = rect.top + window.scrollY - tooltipHeight;
 
-    if (topPosition < 0 && bottomPosition < viewportHeight) {
-      // Not enough space above and enough space below
-      tooltip.style.top = `${rect.bottom + window.scrollY}px`;
-    } else {
-      // Enough space above or no space below, display above
-      tooltip.style.top = `${rect.top + window.scrollY - tooltipHeight}px`;
+    // If placing above would overflow off the top of the viewport, adjust it to be at the top of the viewport
+    if (topPosition < window.scrollY) {
+      topPosition = window.scrollY;
     }
+
+    // If placing it above the element causes the bottom of the tooltip to go past the bottom of the viewport, adjust to be at the bottom of the viewport
+    if (topPosition + tooltipHeight > viewportHeight + window.scrollY) {
+      topPosition = viewportHeight + window.scrollY - tooltipHeight;
+    }
+
+    tooltip.style.top = `${topPosition}px`;
+
+
 
     // Center the tooltip horizontally
     const leftPosition = rect.left + (element.offsetWidth - tooltip.offsetWidth) / 2;
