@@ -61,17 +61,19 @@ const DisableWebsiteButton: React.FC = () => {
 
   return (
     <Tooltip title={tooltipText}>
-      <Button
-        variant="contained"
-        color={buttonColor}
-        onClick={handleClick}
-        disabled={forbiddenSite}
-        style={{ margin: "10px 2px" }}
-        id="disable-website-button"
-        startIcon={buttonIcon}
-      >
-        {buttonText}
-      </Button>
+      <span>
+        <Button
+          variant="contained"
+          color={buttonColor}
+          onClick={handleClick}
+          disabled={forbiddenSite}
+          style={{ margin: "10px 2px" }}
+          id="disable-website-button"
+          startIcon={buttonIcon}
+        >
+          {buttonText}
+        </Button>
+      </span>
     </Tooltip>
   );
 };
