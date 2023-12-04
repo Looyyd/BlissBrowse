@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode, FunctionComponent } from 'react';
+import React, {createContext, useContext, useState, ReactNode, FunctionComponent, useEffect} from 'react';
+import AlertComponent from "./AlertComponent";
 
 // Define the type for the alert object
 type AlertType = 'success' | 'info' | 'warning' | 'error';
@@ -11,9 +12,9 @@ interface AlertState {
 
 // Define the context type
 interface AlertContextType {
-  alert: AlertState;
+  alerts: AlertState[];
   showAlert: (type: AlertType, message: string) => void;
-  closeAlert: () => void;
+  closeAlert: (number: number) => void;
 }
 
 // Create a context with a default value and typed correctly
@@ -32,21 +33,38 @@ export const useAlert = () => {
   return context;
 };
 
-/* Provider component that wraps your app and makes alert object available to any child component that calls useAlert() */
 export const AlertProvider: FunctionComponent<AlertProviderProps> = ({ children }) => {
-  const [alert, setAlert] = useState<AlertState>({ open: false, type: 'success', message: '' });
+  // Use an array to store multiple alerts
+  const [alerts, setAlerts] = useState<AlertState[]>([]);
 
+  // Function to show a new alert
   const showAlert = (type: AlertType, message: string) => {
-    setAlert({ open: true, type, message });
+    setAlerts(prevAlerts => [...prevAlerts, { open: true, type, message }]);
   };
 
-  const closeAlert = () => {
-    setAlert((prev) => ({ ...prev, open: false }));
+  // Function to close an alert
+  // This function now removes the alert from the array
+  const closeAlert = (index: number) => {
+    setAlerts(prevAlerts => prevAlerts.filter((_, i) => i !== index));
   };
+
+  // Optionally, you can add logic to automatically close alerts after a certain duration
+  useEffect(() => {
+    if (alerts.length > 0) {
+      const timer = setTimeout(() => {
+        closeAlert(0); // Automatically close the oldest alert
+      }, 5000); // Adjust the time as needed
+
+      return () => clearTimeout(timer);
+    }
+  }, [alerts]);
 
   return (
-    <AlertContext.Provider value={{ alert, showAlert, closeAlert }}>
+    <AlertContext.Provider value={{ alerts, showAlert, closeAlert }}>
       {children}
+      {/* Render each alert. You can customize the rendering as needed */}
+      <AlertComponent />
     </AlertContext.Provider>
   );
 };
+
