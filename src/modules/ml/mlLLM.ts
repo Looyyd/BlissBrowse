@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import {DEBUG} from "../../constants";
 import {addGPTTokensUsed} from "./mlCosts";
-import {preprocessTextBeforeEmbedding} from "../content_rewrite";
 import {inferenseServerSettings, MLSubject} from "./mlTypes";
 import {extractAndParseJSON, getAnswerFromJSON, openAIClientFromSettings} from "./mlHelpers";
 
