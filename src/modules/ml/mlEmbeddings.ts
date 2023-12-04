@@ -15,13 +15,13 @@ async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
 
   const fetchEmbedding = async (inputTexts: string[]): Promise<any> => {
     const settings = await settingsStore.get();
-    if (settings.type !== 'openai') {
+    if (settings.embedType !== 'openai') {
       throw new Error('getting embeddings from openai but settings.type is not openai');
     }
-    if (!settings.token) {
+    if (!settings.embedToken) {
       throw new Error('OpenAI token is required');
     }
-    const token = settings.token;
+    const token = settings.embedToken;
     const url = 'https://api.openai.com/v1/embeddings';
     const model = 'text-embedding-ada-002';
 

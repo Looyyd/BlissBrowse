@@ -179,9 +179,9 @@ export async function getGPTClassification(text: string, settings:inferenseServe
   let resObj: any;
   const openai = openAIClientFromSettings(settings);
   while (retries < maxRetries) {
-    if (settings.type === 'openai') {
+    if (settings.llmType === 'openai') {
       response = await getOpenAICompletion(messages, openai);
-    } else if (settings.type === 'local') {
+    } else if (settings.llmType === 'local') {
       response = await getLocalCompletion(messages, openai);
     } else {
       throw new Error('invalid settings type');

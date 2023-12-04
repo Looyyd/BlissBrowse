@@ -97,11 +97,37 @@ export async function isTextInSubjectLocal(subject:MLSubject, text:string){
 
 export async function isTextInSubject(subject:MLSubject, text:string){
   const settings = await settingsStore.get();
-  if(settings.type === 'openai'){
-    return await isTextInSubjectOpenAI(subject, text);
-  } else if(settings.type === 'local'){
-    return await isTextInSubjectLocal(subject, text);
+  console.log("Entered isTextInSubject", settings, subject, text)
+
+  if(settings.embedType !== "none"){
+    let embed_result = false;
+    if(settings.embedType === 'openai'){
+      const threshold = 0.76;
+      const populatedSubject = await populateSubjectAndSave(subject);
+      const textEmbedding = await getEmbeddings(text);
+      const similarity = cosineSimilarity(populatedSubject.embedding, textEmbedding);
+
+      embed_result = similarity > threshold;
+    } else {
+      throw new Error('invalid embedding type');
+    }
+    if(embed_result ){
+      if(settings.llmType === 'none'){
+        //no llm
+        return true;
+      } else {
+        //confirm with gpt
+        return await getGPTClassification(text, settings, subject);
+      }
+    } else {
+      return false;
+    }
+  }
+  else if(settings.llmType !== "none"){
+    //llm only
+    return await getGPTClassification(text, settings, subject);
   } else {
-    throw new Error('invalid settings type');
+    //no llm or embedding enabled
+    return false;
   }
 }

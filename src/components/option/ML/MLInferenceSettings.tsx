@@ -5,11 +5,12 @@ import {useAlert} from "../../AlertContext";
 import {Button, FormControl, InputLabel, MenuItem, Select, TextField} from "@mui/material";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 import {Save} from "@mui/icons-material";
-import {inferenseServerType} from "../../../modules/ml/mlTypes";
+import {llmServerTypes} from "../../../modules/ml/mlTypes";
 
 
 //TODO: can remove hard-coded and get from type definition?
-const serverTypes: inferenseServerType[] = ['openai', 'local', 'none'];
+const llmServerTypes: llmServerTypes[] = ['openai', 'local', 'none'];
+const embedServerTypes: llmServerTypes[] = ['openai', 'none'];
 
 
 const MLInferenceSettings = () => {
@@ -34,12 +35,12 @@ const MLInferenceSettings = () => {
 
   };
 
-  const handleSelectChange = (e: SelectChangeEvent<inferenseServerType>) => {
+  const handleSelectChange = (e: SelectChangeEvent<llmServerTypes>) => {
     if(localSettings === null) {
       return;
     }
     const name = e.target.name || '';
-    const value = e.target.value as inferenseServerType;
+    const value = e.target.value as llmServerTypes;
     setLocalSettings({ ...localSettings, [name]: value });
   };
 
@@ -65,23 +66,23 @@ const MLInferenceSettings = () => {
 
   return (
     <div>
-      <h3>Machine Learning Inference Server Settings</h3>
+      <h3>Machine Learning Embedding Inference Server Settings</h3>
       <FormControl fullWidth margin="normal">
         <InputLabel>Type</InputLabel>
         <Select
-          name="type"
-          value={localSettings.type}
+          name="embedType"
+          value={localSettings.embedType}
           onChange={handleSelectChange}
         >
-          {serverTypes.map((type) => (
+          {embedServerTypes.map((type) => (
             <MenuItem key={type} value={type}>{type}</MenuItem>
           ))}
         </Select>
       </FormControl>
       <TextField
         label="URL"
-        name="url"
-        value={localSettings.url || ''}
+        name="embedURL"
+        value={localSettings.embedURL || ''}
         onChange={handleInputChange}
         fullWidth
         type="url"
@@ -89,8 +90,39 @@ const MLInferenceSettings = () => {
       />
       <TextField
         label="Token"
-        name="token"
-        value={localSettings.token || ''}
+        name="embedToken"
+        value={localSettings.embedToken || ''}
+        onChange={handleInputChange}
+        fullWidth
+        type="password"
+        margin="normal"
+      />
+      <h3>Machine Learning LLM Inference Server Settings</h3>
+      <FormControl fullWidth margin="normal">
+        <InputLabel>Type</InputLabel>
+        <Select
+          name="llmType"
+          value={localSettings.llmType}
+          onChange={handleSelectChange}
+        >
+          {llmServerTypes.map((type) => (
+            <MenuItem key={type} value={type}>{type}</MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      <TextField
+        label="URL"
+        name="llmURL"
+        value={localSettings.llmURL || ''}
+        onChange={handleInputChange}
+        fullWidth
+        type="url"
+        margin="normal"
+      />
+      <TextField
+        label="Token"
+        name="llmToken"
+        value={localSettings.llmToken || ''}
         onChange={handleInputChange}
         fullWidth
         type="password"

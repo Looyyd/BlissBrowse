@@ -7,17 +7,23 @@ import {
   SUBJECTS_STORE_NAME
 } from "../../constants";
 
-export type inferenseServerType = 'openai' | 'local' | 'none';
+export type llmServerTypes = 'openai' | 'local' | 'none';
+export type embedServerTypes = 'openai' | 'none';
 
 export interface inferenseServerSettings {
-  type: inferenseServerType;
-  url?: string;
-  token?: string;
+  llmType: llmServerTypes;
+  llmURL?: string;
+  llmToken?: string;
+  embedType: embedServerTypes;
+  embedURL?: string;
+  embedToken?: string;
 }
 
 const DEFAULT_INFERENCE_SERVER_SETTINGS: inferenseServerSettings = {
-  type: 'none',
+  llmType: 'none',
+  embedType: 'none',
 };
+
 
 export class InferenseServerSettingsStore extends DatabaseStorage<inferenseServerSettings> {
   IndexedDBStoreName = SETTINGS_STORE_NAME;
@@ -27,11 +33,15 @@ export class InferenseServerSettingsStore extends DatabaseStorage<inferenseServe
     if (typeof data !== 'object' || data === null) {
       return false;
     }
-    const hasValidType = 'type' in data && typeof data.type === 'string';
-    const hasOptionalUrl = !('url' in data) || typeof data.url === 'string';
-    const hasOptionalToken = !('token' in data) || typeof data.token === 'string';
+    const llmhasValidType = 'llmType' in data && typeof data.llmType=== 'string';
+    const llmhasOptionalUrl = !('llmURL' in data) || typeof data.llmURL === 'string';
+    const llmhasOptionalToken = !('llmToken' in data) || typeof data.llmToken === 'string';
 
-    return hasValidType && hasOptionalUrl && hasOptionalToken;
+    const embedhasValidType = 'embedType' in data && typeof data.embedType=== 'string';
+    const embedhasOptionalUrl = !('embedURL' in data) || typeof data.embedURL === 'string';
+    const embedhasOptionalToken = !('embedToken' in data) || typeof data.embedToken === 'string';
+
+    return llmhasValidType && llmhasOptionalUrl && llmhasOptionalToken && embedhasValidType && embedhasOptionalUrl && embedhasOptionalToken;
   };
   defaultValue = DEFAULT_INFERENCE_SERVER_SETTINGS;
 }
