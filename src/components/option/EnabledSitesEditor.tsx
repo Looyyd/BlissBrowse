@@ -19,7 +19,7 @@ import {supportedWebsites} from "../../modules/content/siteSupport";
 const blacklistDataStore = new BlacklistDatastore();
 
 
-const BlacklistedSitesEditor = () => {
+const EnabledSitesEditor = () => {
   const [blacklist] = useDataFromStore(blacklistDataStore);
   const { showAlert } = useAlert();
 
@@ -30,9 +30,9 @@ const BlacklistedSitesEditor = () => {
 
     const dataStore = new BlacklistDatastore();
     dataStore.set(newBlacklist)
-      .then(() => showAlert('success', 'Blacklist updated successfully!'))
+      .then(() => showAlert('success', 'List of enabled sites updated successfully!'))
       .catch(e => {
-        showAlert('error', 'An error occurred while updating the blacklist');
+        showAlert('error', 'An error occurred while updating the enabled sites list');
         console.error('Error updating blacklist:', e);
       });
   };
@@ -53,7 +53,7 @@ const BlacklistedSitesEditor = () => {
       <Box display="flex" flexDirection="column" alignItems="start" gap={2}>
         <Typography variant="body1" display="flex" alignItems="center" gap={1}>
           <InfoIcon color="primary" />
-          Toggle the blacklist status of supported websites.
+          Toggle the status of supported websites.
         </Typography>
         <List>
           {supportedWebsites.map(site => (
@@ -61,7 +61,7 @@ const BlacklistedSitesEditor = () => {
               <ListItemText primary={site} />
               <ListItemSecondaryAction>
                 <IconButton edge="end" aria-label="toggle blacklist" onClick={() => toggleBlacklist(site)}>
-                  {isBlacklisted(site) ? <RadioButtonChecked color="secondary" /> : <RadioButtonUnchecked/>}
+                  {isBlacklisted(site) ?  <RadioButtonUnchecked/> : <RadioButtonChecked color="secondary" />}
                 </IconButton>
               </ListItemSecondaryAction>
             </ListItem>
@@ -72,6 +72,6 @@ const BlacklistedSitesEditor = () => {
   );
 };
 
-export default BlacklistedSitesEditor;
+export default EnabledSitesEditor;
 
 

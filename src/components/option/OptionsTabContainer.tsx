@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import BlacklistedSitesEditor from "./BlacklistedSitesEditor";
+import EnabledSitesEditor from "./EnabledSitesEditor";
 import FilterWordlistsEditor from "./FilterWordlistsEditor";
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -45,8 +45,8 @@ const TabContainer = () => {
       content: <FilterWordlistsEditor />,
     },
     {
-      tab: 'Blacklisted Websites',
-      content: <BlacklistedSitesEditor />,
+      tab: 'Enabled Websites',
+      content: <EnabledSitesEditor />,
     },
     /*
     {
