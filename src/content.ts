@@ -10,16 +10,8 @@ import {
   writeInMemoryStatisticsToStorage
 } from "./modules/content/filter";
 import {ActionType, Message} from "./modules/types";
-import {checkAndFilterElementsRewrite} from "./modules/content/content";
-
-/*
-some logic taken from:
-https://github.com/yeahpython/filter-anything-everywhere/blob/main/extension/content.ts
- */
-
-
-const CONTENT_CONTEXT = "content";
-let timePrevious:number;
+import {checkAndFilterElements} from "./modules/content/content";
+import {supportedWebsites} from "./modules/content/siteSupport";
 
 
 
@@ -29,7 +21,7 @@ async function debouncedCheckAndFilter() {
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
     //checkAndFilterElements()
-    checkAndFilterElementsRewrite();
+    checkAndFilterElements();
   }, 100);
 }
 
@@ -37,45 +29,51 @@ async function debouncedCheckAndFilter() {
 /*
 INITIALIZE
  */
-const observer = new MutationObserver(async () => {
-  console.log('mutation observer called');
-  await debouncedCheckAndFilter();
-});
+const hostname =  window.location.hostname;
 
-observer.observe(document.body, { childList: true, subtree: true });
+if(supportedWebsites.includes(hostname)){
 
-
-const listener = async (request: Message<unknown>) => {
-  //TODO: the listener could be more specific about what changed, and only refresh that.
-  // for example, if the blacklist changes, only refresh if the current site was added or removed
-  function dataStoreImpactsContents(dataStore: string) {
-    const impactedStores = [
-      SETTINGS_STORE_NAME,
-      TRIE_STORE_NAME,
-      LIST_OF_LIST_NAMES_DATASTORE,
-      LIST_SETTINGS_STORE_NAME,
-      SUBJECTS_STORE_NAME
-    ];
-    return impactedStores.includes(dataStore);
-  }
-  //TODO: add e2e tests? to make sure that refreshes are happening when they should
-  if (request.action === ActionType.DataChanged && dataStoreImpactsContents(request.storeName)) {
+  const observer = new MutationObserver(async () => {
+    console.log('mutation observer called');
     await debouncedCheckAndFilter();
-  }
-};
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  const listener = async (request: Message<unknown>) => {
+    //TODO: the listener could be more specific about what changed, and only refresh that.
+    // for example, if the blacklist changes, only refresh if the current site was added or removed
+    function dataStoreImpactsContents(dataStore: string) {
+      const impactedStores = [
+        SETTINGS_STORE_NAME,
+        TRIE_STORE_NAME,
+        LIST_OF_LIST_NAMES_DATASTORE,
+        LIST_SETTINGS_STORE_NAME,
+        SUBJECTS_STORE_NAME
+      ];
+      return impactedStores.includes(dataStore);
+    }
+    //TODO: add e2e tests? to make sure that refreshes are happening when they should
+    if (request.action === ActionType.DataChanged && dataStoreImpactsContents(request.storeName)) {
+      await debouncedCheckAndFilter();
+    }
+  };
 
 // Add message listener
 //TODO: remove listener if extension is disabled on site
-chrome.runtime.onMessage.addListener(listener);
+  chrome.runtime.onMessage.addListener(listener);
 
-(async () => {
-  await debouncedCheckAndFilter();
-})();
+  (async () => {
+    await debouncedCheckAndFilter();
+  })();
 
 
-setInterval(async () => {
+  setInterval(async () => {
     await writeInMemoryStatisticsToStorage();
-}, BATCH_STAT_UPDATE_INTERVAL);
-window.addEventListener('beforeunload', async function() {
-  await writeInMemoryStatisticsToStorage();
-});
+  }, BATCH_STAT_UPDATE_INTERVAL);
+  window.addEventListener('beforeunload', async function() {
+    await writeInMemoryStatisticsToStorage();
+  });
+}
+
+

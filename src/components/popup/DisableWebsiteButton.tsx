@@ -4,10 +4,11 @@ import {
   currentTabHostname, isCurrentSiteForbiddenForExtensions,
 } from "../../modules/hostname";
 import Button from "@mui/material/Button"
-import {Link, LinkOff} from "@mui/icons-material";
+import {Block, Cancel, Link, LinkOff} from "@mui/icons-material";
 import {Tooltip} from "@mui/material";
 import {useDataFromStore} from "../../modules/datastore";
 import {useAlert} from "../AlertContext";
+import {supportedWebsites} from "../../modules/content/siteSupport";
 
 const blacklistDataStore = new BlacklistDatastore();
 
@@ -23,6 +24,7 @@ const DisableWebsiteButton: React.FC = () => {
     if(blacklist === null) return;
     const fetchHostname = async () => {
       const host = await currentTabHostname("popup");
+      console.log('host:', host);
       setHostname(host);
       const forbidden = await isCurrentSiteForbiddenForExtensions("popup");
       setForbiddenSite(forbidden);
@@ -47,17 +49,34 @@ const DisableWebsiteButton: React.FC = () => {
     }
   };
 
-  const buttonText = forbiddenSite ? 'Site Restricted' : isDisabled ? 'Site Disabled' : 'Site Enabled';
-  const buttonColor = forbiddenSite ? "info" : isDisabled ? "warning" : "primary";
-  const buttonIcon = forbiddenSite ? <LinkOff/> : isDisabled ? <LinkOff/> : <Link/>;
+  const unsupportedSite = !supportedWebsites.includes(hostname);
+
+  const buttonText =
+    forbiddenSite ? 'Site Restricted' :
+      unsupportedSite ? 'Site Unsupported' :
+        isDisabled ? 'Site Disabled' : 'Site Enabled';
+
+  const buttonColor =
+    forbiddenSite ? "info" :
+      unsupportedSite ? "secondary" : // 'secondary' or any other color that signifies unsupported
+        isDisabled ? "warning" : "primary";
+
+  const buttonIcon =
+    forbiddenSite ? <Block/> :
+      unsupportedSite ? <Cancel/> : // 'Block' or any other icon that signifies unsupported
+        isDisabled ? <LinkOff/> : <Link/>;
+
   let tooltipText;
   if (forbiddenSite) {
     tooltipText = "Chrome extensions are disabled on this website";
+  } else if (unsupportedSite) {
+    tooltipText = "This site is not supported by the extension";
   } else if (isDisabled) {
     tooltipText = "Click to enable the extension on this website";
   } else {
     tooltipText = "Click to disable the extension on this website";
   }
+
 
   return (
     <Tooltip title={tooltipText}>
@@ -66,7 +85,7 @@ const DisableWebsiteButton: React.FC = () => {
           variant="contained"
           color={buttonColor}
           onClick={handleClick}
-          disabled={forbiddenSite}
+          disabled={forbiddenSite || unsupportedSite}
           style={{ margin: "10px 2px" }}
           id="disable-website-button"
           startIcon={buttonIcon}

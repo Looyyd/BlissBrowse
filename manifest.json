@@ -3,7 +3,6 @@
   "name": "BlissBrowse",
   "version": "1.0",
   "permissions": ["tabs", "storage"],
-  "host_permissions": ["http://*/*", "https://*/*"],
   "options_page": "options.html",
   "background": {
     "service_worker": "background.js"

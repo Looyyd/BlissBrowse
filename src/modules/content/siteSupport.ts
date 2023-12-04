@@ -36,6 +36,14 @@ async function getTiktokElementsToCheck(): Promise<HTMLElement[]> {
   return Array.from(elements).filter(e => e instanceof HTMLElement) as HTMLElement[];
 }
 
+export const supportedWebsites = [
+  "twitter.com",
+  "youtube.com",
+  "reddit.com",
+  "news.ycombinator.com",
+  "tiktok.com"
+].sort();
+
 //TODO: language detection, only support english for now, for ml features
 export async function getElementsToCheck(): Promise<HTMLElement[]> {
   const website = await currentTabHostname(CONTENT_CONTEXT);

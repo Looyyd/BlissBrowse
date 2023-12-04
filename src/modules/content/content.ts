@@ -116,7 +116,7 @@ export function removeElementFromCaches(element: HTMLElement) {
   }
 }
 
-export async function checkAndFilterElementsRewrite() {
+export async function checkAndFilterElements() {
   function hashCode(s: string): number {
     return s.split('').reduce((a, b) => {
       a = ((a << 5) - a) + b.charCodeAt(0);
