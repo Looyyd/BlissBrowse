@@ -8,9 +8,9 @@ import {getGPTClassification, getKeywordsForSubject} from "./mlLLM";
 
 const settingsStore = new InferenseServerSettingsStore()
 
-// log cost every 10 seconds
-//TODO: would be better to log cost after each api call
-setInterval(logCost, 5000);
+if(DEBUG_TOKEN_COST) {
+  setInterval(logCost, 5000);
+}
 
 export async function createNewSubject(description: string): Promise<void>{
   const subject: MLSubject = {

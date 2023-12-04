@@ -1,8 +1,8 @@
 import React from 'react';
-import {useDataStore} from "../DataStoreContext";
-import {useDataFromStore} from "../../modules/datastore";
-import {Button, Container, List, ListItem, ListItemText, Typography} from "@mui/material";
-import {useAlert} from "../AlertContext";
+import {useDataStore} from "../../DataStoreContext";
+import {useDataFromStore} from "../../../modules/datastore";
+import {Button, List, ListItem, ListItemText, Typography} from "@mui/material";
+import {useAlert} from "../../AlertContext";
 import {Delete} from "@mui/icons-material";
 
 

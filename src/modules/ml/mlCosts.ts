@@ -1,10 +1,7 @@
-import {TotalCostStore} from "./mlTypes";
 import {DEBUG} from "../../constants";
 
 export let embeddingTokensUsed = 0;
 export let gptTokensUsed = 0;
-let costStore = new TotalCostStore();
-let previousTotalCost = 0;
 
 export function addEmbeddingTokensUsed(tokens: number) {
   embeddingTokensUsed += tokens;
@@ -24,7 +21,4 @@ export async function logCost() {
     console.log("Embedding Tokens Used:", embeddingTokensUsed);
     console.log("Total cost $:", totalCost);
   }
-  const costToAdd = totalCost - previousTotalCost;
-  await costStore.add(costToAdd);
-  previousTotalCost = totalCost;
 }

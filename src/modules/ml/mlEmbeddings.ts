@@ -1,11 +1,17 @@
 import {addEmbeddingTokensUsed} from "./mlCosts";
-import {InferenseServerSettingsStore} from "./mlTypes";
+import {InferenseServerSettingsStore, MlCostStore} from "./mlTypes";
 import {huggingFaceToken} from "../secrets";
 
 //TODO: is used by ml and mlEmbeddings, how to have single instance?
 const settingsStore = new InferenseServerSettingsStore()
+let costStore = new MlCostStore();
+const embeddingTokenCost = 0.0001 / 1000;
 
 async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
+  const cost = await costStore.get();
+  if (cost.budgetLimit !== undefined && cost.cost > cost.budgetLimit) {
+    throw new Error('budget limit reached');
+  }
 
   const fetchEmbedding = async (inputTexts: string[]): Promise<any> => {
     const settings = await settingsStore.get();
@@ -39,8 +45,11 @@ async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
       }
 
       const jsonResponse = await response.json();
+
       const tokensUsed = jsonResponse.usage.total_tokens || 0;
       addEmbeddingTokensUsed(tokensUsed)
+      await costStore.add(tokensUsed * embeddingTokenCost);
+
       if (jsonResponse.data === undefined) {
         throw new Error(`'data' field is undefined or empty in the response`);
       }

@@ -41,7 +41,7 @@ enum Duration {
 }
 
 export interface MLCost {
-  lastResetDate: Date;
+  lastResetDate: Date | string;
   cost: number;
   resetInterval: Duration;
   budgetLimit?: number;
@@ -54,17 +54,24 @@ const defaultMLCost: MLCost = {
   budgetLimit: undefined,
 };
 
+function isValidDateString(dateString: string): boolean {
+  const date = new Date(dateString);
+  return !isNaN(date.getTime()); // Check if the date is valid
+}
+
 function costTypeCheck(data: unknown): data is MLCost {
   if (typeof data !== 'object' || data === null) {
     return false;
   }
-  const hasValidLastResetDate = 'lastResetDate' in data && data.lastResetDate instanceof Date;
+
+  const hasValidLastResetDate = 'lastResetDate' in data && (typeof data.lastResetDate === 'string' && isValidDateString(data.lastResetDate) || data.lastResetDate instanceof Date);
   const hasValidCost = 'cost' in data && typeof data.cost === 'number';
-  const hasValidResetInterval = 'resetInterval' in data && typeof data.resetInterval === 'string';
+  const hasValidResetInterval = 'resetInterval' in data && typeof data.resetInterval === 'string' && Object.values(Duration).includes(data.resetInterval as Duration);
   const hasOptionalBudgetLimit = !('budgetLimit' in data) || typeof data.budgetLimit === 'number';
 
   return hasValidLastResetDate && hasValidCost && hasValidResetInterval && hasOptionalBudgetLimit;
 }
+
 
 function costUpgrade(data:unknown){
   if(typeof data === 'number'){
@@ -77,18 +84,19 @@ function costUpgrade(data:unknown){
   }
 }
 
-export class TotalCostStore extends DatabaseStorage<MLCost> {
+export class MlCostStore extends DatabaseStorage<MLCost> {
   defaultValue: MLCost = defaultMLCost;
   IndexedDBStoreName: string = DEBUG_STORE_NAME;
   key: string = 'apiCost';
   typeUpgrade = costUpgrade;
   isType = costTypeCheck;
 
-  async reset(): Promise<void> {
+  async resetCost(): Promise<void> {
     if(DEBUG){
       console.log('resetting api cost');
     }
-    await this.set({ ...this.defaultValue, lastResetDate: new Date() });
+    const cost = await this.get();
+    await this.set({ ...cost, lastResetDate: new Date(), cost: 0 });
   }
 
   async get(): Promise<MLCost> {
@@ -96,8 +104,10 @@ export class TotalCostStore extends DatabaseStorage<MLCost> {
       console.log('getting api cost');
     }
     const cost = await super.get();
-    if (cost.lastResetDate.getMonth() !== new Date().getMonth()) {
-      await this.reset();
+    console.log("Got cost", cost)
+    const date = new Date(cost.lastResetDate);
+    if (date.getMonth() !== new Date().getMonth()) {
+      await this.resetCost();
     }
     return await super.get();
   }
@@ -108,6 +118,14 @@ export class TotalCostStore extends DatabaseStorage<MLCost> {
     }
     const cost = await this.get();
     await this.set({ ...cost, cost: cost.cost + value });
+  }
+
+  async setBudgetLimit(value: number | undefined): Promise<void> {
+    if(DEBUG){
+      console.log('setting api cost budget limit');
+    }
+    const cost = await this.get();
+    await this.set({ ...cost, budgetLimit: value });
   }
 }
 

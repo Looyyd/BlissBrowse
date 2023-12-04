@@ -1,11 +1,12 @@
 import React from "react";
-import NewMLSubjectForm from "../popup/NewMLSubjectForm";
+import NewMLSubjectForm from "../../popup/NewMLSubjectForm";
 import {Box, Container} from "@mui/material";
 import MLSubjectList from "./MLSubjectList";
 import MLInferenceSettings from "./MLInferenceSettings";
+import MLBudget from "./MLBudget";
 
 
-const MachineLearningSettings = () => {
+const MLSettings = () => {
 
   return (
     <Container>
@@ -16,8 +17,10 @@ const MachineLearningSettings = () => {
       <MLSubjectList />
       <Box sx={{height: 20}}/>
       <MLInferenceSettings />
+      <Box sx={{height: 20}}/>
+      <MLBudget />
     </Container>
   )
 }
 
-export default MachineLearningSettings;
+export default MLSettings;

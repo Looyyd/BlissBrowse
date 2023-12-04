@@ -1,16 +1,25 @@
 import OpenAI from "openai";
 import {DEBUG} from "../../constants";
 import {addGPTTokensUsed} from "./mlCosts";
-import {inferenseServerSettings, MLSubject} from "./mlTypes";
+import {inferenseServerSettings, MLSubject, MlCostStore} from "./mlTypes";
 import {extractAndParseJSON, getAnswerFromJSON, openAIClientFromSettings} from "./mlHelpers";
 
 interface cacheValue {
   content: string;
 }
 
+const gpt35TokenCost = 0.001 / 1000;
+let costStore = new MlCostStore();
+
 const completionCache: Map<string, Promise<cacheValue>> = new Map();
 
 async function getOpenAICompletion(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[], openai:OpenAI, json_mode = true) {
+  //cost check
+  const cost = await costStore.get();
+  if (cost.budgetLimit !== undefined && cost.cost > cost.budgetLimit) {
+    throw new Error('budget limit reached');
+  }
+
   const userMessage = messages[1].content as string
   const systemPrompt = messages[0].content as string;
   const cacheKey = `userMessage:${userMessage}|systemPrompt:${systemPrompt}`;
@@ -40,9 +49,13 @@ async function getOpenAICompletion(messages: OpenAI.Chat.Completions.ChatComplet
       top_p: 1,
       frequency_penalty: 0,
       presence_penalty: 0,
-    }).then(response => {
+    }).then(async response => {
       const content = response.choices[0].message.content;
-      addGPTTokensUsed(response.usage?.total_tokens || 0);
+
+      const tokensUsed = response.usage?.total_tokens || 0;
+      addGPTTokensUsed(tokensUsed);
+      await costStore.add(tokensUsed * gpt35TokenCost);
+
       if (content === null) {
         throw new Error('content is null');
       }
