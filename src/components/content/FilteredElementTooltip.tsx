@@ -4,7 +4,7 @@ import FilterIgnore from "./FilterIgnore";
 import {unfilterAndIgnoreElement} from "../../modules/content/filter";
 import TooltipBox from "./TooltipBox";
 import ExtensionTitle from "../ExtensionTitle";
-import {FilteredElement} from "../../modules/content_rewrite";
+import {FilteredElement} from "../../modules/content/content";
 
 
 type FilteredElementTooltipProps = {

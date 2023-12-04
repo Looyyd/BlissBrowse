@@ -10,7 +10,7 @@ import {
   FilteredElement,
   FilteredMLElement,
   FilteredTextElement, removeElementFromCaches,
-} from "../content_rewrite";
+} from "./content";
 import {MLSubject} from "../ml/mlTypes";
 
 

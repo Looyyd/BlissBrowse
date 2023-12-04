@@ -10,7 +10,7 @@ import {
   writeInMemoryStatisticsToStorage
 } from "./modules/content/filter";
 import {ActionType, Message} from "./modules/types";
-import {checkAndFilterElementsRewrite} from "./modules/content_rewrite";
+import {checkAndFilterElementsRewrite} from "./modules/content/content";
 
 /*
 some logic taken from:
