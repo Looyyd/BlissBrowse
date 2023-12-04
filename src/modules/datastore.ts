@@ -239,6 +239,7 @@ export abstract class LocalStorageStore<T> extends RowDataStore<T> {
     //synced through background script
     const processedValue = this.setPreprocessor(value);
     //TODO: does this cause double notification since we also have a dataChanged listener?
+    this._currentData = processedValue;
     this.notifySubscribers();
 
     await setLocalStorageKey(this.key, processedValue)
@@ -293,6 +294,7 @@ export abstract class DatabaseStorage<T> extends RowDataStore<T> {
     const processedValue = this.setPreprocessor(value);
     //TODO: notify only if value changed?
     //TODO: does this cause double notification since we also have a dataChanged listener?
+    this._currentData = processedValue;
     this.notifySubscribers();
     try {
       await setStorageKey(this.IndexedDBStoreName, this.key, processedValue);
