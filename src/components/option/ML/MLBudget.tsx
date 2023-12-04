@@ -54,8 +54,13 @@ const MLBudget = () => {
   }
 
   return (
-    <Paper style={{ padding: '20px', margin: '20px' }}>
-      <Typography variant="h6">Machine Learning Cost Management</Typography>
+      <Paper style={{
+        padding: '20px',
+        margin: '20px',
+        //border: '2px solid #000', // Adjust color and width as needed
+        boxShadow: '0px 0px 10px rgba(0,0,0,0.5)' // Adjust shadow to make it more visible
+      }} >
+      <Typography variant="h5">Machine Learning Cost Management</Typography>
       <Typography variant="body1">
         Current Period Cost: {mlCost.cost.toFixed(2)}
       </Typography>

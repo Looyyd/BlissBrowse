@@ -1,5 +1,4 @@
 import React, {FormEvent, useState} from "react";
-import {useDataStore} from "../DataStoreContext";
 import {useAlert} from "../AlertContext";
 import {Button, FormControl, TextField, Typography} from "@mui/material";
 import {Add} from "@mui/icons-material";
@@ -30,7 +29,7 @@ const NewMLSubjectForm: React.FC = () => {
 
   return (
     <>
-      <Typography variant="h6">Create a new subject to filter</Typography>
+      <Typography variant="h5">Create a new subject to filter</Typography>
       <form onSubmit={handleSubmit}>
         <FormControl fullWidth margin="normal">
           <TextField
