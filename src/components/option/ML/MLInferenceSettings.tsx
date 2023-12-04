@@ -84,6 +84,7 @@ const MLInferenceSettings = () => {
         value={localSettings.url || ''}
         onChange={handleInputChange}
         fullWidth
+        type="url"
         margin="normal"
       />
       <TextField
@@ -92,6 +93,7 @@ const MLInferenceSettings = () => {
         value={localSettings.token || ''}
         onChange={handleInputChange}
         fullWidth
+        type="password"
         margin="normal"
       />
       <Button variant="contained" color="primary" onClick={handleSave} style={{ marginTop: '20px' }} startIcon={<Save/>}>
