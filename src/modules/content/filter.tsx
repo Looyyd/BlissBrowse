@@ -1,6 +1,6 @@
 import {FilterAction} from "../types";
 import {DEBUG_FILTERING, EXTENSION_NAME, FILTER_IGNORE_ATTRIBUTE} from "../../constants";
-import {addToFilterWordStatistics, ListNamesDataStore, TrieRootNodeDataStore} from "../wordLists";
+import {addToFilterWordStatistics, ListNamesDataStore, FilterListDataStore, FilterList} from "../wordLists";
 import {Trie} from "../trie";
 import React from 'react';
 import {createRoot} from "react-dom/client";
@@ -454,7 +454,9 @@ export function hasAncestorTagThatShouldBeIgnored(node: Node) {
   return false;
 }
 
-const trieDataStores: { [key: string]: TrieRootNodeDataStore} = {};
+const filterListDataStores: { [key: string]: FilterListDataStore} = {};
+
+/*
 export interface ListTriePair {
   listName: string;
   trie: Trie;
@@ -467,11 +469,11 @@ export async function getFilterTries(): Promise<ListTriePair[]> {
 
     for (const listName of lists) {
       // Reuse or create a FilterListDataStore instance
-      if (!trieDataStores[listName]) {
-        trieDataStores[listName] = new TrieRootNodeDataStore(listName);
+      if (!filterListDataStores[listName]) {
+        filterListDataStores[listName] = new FilterListDataStore(listName);
       }
 
-      const listStore = trieDataStores[listName];
+      const listStore = filterListDataStores[listName];
       const trie: Trie = await listStore.getTrie();
       triesWithNames.push({ listName, trie });
     }
@@ -479,6 +481,27 @@ export async function getFilterTries(): Promise<ListTriePair[]> {
     console.error("Error retrieving saved words.", e);
   }
   return triesWithNames;
+}
+ */
+
+export async function getFilterLists(): Promise<FilterList[]> {
+  const result: FilterList[] = [];
+  try {
+    const listsStore = new ListNamesDataStore();
+    const lists: string[] = await listsStore.get();
+    for (const listName of lists) {
+      if (!filterListDataStores[listName]) {
+        filterListDataStores[listName] = new FilterListDataStore(listName);
+      }
+
+      const listStore = filterListDataStores[listName];
+      const list: FilterList = await listStore.get();
+      result.push(list);
+    }
+  } catch (e) {
+    console.error("Error retrieving saved words.", e);
+  }
+  return result;
 }
 
 

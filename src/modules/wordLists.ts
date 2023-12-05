@@ -93,32 +93,40 @@ export class ListNamesDataStore extends DatabaseStorage<string[]> {
     if (index > -1) {
       listNames.splice(index, 1);
       await this.set(listNames);
-      const trieStore = new TrieRootNodeDataStore(listName);
+      const trieStore = new FilterListDataStore(listName);
       await trieStore.clear();
     }
   }
 }
 
 
-interface filterList {
-  trie: Trie;
+export interface FilterList {
+  listname: string;
+  trieNode: TrieNode;
   filterAction?: FilterAction;
 }
 
-export class TrieRootNodeDataStore extends DatabaseStorage<TrieNode> {
+
+export class FilterListDataStore extends DatabaseStorage<FilterList> {
   key: string;
-  defaultValue = new Trie([]).getRoot();
+  defaultValue: FilterList;
   IndexedDBStoreName = TRIE_STORE_NAME;
-  isType = (obj: unknown): obj is TrieNode => (obj !== null);//TODO: make sure skipping this check is ok
+  isType = (obj: unknown): obj is FilterList => (obj !== null);//TODO: make sure skipping this check is ok
   typeUpgrade = undefined;
 
   constructor(listName: string) {
     super();
     this.key = listName;
+    this.defaultValue = {
+      listname: listName,
+      trieNode: new Trie([]).getRoot(),
+      filterAction: undefined
+    }
   }
 
   async getTrie(): Promise<Trie> {
-    const serializedTrie= await super.get();
+    const filterList = await super.get();
+    const serializedTrie= filterList.trieNode;
     const trie = new Trie([]);
     trie.setRoot(serializedTrie);
     return trie;
@@ -130,7 +138,8 @@ export class TrieRootNodeDataStore extends DatabaseStorage<TrieNode> {
     const trie = await this.getTrie();
     trie.addWord(word);
     const reserializedTrie = trie.getRoot();
-    await this.set(reserializedTrie);
+    const filterList = await super.get();
+    await this.set({...filterList, trieNode: reserializedTrie});
   }
 
   async getWordList(): Promise<string[]> {
@@ -141,7 +150,8 @@ export class TrieRootNodeDataStore extends DatabaseStorage<TrieNode> {
   async setWordList(wordList: string[]): Promise<void> {
     const trie = new Trie(wordList);
     const reserializedTrie = trie.getRoot();
-    await this.set(reserializedTrie);
+    const filterList = await super.get();
+    await this.set({...filterList, trieNode: reserializedTrie});
   }
 }
 

@@ -6,6 +6,7 @@ import {
   SETTINGS_STORE_NAME,
   SUBJECTS_STORE_NAME
 } from "../../constants";
+import {FilterAction} from "../types";
 
 export type llmServerTypes = 'openai' | 'local' | 'none';
 export type embedServerTypes = 'openai' | 'none';
@@ -143,6 +144,7 @@ export interface MLSubject {
   description: string;
   embedding_keywords?: string[];
   embedding?: number[];
+  filterAction?: FilterAction;
 }
 
 export interface PopulatedFilterSubject extends MLSubject {

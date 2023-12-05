@@ -2,10 +2,8 @@ import {DEBUG, ML_FEATURES} from "../../constants";
 import {isCurrentSiteDisabled} from "../hostname";
 import {
   filterMLElement,
-  filterTextElement,
-  getFilterTries,
+  filterTextElement, getFilterLists,
   isElementIgnored,
-  ListTriePair,
   unfilterElement,
   unfilterElementIfNotInSubjects,
   unfilterElementsIfNotInTries,
@@ -16,6 +14,8 @@ import {getSubjects, isTextInSubject, shouldTextBeSkippedML} from "../ml/ml";
 import {FilterAction} from "../types";
 import {MLSubject} from "../ml/mlTypes";
 import {getElementsToCheck, getElementText} from "./siteSupport";
+import {FilterList} from "../wordLists";
+import {Trie} from "../trie";
 
 const CONTENT_CONTEXT = "content";
 
@@ -63,12 +63,12 @@ async function unfilterElements(elements: FilteredElement[]) {
   });
 }
 
-async function checkAndUnfilterPreviouslyFiltered(filterAction: FilterAction, triesWithNames: ListTriePair[], subjects:MLSubject[]) {
+async function checkAndUnfilterPreviouslyFiltered(filterAction: FilterAction, filterLists: FilterList[], subjects:MLSubject[]) {
   //TODO: check if preprocessed text content has changed and unfilter if yes
   filteredElements = await unfilterElementsIfWrongAction(filterAction, filteredElements);
 
   const filteredTextElements = filteredElements.filter(fe => fe.type === "text") as FilteredTextElement[];
-  const remainingtextElements = await unfilterElementsIfNotInTries(triesWithNames.map(twn => twn.trie), filteredTextElements);
+  const remainingtextElements = await unfilterElementsIfNotInTries(filterLists.map(fe => new Trie(fe.trieNode)), filteredTextElements);
   const filteredMLElements = filteredElements.filter(fe => fe.type === "ml") as FilteredMLElement[];
   const remainingMLElements = await unfilterElementIfNotInSubjects(subjects, filteredMLElements);
 
@@ -152,10 +152,10 @@ export async function checkAndFilterElements() {
 
   const actionStore = new FilterActionStore();
   const filterAction = await actionStore.get();
-  const triesWithNames = await getFilterTries();
+  const filterLists = await getFilterLists();
   const subjects = await getSubjects();
 
-  await checkAndUnfilterPreviouslyFiltered(filterAction, triesWithNames, subjects);
+  await checkAndUnfilterPreviouslyFiltered(filterAction,filterLists, subjects);
 
   const promises = elementsToCheck.map(async (element) => {
     const clonedElement = cloneElementWithoutBubble(element);
@@ -193,14 +193,15 @@ export async function checkAndFilterElements() {
 
     let textFiltered = false;
     const elementText = await getElementText(element);
-    for (const {listName, trie} of triesWithNames) {
+    for (const filterList of filterLists) {
+      const trie = new Trie(filterList.trieNode);
       const filterResult = trie.shouldFilterTextContent(elementText);
       if (filterResult.shouldFilter && filterResult.triggeringWord) {
         let filteredTextElement: FilteredTextElement = {
           element: element,
           type: "text",
           triggeringWord: filterResult.triggeringWord,
-          listName: listName,
+          listName: filterList.listname,
           filterAction: filterAction
         };
         filteredTextElement = await filterTextElement(filteredTextElement);
@@ -220,7 +221,7 @@ export async function checkAndFilterElements() {
             element: element,
             type: "ml",
             subject_description: filterResult.subjects[0].description,//TODO: implement multiple subjects
-            filterAction: filterAction
+            filterAction: filterResult.subjects[0].filterAction || filterAction
           };
           await filterMLElement(filteredMLElement)
           filteredElements.push(filteredMLElement);

@@ -39,10 +39,15 @@ export class Trie {
     return this.root;
   }
 
-  constructor(words: string[]) {
-    //TODO: wordsToFilter lowercase class to make sure only lowercase is passed
-    this.root = { isEndOfWord: false, children: {} };
-    this.buildTrie(words);
+  constructor(wordsOrRoot: string[] | TrieNode) {
+    if (Array.isArray(wordsOrRoot)) {
+      // It's an array of strings
+      this.root = { isEndOfWord: false, children: {} };
+      this.buildTrie(wordsOrRoot);
+    } else {
+      // It's a TrieNode
+      this.root = wordsOrRoot;
+    }
   }
 
   private buildTrie(words: string[]): void {

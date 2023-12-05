@@ -10,7 +10,7 @@ import ListSelector from "../ListSelector";
 import {useAlert} from "../AlertContext";
 import {Add} from "@mui/icons-material";
 import {useDataStore} from "../DataStoreContext";
-import {TrieRootNodeDataStore} from "../../modules/wordLists";
+import {FilterListDataStore} from "../../modules/wordLists";
 import {useDataFromStore} from "../../modules/datastore";
 
 
@@ -35,7 +35,7 @@ const NewFilterWordForm: React.FC = () => {
     }
 
     setNewWord('');
-    const dataStore = new TrieRootNodeDataStore(list);
+    const dataStore = new FilterListDataStore(list);
     try {
       await dataStore.addWord(newWord);
       showAlert('success', 'Word added successfully!');

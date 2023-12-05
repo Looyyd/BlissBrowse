@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {
-  FullStatisticsDataStore, WordStatistic, TrieRootNodeDataStore
+  FullStatisticsDataStore, WordStatistic, FilterListDataStore
 } from "../../modules/wordLists";
 import {
   Table,
@@ -71,7 +71,7 @@ const WordStatistics = () => {
         if(selectedList === ALL_LISTS_SYMBOL){
           setShownStatistics(statistics);
         }else{
-          const dataStore = new TrieRootNodeDataStore(selectedList);
+          const dataStore = new FilterListDataStore(selectedList);
           const words = await dataStore.getWordList();
           const statisticsToShow: IndexedDBKeyValueStore<WordStatistic> = {};
           for(const word of words){
