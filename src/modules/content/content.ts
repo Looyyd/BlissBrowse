@@ -63,9 +63,11 @@ async function unfilterElements(elements: FilteredElement[]) {
   });
 }
 
-async function checkAndUnfilterPreviouslyFiltered(filterAction: FilterAction, filterLists: FilterList[], subjects:MLSubject[]) {
+async function checkAndUnfilterPreviouslyFiltered(defaultAction: FilterAction, filterLists: FilterList[], subjects:MLSubject[]) {
   //TODO: check if preprocessed text content has changed and unfilter if yes
-  filteredElements = await unfilterElementsIfWrongAction(filterAction, filteredElements);
+
+  //TODO: i removed this to debug, but actually seems like app is working without it so maybe it's not needed???
+  //filteredElements = await unfilterElementsIfWrongAction(defaultAction, filteredElements);
 
   const filteredTextElements = filteredElements.filter(fe => fe.type === "text") as FilteredTextElement[];
   const remainingtextElements = await unfilterElementsIfNotInTries(filterLists.map(fe => new Trie(fe.trieNode)), filteredTextElements);
@@ -151,18 +153,17 @@ export async function checkAndFilterElements() {
   }
 
   const actionStore = new FilterActionStore();
-  const filterAction = await actionStore.get();
+  const defaultFilterAction = await actionStore.get();
   const filterLists = await getFilterLists();
   const subjects = await getSubjects();
 
-  await checkAndUnfilterPreviouslyFiltered(filterAction,filterLists, subjects);
+  await checkAndUnfilterPreviouslyFiltered(defaultFilterAction,filterLists, subjects);
 
   const promises = elementsToCheck.map(async (element) => {
     const clonedElement = cloneElementWithoutBubble(element);
 
     // Calculate the hash of the cloned element's text
     const elementHash = hashCode(clonedElement.innerText);
-    //const elementHash = hashCode(element.innerText);
 
     const processed = processedElements.find(p => p.element === element);
 
@@ -202,7 +203,7 @@ export async function checkAndFilterElements() {
           type: "text",
           triggeringWord: filterResult.triggeringWord,
           listName: filterList.listname,
-          filterAction: filterAction
+          filterAction: filterList.filterAction || defaultFilterAction
         };
         filteredTextElement = await filterTextElement(filteredTextElement);
         filteredElements.push(filteredTextElement);
@@ -221,7 +222,7 @@ export async function checkAndFilterElements() {
             element: element,
             type: "ml",
             subject_description: filterResult.subjects[0].description,//TODO: implement multiple subjects
-            filterAction: filterResult.subjects[0].filterAction || filterAction
+            filterAction: filterResult.subjects[0].filterAction || defaultFilterAction
           };
           await filterMLElement(filteredMLElement)
           filteredElements.push(filteredMLElement);

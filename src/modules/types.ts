@@ -1,17 +1,17 @@
 import {WordStatistic} from "./wordLists";
 
 export enum FilterAction {
-  BLUR = "blur",
-  HIDE = "hide",
-  TAG = "tag",
+  BLUR = "BLUR",
+  HIDE = "HIDE",
+  TAG = "TAG",
 }
 export function isFilterAction(value: unknown): value is FilterAction {
   return typeof value === 'string' && Object.values(FilterAction).includes(value as FilterAction);
 }
 
 export enum ColorTheme {
-  LIGHT = "light",
-  DARK = "dark"
+  LIGHT = "LIGHT",
+  DARK = "DARK"
 }
 
 export function isColorTheme(value: unknown): value is ColorTheme {

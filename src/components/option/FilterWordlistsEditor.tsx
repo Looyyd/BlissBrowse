@@ -3,7 +3,7 @@ import {
   Button,
   Container,
   Box,
-  SelectChangeEvent, Typography,
+  SelectChangeEvent, Typography, MenuItem, Select,
 } from '@mui/material';
 import ListSelector from "../ListSelector";
 import {useAlert} from "../AlertContext";
@@ -11,8 +11,9 @@ import {TextEditBox} from "../TextEditBox";
 import {Delete, Save} from "@mui/icons-material";
 import NewListForm from "../popup/NewListForm";
 import {useDataStore} from "../DataStoreContext";
-import {FilterListDataStore} from "../../modules/wordLists";
+import {FilterList, FilterListDataStore} from "../../modules/wordLists";
 import {useDataFromStore} from "../../modules/datastore";
+import {FilterAction} from "../../modules/types";
 
 
 
@@ -33,9 +34,10 @@ const useUrlParameter = (param:string) => {
 };
 
 // Custom hook for managing list selection and data
-const useSelectedListData = (initialListName: string): [string, React.Dispatch<React.SetStateAction<string>>, string[]] => {
+const useSelectedListData = (initialListName: string): [string, React.Dispatch<React.SetStateAction<string>>, string[], FilterList | null] => {
   const [selectedList, setSelectedList] = useState(initialListName);
   const [words, setWords] = useState<string[]>([]);
+  const [filterList, setFilterList] = useState<FilterList | null>(null)
 
   useEffect(() => {
     if (!selectedList || selectedList === ""){
@@ -47,12 +49,14 @@ const useSelectedListData = (initialListName: string): [string, React.Dispatch<R
       const dataStore = new FilterListDataStore(selectedList);
       const fetchedWords = await dataStore.getWordList();
       setWords(fetchedWords);
+      const filterList = await dataStore.get();
+      setFilterList(filterList);
     };
 
     fetchData();
   }, [selectedList]);
 
-  return [selectedList, setSelectedList, words];
+  return [selectedList, setSelectedList, words, filterList];
 };
 
 
@@ -61,8 +65,18 @@ const FilterWordlistsEditor = () => {
   const { listNamesDataStore } = useDataStore();
   const [lists] = useDataFromStore(listNamesDataStore);
   const urlSelectedList = useUrlParameter('list');
-  const [selectedList, setSelectedList, words] = useSelectedListData(urlSelectedList);
+  const [selectedList, setSelectedList, words, selectedFilterList] = useSelectedListData(urlSelectedList);
   const [textAreaValue, setTextAreaValue] = useState(words.join('\n'));
+
+  const possibleFilterActions = Object.keys(FilterAction);
+  possibleFilterActions.push('default');
+  const [selectedFilterAction, setSelectedFilterAction] = useState('' as string);
+
+  useEffect(() => {
+    if (!selectedFilterList) return;
+    setSelectedFilterAction(selectedFilterList.filterAction || 'default');
+  }, [selectedFilterList]);
+
   const { showAlert } = useAlert();
 
   useEffect(() => {
@@ -73,6 +87,22 @@ const FilterWordlistsEditor = () => {
   useEffect(() => {
     setTextAreaValue(words.join('\n'));
   }, [words]);
+
+  const handleFilterActionChange = async (event: SelectChangeEvent<unknown>) => {
+    const action = event.target.value as string;
+    setSelectedFilterAction(action);
+    const datastore = new FilterListDataStore(selectedList);
+    try{
+      if (action === 'default') {
+        await datastore.setFilterAction(undefined)
+      } else {
+        await datastore.setFilterAction(action as FilterAction);
+      }
+      showAlert('success', 'Filter action updated successfully!');
+    } catch (e) {
+      showAlert('error', 'An error occurred while updating the filter action');
+    }
+  }
 
   const handleListChange = async (event: SelectChangeEvent<unknown>) => {
     const list = event.target.value as string;
@@ -118,7 +148,6 @@ const FilterWordlistsEditor = () => {
         <NewListForm/>
         {/* separator */}
         <Box sx={{height: 20}}/>
-        {/* separator */}
         <Box display="flex" flexDirection="column" alignItems="start" gap={2}>
           <Typography variant="h6">Edit a list</Typography>
           <ListSelector
@@ -126,6 +155,15 @@ const FilterWordlistsEditor = () => {
             onListChange={handleListChange}
             value={selectedList}
           />
+          <Typography variant="h6">Filter Action</Typography>
+          <Select
+            onChange={handleFilterActionChange}
+            value={selectedFilterAction}
+          >
+            {possibleFilterActions.map((action) => (
+              <MenuItem value={action}>{action}</MenuItem>
+            ))}
+          </Select>
           <Button variant="contained" color="primary" onClick={saveWords} startIcon={<Save/>}>
             Save
           </Button>

@@ -314,6 +314,7 @@ export async function filterElementCommon<T extends FilteredElement>(filterEleme
 }
 
 export async function filterTextElement(fe: FilteredTextElement): Promise<FilteredTextElement> {
+  console.log('filterTextElement', fe);
   const filterElement = await filterElementCommon(fe);
   const textElement = filterElement as FilteredTextElement;
   const triggeringWord = textElement.triggeringWord;
@@ -427,11 +428,11 @@ export async function unfilterElementIfNotInSubjects(subjects: MLSubject[], filt
   return remainingElements;
 }
 
-export async function unfilterElementsIfWrongAction(currentAction: FilterAction, filteredElements: FilteredElement[]) {
+export async function unfilterElementsIfWrongAction(defaultAction: FilterAction, filteredElements: FilteredElement[]) {
   const remainingElements: FilteredElement[] = [];
   filteredElements.forEach(fe => {
     const action = fe.filterAction;
-    if (action !== currentAction) {
+    if (action !== defaultAction) {
       unfilterElement(fe);
     } else {
       remainingElements.push(fe);

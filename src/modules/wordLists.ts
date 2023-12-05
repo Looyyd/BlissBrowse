@@ -153,5 +153,10 @@ export class FilterListDataStore extends DatabaseStorage<FilterList> {
     const filterList = await super.get();
     await this.set({...filterList, trieNode: reserializedTrie});
   }
+
+  async setFilterAction(filterAction: FilterAction | undefined): Promise<void> {
+    const filterList = await super.get();
+    await this.set({...filterList, filterAction});
+  }
 }
 
