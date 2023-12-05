@@ -5,7 +5,7 @@ import {
   WORD_STATISTICS_STORE_NAME, TRIE_STORE_NAME
 } from "../constants";
 import {DatabaseStorage, FullDataStore} from "./datastore";
-import {isNumber, isStringArray} from "./types";
+import {FilterAction, isNumber, isStringArray} from "./types";
 import {Trie, TrieNode} from "./trie";
 
 /*
@@ -99,6 +99,11 @@ export class ListNamesDataStore extends DatabaseStorage<string[]> {
   }
 }
 
+
+interface filterList {
+  trie: Trie;
+  filterAction?: FilterAction;
+}
 
 export class TrieRootNodeDataStore extends DatabaseStorage<TrieNode> {
   key: string;

@@ -2,7 +2,8 @@ import {WordStatistic} from "./wordLists";
 
 export enum FilterAction {
   BLUR = "blur",
-  HIDE = "hide"
+  HIDE = "hide",
+  TAG = "tag",
 }
 export function isFilterAction(value: unknown): value is FilterAction {
   return typeof value === 'string' && Object.values(FilterAction).includes(value as FilterAction);

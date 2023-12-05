@@ -304,7 +304,11 @@ export async function filterTextElement(fe: FilteredTextElement): Promise<Filter
   const filterElement = await filterElementCommon(fe);
   const textElement = filterElement as FilteredTextElement;
   const triggeringWord = textElement.triggeringWord;
-  addFilterTooltipToTextFilteredElement(textElement);
+
+  if(fe.filterAction === FilterAction.BLUR){
+    addFilterTooltipToTextFilteredElement(textElement);
+  }
+
   inMemoryStatistics[triggeringWord] = (inMemoryStatistics[triggeringWord] || 0) + 1;
   return filterElement;
 }
@@ -312,7 +316,11 @@ export async function filterTextElement(fe: FilteredTextElement): Promise<Filter
 export async function filterMLElement(fe: FilteredMLElement): Promise<FilteredMLElement> {
   const filterElement = await filterElementCommon(fe);
   const mlElement = filterElement as FilteredMLElement;
-  addFilterTooltipToMLFilteredElement(mlElement);
+
+  if(fe.filterAction === FilterAction.BLUR){
+    addFilterTooltipToMLFilteredElement(mlElement);
+  }
+
   return filterElement;
 }
 
@@ -323,6 +331,7 @@ export async function unfilterElement(fe: FilteredElement) {
   const action = fe.filterAction;
   if (action === FilterAction.BLUR) {
     element.style.filter = fe.originalAttribueValue || '';
+    removeTooltipFromElement(element);
   } else if (action === FilterAction.HIDE) {
     element.style.display = fe.originalAttribueValue || '';
   }
@@ -331,7 +340,6 @@ export async function unfilterElement(fe: FilteredElement) {
     const triggeringWord = (fe as FilteredTextElement).triggeringWord;
     inMemoryStatistics[triggeringWord] = (inMemoryStatistics[triggeringWord] || 0) - 1;
   }
-  removeTooltipFromElement(element);
 }
 
 export function markElementAsIgnored(element: HTMLElement) {

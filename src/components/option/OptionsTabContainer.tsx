@@ -48,12 +48,10 @@ const TabContainer = () => {
       tab: 'Enabled Websites',
       content: <EnabledSitesEditor />,
     },
-    /*
     {
       tab: 'Settings',
       content: <GlobalSettings />,
     }
-     */
   ];
   if (ML_FEATURES) {
     tabContentMapping.push({

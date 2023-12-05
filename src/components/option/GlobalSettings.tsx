@@ -52,6 +52,7 @@ const GlobalSettings = () => {
           </Select>
         </Box>
 
+        {/*
         <Box mb={2}>
           <Tooltip title="Select the color theme for the extension option pages">
             <Box mr={1}>
@@ -72,6 +73,7 @@ const GlobalSettings = () => {
             ))}
           </Select>
         </Box>
+      */}
       </Box>
     </Container>
   );
