@@ -1,16 +1,12 @@
 import {FilterAction} from "../types";
-import {DEBUG, DEBUG_FILTERING, EXTENSION_NAME, FILTER_IGNORE_ATTRIBUTE} from "../../constants";
+import {DEBUG_FILTERING, EXTENSION_NAME, FILTER_IGNORE_ATTRIBUTE} from "../../constants";
 import {addToFilterWordStatistics, ListNamesDataStore, TrieRootNodeDataStore} from "../wordLists";
 import {Trie} from "../trie";
 import React from 'react';
 import {createRoot} from "react-dom/client";
 import {FilteredElementTooltip} from "../../components/content/FilteredElementTooltip";
 import {UnfilteredElementTooltip} from "../../components/content/UnfilteredElementTooltip";
-import {
-  FilteredElement,
-  FilteredMLElement,
-  FilteredTextElement, removeElementFromCaches,
-} from "./content";
+import {FilteredElement, FilteredMLElement, FilteredTextElement, removeElementFromCaches,} from "./content";
 import {MLSubject} from "../ml/mlTypes";
 
 
@@ -279,19 +275,19 @@ export function shouldFilterTextContent(textContent: string, wordsToFilter: stri
 }
 
 const PROCESSED_BY_PREFIX = 'processed-by-';
-const SCRIPT_NAME = EXTENSION_NAME;
+const PROCESSED_BY_ATTRIBUTE = `${PROCESSED_BY_PREFIX}${EXTENSION_NAME}`;
 
 export async function filterElementCommon<T extends FilteredElement>(filterElement: T): Promise<T> {
   const element = filterElement.element;
   const filterAction = filterElement.filterAction;
-  if (element.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true') {
+  if (element.getAttribute(PROCESSED_BY_ATTRIBUTE) === 'true') {
     if (DEBUG_FILTERING) {
       //TODO: fix this, it shouldn't be happending
       console.log('Element already processed', element);
     }
     throw new Error('Element already processed');
   }
-  element.setAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`, 'true');
+  element.setAttribute(PROCESSED_BY_ATTRIBUTE, 'true');
 
   if (filterAction === FilterAction.BLUR) {
     filterElement.originalAttribueValue = element.style.filter;
@@ -322,7 +318,7 @@ export async function filterMLElement(fe: FilteredMLElement): Promise<FilteredML
 
 export async function unfilterElement(fe: FilteredElement) {
   const element = fe.element;
-  element.removeAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`);
+  element.removeAttribute(PROCESSED_BY_ATTRIBUTE);
 
   const action = fe.filterAction;
   if (action === FilterAction.BLUR) {
@@ -351,7 +347,7 @@ export function unmarkElementAsIgnored(element: HTMLElement) {
 }
 
 export function isElementProcessed(element: HTMLElement) {
-  return element.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true';
+  return element.getAttribute(PROCESSED_BY_ATTRIBUTE) === 'true';
 }
 
 export async function unfilterAndIgnoreElement(fe: FilteredElement) {
@@ -462,7 +458,7 @@ export function nodeHasAProcessedParent(node: Node) {
   let currentNode:Node | null = node;
   do {
     if (currentNode instanceof HTMLElement) {
-      if (currentNode.getAttribute(`${PROCESSED_BY_PREFIX}${SCRIPT_NAME}`) === 'true') {
+      if (currentNode.getAttribute(PROCESSED_BY_ATTRIBUTE) === 'true') {
         return true;
       }
     }

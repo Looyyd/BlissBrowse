@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import {DEBUG} from "../../constants";
+import {DEBUG, DEBUG_CACHE, DEBUG_EMBEDDING} from "../../constants";
 import {addGPTTokensUsed} from "./mlCosts";
 import {inferenseServerSettings, MLSubject, MlCostStore} from "./mlTypes";
 import {extractAndParseJSON, getAnswerFromJSON, openAIClientFromSettings} from "./mlHelpers";
@@ -35,7 +35,7 @@ async function getOpenAICompletion(messages: OpenAI.Chat.Completions.ChatComplet
     }
     return cachedResult.content;
   } else {
-    if (DEBUG) {
+    if (DEBUG_CACHE) {
       console.log('cache miss, creating new promise');
     }
 
@@ -84,7 +84,9 @@ async function getLocalCompletion(messages: OpenAI.Chat.Completions.ChatCompleti
   if (completionCache.has(cacheKey)) {
     // Wait for the promise to resolve and return its result
     const cachedResult = await completionCache.get(cacheKey);
-    console.log('cachedResult:', cachedResult)
+    if(DEBUG_CACHE){
+      console.log('cachedResult:', cachedResult)
+    }
     if (!cachedResult) {
       throw new Error('cachedResult is undefined');
     }
@@ -93,7 +95,7 @@ async function getLocalCompletion(messages: OpenAI.Chat.Completions.ChatCompleti
     }
     return cachedResult.content;
   } else {
-    if (DEBUG) {
+    if (DEBUG_CACHE) {
       console.log('cache miss, creating new promise');
     }
 
@@ -226,7 +228,7 @@ export async function getKeywordsForSubject(subject: string, inferenceSettings:i
     throw new Error(`'sentences' field is undefined or empty in the response`);
   }
   const sentences = resObj.sentences as string[];
-  if (DEBUG) {
+  if (DEBUG_EMBEDDING) {
     console.log('Sentence creation response preprocessed output:', sentences);
   }
   return sentences;

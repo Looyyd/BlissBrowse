@@ -110,11 +110,7 @@ export class MlCostStore extends DatabaseStorage<MLCost> {
   }
 
   async get(): Promise<MLCost> {
-    if(DEBUG){
-      console.log('getting api cost');
-    }
     const cost = await super.get();
-    console.log("Got cost", cost)
     const date = new Date(cost.lastResetDate);
     if (date.getMonth() !== new Date().getMonth()) {
       await this.resetCost();
@@ -123,17 +119,11 @@ export class MlCostStore extends DatabaseStorage<MLCost> {
   }
 
   async add(value: number): Promise<void> {
-    if(DEBUG){
-      console.log('adding api cost');
-    }
     const cost = await this.get();
     await this.set({ ...cost, cost: cost.cost + value });
   }
 
   async setBudgetLimit(value: number | undefined): Promise<void> {
-    if(DEBUG){
-      console.log('setting api cost budget limit');
-    }
     const cost = await this.get();
     await this.set({ ...cost, budgetLimit: value });
   }

@@ -1,6 +1,6 @@
 import {
   BATCH_STAT_UPDATE_INTERVAL,
-  DEBUG,
+  DEBUG, DEBUG_FILTERING,
   LIST_OF_LIST_NAMES_DATASTORE,
   LIST_SETTINGS_STORE_NAME,
   SETTINGS_STORE_NAME, SUBJECTS_STORE_NAME,
@@ -34,7 +34,9 @@ const hostname =  window.location.hostname;
 if(supportedWebsites.includes(hostname)){
 
   const observer = new MutationObserver(async () => {
-    console.log('mutation observer called');
+    if(DEBUG_FILTERING){
+      console.log('mutation observer called');
+    }
     await debouncedCheckAndFilter();
   });
 

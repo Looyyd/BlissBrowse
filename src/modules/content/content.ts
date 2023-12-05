@@ -125,7 +125,7 @@ export async function checkAndFilterElements() {
   }
 
   if (DEBUG) {
-    console.log("checkAndFilterElementsRewrite");
+    console.log("Entering checkAndFilterElements");
   }
 
   const isDisabled = await isCurrentSiteDisabled(CONTENT_CONTEXT);

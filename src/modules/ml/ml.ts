@@ -97,7 +97,6 @@ export async function isTextInSubjectLocal(subject:MLSubject, text:string){
 
 export async function isTextInSubject(subject:MLSubject, text:string){
   const settings = await settingsStore.get();
-  console.log("Entered isTextInSubject", settings, subject, text)
 
   if(settings.embedType !== "none"){
     let embed_result = false;
