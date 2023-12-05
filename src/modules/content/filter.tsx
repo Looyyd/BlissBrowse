@@ -43,6 +43,7 @@ function addFilterBubbleStylesIfAbsent() {
     style.textContent = `
       .filter-bubble {
         padding: 5px 10px;
+        font-family: 'Roboto', sans-serif;
         border: 1px solid #ddd;
         border-radius: 5px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -271,7 +272,7 @@ function addFilterBubble(element:HTMLElement, categoryName:string) {
   // Create the bubble element
   const bubble = document.createElement('div');
   bubble.className = 'filter-bubble';
-  bubble.textContent = categoryName; // Set the category name as text
+  bubble.textContent = EXTENSION_NAME + " tag : " + categoryName; // Set the category name as text
 
   addFilterBubbleStylesIfAbsent();
   // Prepend the bubble as the first child of the element
