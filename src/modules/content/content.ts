@@ -116,6 +116,19 @@ export function removeElementFromCaches(element: HTMLElement) {
   }
 }
 
+function cloneElementWithoutBubble(element: HTMLElement) {
+  // Clone the element
+  const clonedElement = element.cloneNode(true) as HTMLElement;
+
+  // Remove the filter bubble from the clone
+  const bubble = clonedElement.querySelector('.filter-bubble');
+  if (bubble) {
+    bubble.remove();
+  }
+
+  return clonedElement;
+}
+
 export async function checkAndFilterElements() {
   function hashCode(s: string): number {
     return s.split('').reduce((a, b) => {
@@ -145,7 +158,11 @@ export async function checkAndFilterElements() {
   await checkAndUnfilterPreviouslyFiltered(filterAction, triesWithNames, subjects);
 
   const promises = elementsToCheck.map(async (element) => {
-    const elementHash = hashCode(element.innerText); // Assuming 'text' property holds the content
+    const clonedElement = cloneElementWithoutBubble(element);
+
+    // Calculate the hash of the cloned element's text
+    const elementHash = hashCode(clonedElement.innerText);
+    //const elementHash = hashCode(element.innerText);
 
     const processed = processedElements.find(p => p.element === element);
 

@@ -34,6 +34,29 @@ function addTooltipStylesIfAbsent(): void {
   }
 }
 
+function addFilterBubbleStylesIfAbsent() {
+  // Check if the styles have already been added
+  if (!document.getElementById('filter-bubble-styles')) {
+    // Create a style element
+    const style = document.createElement('style');
+    style.id = 'filter-bubble-styles';
+    style.textContent = `
+      .filter-bubble {
+        padding: 5px 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        font-size: 12px;
+        margin-bottom: 5px; /* Adjust spacing if needed */
+        /* Add any additional styles you need for the filter bubble */
+      }
+    `;
+    // Append the style element to the document head
+    document.head.appendChild(style);
+  }
+}
+
+
 // This variable should be in a scope accessible to both setupTooltipListeners and removeTooltipListeners
 const tooltipVisibilityHandlers = new Map<HTMLElement, { show: () => void; hide: () => void; hideTimeoutId?: number }>();
 
@@ -241,45 +264,34 @@ export function resetAndReturnStatistics(): MyStats {
 }
 
 
-export function shouldFilterTextContent(textContent: string, wordsToFilter: string[], isRegex: boolean): FilterResult {
-  //TODO: wordsToFilter lowercase class
-  const cleanedTextContent = textContent.toLowerCase().trim();
-  const result: FilterResult = {
-    shouldFilter: false,
-  };
+const PROCESSED_BY_PREFIX = 'processed-by-';
+const PROCESSED_BY_ATTRIBUTE = `${PROCESSED_BY_PREFIX}${EXTENSION_NAME}`.toLowerCase();
 
-  if (isRegex) {
-    const nonEmptyWords = wordsToFilter.filter(word => word !== '');
-    const joinedWords = nonEmptyWords.join('|');
-    const regex = new RegExp(joinedWords, 'i'); // case-insensitive matching
+function addFilterBubble(element:HTMLElement, categoryName:string) {
+  // Create the bubble element
+  const bubble = document.createElement('div');
+  bubble.className = 'filter-bubble';
+  bubble.textContent = categoryName; // Set the category name as text
 
-    const match = cleanedTextContent.match(regex);
-    if (match) {
-      result.shouldFilter = true;
-      result.triggeringWord = match[0]; // Gets the matched word
-      return result;
-    }
-  } else {
-    for (const word of wordsToFilter) {
-      if (word === '') {
-        continue;
-      }
-      if (cleanedTextContent.includes(word)) {
-        result.shouldFilter = true;
-        result.triggeringWord = word;
-        return result;
-      }
-    }
-  }
-  return result;
+  addFilterBubbleStylesIfAbsent();
+  // Prepend the bubble as the first child of the element
+  element.insertBefore(bubble, element.firstChild);
 }
 
-const PROCESSED_BY_PREFIX = 'processed-by-';
-const PROCESSED_BY_ATTRIBUTE = `${PROCESSED_BY_PREFIX}${EXTENSION_NAME}`;
+function removeFilterBubble(element:HTMLElement) {
+  const filterBubble = element.querySelector('.filter-bubble');
+  if (filterBubble) {
+    element.removeChild(filterBubble);
+  }
+}
 
 export async function filterElementCommon<T extends FilteredElement>(filterElement: T): Promise<T> {
   const element = filterElement.element;
   const filterAction = filterElement.filterAction;
+  if(DEBUG_FILTERING){
+    console.log('Filtering element', element);
+    console.log("Processed by attribute", element.getAttribute(PROCESSED_BY_ATTRIBUTE));
+  }
   if (element.getAttribute(PROCESSED_BY_ATTRIBUTE) === 'true') {
     if (DEBUG_FILTERING) {
       //TODO: fix this, it shouldn't be happending
@@ -307,6 +319,8 @@ export async function filterTextElement(fe: FilteredTextElement): Promise<Filter
 
   if(fe.filterAction === FilterAction.BLUR){
     addFilterTooltipToTextFilteredElement(textElement);
+  } else if (fe.filterAction === FilterAction.TAG) {
+    addFilterBubble(fe.element, fe.listName);
   }
 
   inMemoryStatistics[triggeringWord] = (inMemoryStatistics[triggeringWord] || 0) + 1;
@@ -319,6 +333,8 @@ export async function filterMLElement(fe: FilteredMLElement): Promise<FilteredML
 
   if(fe.filterAction === FilterAction.BLUR){
     addFilterTooltipToMLFilteredElement(mlElement);
+  } else if (fe.filterAction === FilterAction.TAG) {
+    addFilterBubble(fe.element, fe.subject_description);
   }
 
   return filterElement;
@@ -326,6 +342,9 @@ export async function filterMLElement(fe: FilteredMLElement): Promise<FilteredML
 
 export async function unfilterElement(fe: FilteredElement) {
   const element = fe.element;
+  if(DEBUG_FILTERING){
+    console.log('Unfiltering element', element);
+  }
   element.removeAttribute(PROCESSED_BY_ATTRIBUTE);
 
   const action = fe.filterAction;
@@ -334,6 +353,8 @@ export async function unfilterElement(fe: FilteredElement) {
     removeTooltipFromElement(element);
   } else if (action === FilterAction.HIDE) {
     element.style.display = fe.originalAttribueValue || '';
+  } else if (action === FilterAction.TAG) {
+    removeFilterBubble(element);
   }
 
   if(fe.type === 'text') {
@@ -457,35 +478,6 @@ export async function getFilterTries(): Promise<ListTriePair[]> {
     console.error("Error retrieving saved words.", e);
   }
   return triesWithNames;
-}
-
-
-
-
-export function nodeHasAProcessedParent(node: Node) {
-  let currentNode:Node | null = node;
-  do {
-    if (currentNode instanceof HTMLElement) {
-      if (currentNode.getAttribute(PROCESSED_BY_ATTRIBUTE) === 'true') {
-        return true;
-      }
-    }
-    currentNode = currentNode.parentNode;
-  } while (currentNode !== null);
-  return false;
-}
-
-export function nodeHasAIgnoredParent(node: Node) {
-  let currentNode:Node | null = node;
-  do {
-    if (currentNode instanceof HTMLElement) {
-      if (currentNode.getAttribute(FILTER_IGNORE_ATTRIBUTE) === 'true') {
-        return true;
-      }
-    }
-    currentNode = currentNode.parentNode;
-  } while (currentNode !== null);
-  return false;
 }
 
 
