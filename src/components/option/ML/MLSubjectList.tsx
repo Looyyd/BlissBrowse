@@ -1,9 +1,12 @@
 import React from 'react';
 import {useDataStore} from "../../DataStoreContext";
 import {useDataFromStore} from "../../../modules/datastore";
-import {Button, List, ListItem, ListItemText, Paper, Typography} from "@mui/material";
+import {Button, List, ListItem, ListItemText, MenuItem, Paper, Select, Typography} from "@mui/material";
 import {useAlert} from "../../AlertContext";
 import {Delete} from "@mui/icons-material";
+import {FilterAction} from "../../../modules/types";
+import {MLSubject, SubjectsStore} from "../../../modules/ml/mlTypes";
+import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 
 
 
@@ -13,6 +16,10 @@ const MLSubjectList = () => {
   const { subjectsDataStore } = useDataStore();
   const [subjects] = useDataFromStore(subjectsDataStore);
   const { showAlert } = useAlert();
+
+  const possibleFilterActions = Object.keys(FilterAction);
+  possibleFilterActions.push('default');
+
 
   const deleteSubject = async (subjectDescription: string) => {
     const key = subjectDescription;
@@ -25,33 +32,61 @@ const MLSubjectList = () => {
     }
   }
 
+  const changeDefaultAction = async (subject: MLSubject, event: SelectChangeEvent<unknown>) => {
+    let action: string | undefined = event.target.value as string;
+    if(action === 'default') {
+      action = undefined;
+    }
+    const newSubject : MLSubject = {...subject, filterAction: action as FilterAction};
+    try {
+      await subjectsDataStore.set(subject.description, newSubject);
+      showAlert('success', 'Default action updated successfully!');
+    } catch (e) {
+      showAlert('error', 'An error occurred while updating the default action');
+    }
+  }
+
   if (subjects === null) {
     return (
         <div>No subjects yet</div>
     )
   } else {
     return (
-      <Paper style={{
+           <Paper style={{
           padding: '20px',
           margin: '20px',
-          //border: '2px solid #000', // Adjust color and width as needed
-          boxShadow: '0px 0px 10px rgba(0,0,0,0.5)' // Adjust shadow to make it more visible
-        }} >
+          boxShadow: '0px 0px 10px rgba(0,0,0,0.5)'
+        }}>
         <Typography variant="h5" style={{ marginBottom: '1rem' }}>Your Subjects</Typography>
         <List>
-          {Object.keys(subjects).map((subjectDescription) => (
-            <ListItem key={subjectDescription} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <ListItemText primary={<Typography variant="subtitle1" style={{ fontWeight: 'bold' }}>{subjectDescription}</Typography>} />
-              <Button
-                variant="contained"
-                color="error"
-                onClick={() => deleteSubject(subjectDescription)}
-                startIcon={<Delete style={{ fontSize: 'small' }} />}
-              >
-                Delete
-              </Button>
-            </ListItem>
-          ))}
+          {Object.keys(subjects).map((subjectDescription) => {
+            const subject = subjects[subjectDescription].value;
+            return (
+              <ListItem key={subjectDescription} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <ListItemText primary={<Typography variant="subtitle1" style={{ fontWeight: 'bold' }}>{subjectDescription}</Typography>} />
+
+                <Typography variant="subtitle1" style={{ marginRight: '1rem' }}>Filter Action:</Typography>
+                <Select
+                  value={subject.filterAction || 'default'}
+                  onChange={(event) => changeDefaultAction(subject, event)}
+                  style={{ marginRight: '1rem' }}
+                >
+                  {possibleFilterActions.map((action) => (
+                    <MenuItem key={action} value={action}>{action}</MenuItem>
+                  ))}
+                </Select>
+
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={() => deleteSubject(subjectDescription)}
+                  startIcon={<Delete style={{ fontSize: 'small' }} />}
+                >
+                  Delete
+                </Button>
+              </ListItem>
+            )
+          })}
         </List>
       </Paper>
     )

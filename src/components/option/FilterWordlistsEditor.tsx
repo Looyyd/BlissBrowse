@@ -155,25 +155,30 @@ const FilterWordlistsEditor = () => {
             onListChange={handleListChange}
             value={selectedList}
           />
-          <Typography variant="h6">Filter Action</Typography>
-          <Select
-            onChange={handleFilterActionChange}
-            value={selectedFilterAction}
-          >
-            {possibleFilterActions.map((action) => (
-              <MenuItem value={action}>{action}</MenuItem>
-            ))}
-          </Select>
-          <Button variant="contained" color="primary" onClick={saveWords} startIcon={<Save/>}>
-            Save
-          </Button>
-          <Button variant="contained" color="error" onClick={deleteSelectedList} startIcon={<Delete/>}>
-            Delete List
-          </Button>
-          <TextEditBox textAreaValue={textAreaValue} handleTextAreaChange={handleTextAreaChange} id={"filterWordlistsEditorTextArea"}/>
-        </Box>
-      </Container>
-    </>
+          { selectedList && (
+            <>
+              <Typography variant="h6">Filter Action</Typography>
+              <Select
+                onChange={handleFilterActionChange}
+                value={selectedFilterAction}
+              >
+                {possibleFilterActions.map((action) => (
+                  <MenuItem value={action}>{action}</MenuItem>
+                ))}
+              </Select>
+              <Button variant="contained" color="primary" onClick={saveWords} startIcon={<Save/>}>
+                Save
+              </Button>
+              <Button variant="contained" color="error" onClick={deleteSelectedList} startIcon={<Delete/>}>
+                Delete List
+              </Button>
+              <TextEditBox textAreaValue={textAreaValue} handleTextAreaChange={handleTextAreaChange} id={"filterWordlistsEditorTextArea"}/>
+            </>
+          )
+        }
+      </Box>
+    </Container>
+</>
 
   );
 };
