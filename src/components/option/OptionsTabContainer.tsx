@@ -49,7 +49,7 @@ const TabContainer = () => {
       content: <EnabledSitesEditor />,
     },
     {
-      tab: 'Settings',
+      tab: 'Global Settings',
       content: <GlobalSettings />,
     }
   ];
