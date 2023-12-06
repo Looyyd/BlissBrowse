@@ -25,6 +25,15 @@ const DEFAULT_INFERENCE_SERVER_SETTINGS: inferenseServerSettings = {
   embedType: 'none',
 };
 
+export enum MLFilterMethod {
+  EMBEDDING = "EMBEDDING",
+  LLM = "LLM",
+  EMBEDDING_AND_LLM = "EMBEDDING_AND_LLM"
+}
+
+export function isMLFilterMethod(value: unknown): value is MLFilterMethod{
+  return typeof value === 'string' && Object.values(MLFilterMethod).includes(value as MLFilterMethod);
+}
 
 export class InferenseServerSettingsStore extends DatabaseStorage<inferenseServerSettings> {
   IndexedDBStoreName = SETTINGS_STORE_NAME;
@@ -145,6 +154,7 @@ export interface MLSubject {
   embedding_keywords?: string[];
   embedding?: number[];
   filterAction?: FilterAction;
+  filterMethod?: MLFilterMethod;
 }
 
 export interface PopulatedFilterSubject extends MLSubject {

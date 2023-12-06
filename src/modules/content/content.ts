@@ -9,10 +9,10 @@ import {
   unfilterElementsIfNotInTries,
   unfilterElementsIfWrongAction
 } from "./filter";
-import {FilterActionStore} from "../settings";
+import {FilterActionStore, MLFilterMethodStore} from "../settings";
 import {getSubjects, isTextInSubject, shouldTextBeSkippedML} from "../ml/ml";
 import {FilterAction} from "../types";
-import {MLSubject} from "../ml/mlTypes";
+import {MLFilterMethod, MLSubject} from "../ml/mlTypes";
 import {getElementsToCheck, getElementText} from "./siteSupport";
 import {FilterList} from "../wordLists";
 import {Trie} from "../trie";
@@ -37,16 +37,18 @@ export function preprocessTextBeforeEmbedding(text:string): string {
 
 
 
-interface MLFilterResult {
+export interface MLFilterResult {
   shouldFilter: boolean;
   subjects?: MLSubject[];
 }
 
-async function shouldTextBeFilteredML(text: string, subjects: MLSubject[]): Promise<MLFilterResult> {
+
+async function shouldTextBeFilteredML(text: string, subjects: MLSubject[], defaultFilterMethod: MLFilterMethod): Promise<MLFilterResult> {
   let filterSubjects: MLSubject[] = [];
 
   await Promise.all(subjects.map(async (subject) => {
-    if (await isTextInSubject(subject, text)) {
+    const filterMethod = subject.filterMethod || defaultFilterMethod;
+    if (await isTextInSubject(subject, text, filterMethod)) {
       filterSubjects.push(subject);
     }
   }));
@@ -154,6 +156,8 @@ export async function checkAndFilterElements() {
 
   const actionStore = new FilterActionStore();
   const defaultFilterAction = await actionStore.get();
+  const mlFilterMethodStore = new MLFilterMethodStore();
+  const defaultMLFilterMethod = await mlFilterMethodStore.get();
   const filterLists = await getFilterLists();
   const subjects = await getSubjects();
 
@@ -216,13 +220,13 @@ export async function checkAndFilterElements() {
     if (ML_FEATURES && !textFiltered) {
       const text = preprocessTextBeforeEmbedding(elementText);
       if (!shouldTextBeSkippedML(text)) {
-        const filterResult = await shouldTextBeFilteredML(text, subjects);
+        const filterResult = await shouldTextBeFilteredML(text, subjects, defaultMLFilterMethod);
         if (filterResult.shouldFilter && filterResult.subjects && filterResult.subjects.length > 0) {
           const filteredMLElement: FilteredMLElement = {
             element: element,
             type: "ml",
             subject_description: filterResult.subjects[0].description,//TODO: implement multiple subjects
-            filterAction: filterResult.subjects[0].filterAction || defaultFilterAction
+            filterAction: filterResult.subjects[0].filterAction || defaultFilterAction,
           };
           await filterMLElement(filteredMLElement)
           filteredElements.push(filteredMLElement);

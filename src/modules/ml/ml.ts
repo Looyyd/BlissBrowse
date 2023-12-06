@@ -1,6 +1,13 @@
 import {DEBUG, DEBUG_TOKEN_COST} from "../../constants";
 import {averageEmbeddings, cosineSimilarity} from "./mlHelpers";
-import {InferenseServerSettingsStore, MLSubject, PopulatedFilterSubject, SubjectsStore} from "./mlTypes";
+import {
+  inferenseServerSettings,
+  InferenseServerSettingsStore,
+  MLFilterMethod,
+  MLSubject,
+  PopulatedFilterSubject,
+  SubjectsStore
+} from "./mlTypes";
 import {logCost,} from "./mlCosts";
 import {getEmbeddings} from "./mlEmbeddings";
 import {getGPTClassification, getKeywordsForSubject} from "./mlLLM";
@@ -95,12 +102,21 @@ export async function isTextInSubjectLocal(subject:MLSubject, text:string){
   }
 }
 
-export async function isTextInSubject(subject:MLSubject, text:string){
-  const settings = await settingsStore.get();
 
-  if(settings.embedType !== "none"){
+export async function isTextInSubjectLLM(subject:MLSubject, text:string, settings: inferenseServerSettings){
+  if(settings.llmType !== "none"){
+    //llm only
+    return await getGPTClassification(text, settings, subject);
+  } else {
+    //no llm or embedding enabled
+    return false;
+  }
+}
+
+export async function isTextInSubjectEmbedding(subject:MLSubject, text:string, settings: inferenseServerSettings){
+  if(settings.embedType !== "none") {
     let embed_result = false;
-    if(settings.embedType === 'openai'){
+    if (settings.embedType === 'openai') {
       const threshold = 0.76;
       const populatedSubject = await populateSubjectAndSave(subject);
       const textEmbedding = await getEmbeddings(text);
@@ -110,23 +126,25 @@ export async function isTextInSubject(subject:MLSubject, text:string){
     } else {
       throw new Error('invalid embedding type');
     }
-    if(embed_result ){
-      if(settings.llmType === 'none'){
-        //no llm
-        return true;
-      } else {
-        //confirm with gpt
-        return await getGPTClassification(text, settings, subject);
-      }
-    } else {
-      return false;
-    }
-  }
-  else if(settings.llmType !== "none"){
-    //llm only
-    return await getGPTClassification(text, settings, subject);
+    return embed_result;
   } else {
-    //no llm or embedding enabled
-    return false;
+    return false;//TODO: throw error?
+  }
+}
+
+export async function isTextInSubject(subject:MLSubject, text:string, filterMethod: MLFilterMethod){
+  const settings = await settingsStore.get();
+
+  if (filterMethod === MLFilterMethod.EMBEDDING) {
+    return isTextInSubjectEmbedding(subject, text, settings);
+  } else if (filterMethod === MLFilterMethod.LLM) {
+    return isTextInSubjectLLM(subject, text, settings);
+  } else if (filterMethod === MLFilterMethod.EMBEDDING_AND_LLM){
+    const embed_result = await isTextInSubjectEmbedding(subject, text, settings);
+    if(embed_result){
+      return true;
+    } else {
+      return await isTextInSubjectLLM(subject, text, settings);
+    }
   }
 }

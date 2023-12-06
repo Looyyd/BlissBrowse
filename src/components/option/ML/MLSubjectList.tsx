@@ -5,7 +5,7 @@ import {Button, List, ListItem, ListItemText, MenuItem, Paper, Select, Typograph
 import {useAlert} from "../../AlertContext";
 import {Delete} from "@mui/icons-material";
 import {FilterAction} from "../../../modules/types";
-import {MLSubject, SubjectsStore} from "../../../modules/ml/mlTypes";
+import {MLFilterMethod, MLSubject, SubjectsStore} from "../../../modules/ml/mlTypes";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 
 
@@ -20,6 +20,8 @@ const MLSubjectList = () => {
   const possibleFilterActions = Object.keys(FilterAction);
   possibleFilterActions.push('default');
 
+  const possibleFilterMethods = Object.keys(MLFilterMethod);
+  possibleFilterMethods.push('default');
 
   const deleteSubject = async (subjectDescription: string) => {
     const key = subjectDescription;
@@ -46,6 +48,20 @@ const MLSubjectList = () => {
     }
   }
 
+  const changeDefaultFilterMethod = async (subject: MLSubject, event: SelectChangeEvent<unknown>) => {
+    let method: string | undefined = event.target.value as string;
+    if(method === 'default') {
+      method = undefined;
+    }
+    const newSubject : MLSubject = {...subject, filterMethod: method as MLFilterMethod};
+    try {
+      await subjectsDataStore.set(subject.description, newSubject);
+      showAlert('success', 'Default filter method updated successfully!');
+    } catch (e) {
+      showAlert('error', 'An error occurred while updating the default filter method');
+    }
+  }
+
   if (subjects === null) {
     return (
         <div>No subjects yet</div>
@@ -64,6 +80,18 @@ const MLSubjectList = () => {
             return (
               <ListItem key={subjectDescription} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <ListItemText primary={<Typography variant="subtitle1" style={{ fontWeight: 'bold' }}>{subjectDescription}</Typography>} />
+
+
+                <Typography variant="subtitle1" style={{ marginRight: '1rem' }}>Filter Method:</Typography>
+                <Select
+                  value={subject.filterMethod || 'default'}
+                  onChange={(event) => changeDefaultFilterMethod(subject, event)}
+                  style={{ marginRight: '1rem' }}
+                >
+                  {possibleFilterMethods.map((action) => (
+                    <MenuItem key={action} value={action}>{action}</MenuItem>
+                  ))}
+                </Select>
 
                 <Typography variant="subtitle1" style={{ marginRight: '1rem' }}>Filter Action:</Typography>
                 <Select

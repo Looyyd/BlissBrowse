@@ -3,30 +3,40 @@ import {Container, MenuItem, Select, Tooltip} from "@mui/material";
 import React from "react";
 import {
   ColorThemeStore,
-  FilterActionStore,
+  FilterActionStore, MLFilterMethodStore,
 } from "../../modules/settings";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 import Box from "@mui/material/Box";
 import {useDataFromStore} from "../../modules/datastore";
+import {MLFilterMethod} from "../../modules/ml/mlTypes";
 
-const colorThemeStore = new ColorThemeStore();
+//const colorThemeStore = new ColorThemeStore();
 const filterActionStore = new FilterActionStore();
+const mlFilterMethodStore = new MLFilterMethodStore()
 
 const GlobalSettings = () => {
   const [selectedAction] = useDataFromStore(filterActionStore);
-  const [selectedColorTheme] = useDataFromStore(colorThemeStore);
+  const [selectedMLFilterMethod] = useDataFromStore(mlFilterMethodStore);
+  //const [selectedColorTheme] = useDataFromStore(colorThemeStore);
   const filterActions = Object.values(FilterAction);
-  const colorThemes = Object.values(ColorTheme);
+  //const colorThemes = Object.values(ColorTheme);
 
   async function onActionChange(event: SelectChangeEvent<FilterAction>) {
     const action = event.target.value as FilterAction;
     await filterActionStore.set(action);
   }
 
+  async function onMLFilterMethodChange(event: SelectChangeEvent<MLFilterMethod>) {
+    const action = event.target.value as MLFilterMethod;
+    await mlFilterMethodStore.set(action);
+  }
+
+  /*
   async function onColorThemeChange(event: SelectChangeEvent<ColorTheme>) {
     const colorTheme = event.target.value as ColorTheme;
     await colorThemeStore.set(colorTheme);
   }
+   */
 
   return (
     <Container>
@@ -47,6 +57,27 @@ const GlobalSettings = () => {
             {filterActions.map((actionName) => (
               <MenuItem key={actionName} value={actionName}>
                 {actionName}
+              </MenuItem>
+            ))}
+          </Select>
+        </Box>
+
+        <Box mb={2}>
+          <Tooltip title="Choose the default ML filter method, this will impact how filtered elements are modified">
+            <Box mr={1}>
+              <label id="mlFilterMethodSelect-label">Change Default ML Filter Method</label>
+            </Box>
+          </Tooltip>
+          <Select
+            labelId="mlFilterMethodSelect-label"
+            id="mlFilterMethodSelect"
+            value={selectedMLFilterMethod === null ? "" : selectedMLFilterMethod}
+            onChange={onMLFilterMethodChange}
+            disabled={filterActions.length === 0}
+          >
+            {Object.values(MLFilterMethod).map((method) => (
+              <MenuItem key={method} value={method}>
+                {method}
               </MenuItem>
             ))}
           </Select>

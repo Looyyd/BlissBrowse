@@ -1,4 +1,5 @@
 import {ColorTheme, FilterAction} from "./modules/types";
+import {MLFilterMethod} from "./modules/ml/mlTypes";
 
 
 //GENERAL CONSTANTS
@@ -29,12 +30,14 @@ export const DEFAULT_LISTNAMES_ARRAY = [];
 export const DEFAULT_WORDLIST = [];
 export const DEFAULT_HOSTNAME_BLACKLIST = [];
 export const DEFAULT_FILTER_ACTION = FilterAction.BLUR;
+export const DEFAULT_ML_FILTER_METHOD = MLFilterMethod.EMBEDDING_AND_LLM;
 export const DEFAULT_COLOR_THEME = ColorTheme.LIGHT;
 //settings keys
 export const BLACKLISTED_WEBSITES_KEY = 'blacklist';
 export const FILTER_ACTION_KEY = 'actionToApplyOnFilter';
 export const COLOR_THEME_KEY = 'colorTheme';
 export const INFERENCE_SETTINGS_KEY = "inferenseServerSettings";
+export const ML_FILTER_METHOD_KEY = "mlFilterMethod";
 
 //hack store name, it's not a real storage but it's used by listeners
 export const LOCAL_STORAGE_STORE_NAME = 'localStorage';
