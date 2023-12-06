@@ -54,9 +54,12 @@ export class ListSettingsStore extends DatabaseStorage<ListSettings>{
   }
 }
 
+/*
 export class FullListSettingsStore extends FullDataStore<ListSettings>{
   IndexedDBStoreName = LIST_SETTINGS_STORE_NAME;
   isType = (data:unknown): data is ListSettings => data !== null;//TODO: implement a funciton, but is it needed since there are null defaults?
   defaultValue = DEFAULT_LIST_SETTINGS;
   typeUpgrade = undefined;
 }
+
+ */

@@ -2,17 +2,16 @@ import React from 'react';
 import {Button, List, ListItem, ListItemText, Typography} from '@mui/material';
 import LoadingScreen from "../LoadingScreen";
 import {Edit} from "@mui/icons-material";
-import {FullListSettingsStore} from "../../modules/settings";
 import {useDataStore} from "../DataStoreContext";
 import {useDataFromStore} from "../../modules/datastore";
 import {useAlert} from "../AlertContext";
 
-const listSettingsDataStore = new FullListSettingsStore();
+//const listSettingsDataStore = new FullListSettingsStore();
 
 const ListsDisplay: React.FC = () => {
   const { listNamesDataStore } = useDataStore();
   const [lists] = useDataFromStore(listNamesDataStore);
-  const [listSettings] = useDataFromStore(listSettingsDataStore);
+  //const [listSettings] = useDataFromStore(listSettingsDataStore);
   const { showAlert } = useAlert();
 
 
@@ -24,6 +23,7 @@ const ListsDisplay: React.FC = () => {
     chrome.tabs.create({ url: urlWithState });
   }
 
+  /*
   const toggleListDisable = async (listName: string) => {
     if (!lists || !listSettings) {
       return;
@@ -38,18 +38,20 @@ const ListsDisplay: React.FC = () => {
       showAlert('error', 'An error occurred while toggling the list');
     }
   }
+   */
 
   return (
     <>
       <Typography variant="h6">Your lists</Typography>
       <List id="listsList">
-        {lists === null || listSettings === null ? (
+        {lists === null ? (
           <LoadingScreen/>
         ) : (
           lists.map((listName, index) => (
           <div key={index}>
             <ListItem>
               <ListItemText primary={listName} />
+              {/*
               <Button
                 onClick={() => toggleListDisable(listName)}
                 id={"toggle-"+listName.replace(" ", "_")}
@@ -58,6 +60,7 @@ const ListsDisplay: React.FC = () => {
               >
                 {listSettings[listName]?.value.disabled ? "Enable" : "Disable"}
               </Button>
+               */}
               <Button
                 onClick={() => openListEditor(listName)}
                 id={"edit-"+listName.replace(" ", "_")}
