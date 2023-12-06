@@ -314,7 +314,6 @@ export async function filterElementCommon<T extends FilteredElement>(filterEleme
 }
 
 export async function filterTextElement(fe: FilteredTextElement): Promise<FilteredTextElement> {
-  console.log('filterTextElement', fe);
   const filterElement = await filterElementCommon(fe);
   const textElement = filterElement as FilteredTextElement;
   const triggeringWord = textElement.triggeringWord;
