@@ -5,6 +5,16 @@ import React, {useEffect, useState} from "react";
 import {Button, Paper, TextField, Typography} from "@mui/material";
 import {Save} from "@mui/icons-material";
 
+
+function displayCost(cost:number) {
+  const roundedCost = cost.toFixed(2);
+  if (cost > 0 && roundedCost === '0.00') {
+    return `Current Period Cost: Less than $0.01`;
+  }
+  return `Current Period Cost: $${roundedCost}`;
+}
+
+
 const MLBudget = () => {
   const { mlCostStore } = useDataStore();
   const [mlCost] = useDataFromStore(mlCostStore);
@@ -62,7 +72,7 @@ const MLBudget = () => {
       }} >
       <Typography variant="h5">Machine Learning Cost Management</Typography>
       <Typography variant="body1">
-        Current Period Cost: {mlCost.cost.toFixed(2)}
+        {displayCost(mlCost.cost)}
       </Typography>
       <Button
         variant="contained"
