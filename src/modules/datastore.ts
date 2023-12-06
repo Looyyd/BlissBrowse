@@ -34,6 +34,7 @@ export function useDataFromStore<T>(dataStore: ListenableDataStore<T>, defaultVa
     const updateState = async () => {
       try {
         const value = await dataStore.get();
+        console.log("useDataFromStore", value);
         setData(value);
         setError(null); // Reset error state if successful
       } catch (err) {
@@ -81,7 +82,14 @@ export abstract class FullDataStore<T> extends ListenableDataStore<IndexedDBKeyV
           // maybe because deepcopy is not an optimal default, we should only deepcopy if there is a subscriber?
           // or maybe there is another way to force rerender of components?
           //changeValueIndexedDB(this._currentData, request.key, newValue);
-          this._currentData = {...this._currentData, [request.key]: KeyValue(request.key, newValue)};
+
+          if (newValue === null) {
+            const newData = { ...this._currentData };
+            delete newData[request.key];
+            this._currentData = newData;
+          } else {
+            this._currentData = { ...this._currentData, [request.key]: KeyValue(request.key, newValue) };
+          }
           //TODO: notify only if value changed?
           this.notifySubscribers();
         }

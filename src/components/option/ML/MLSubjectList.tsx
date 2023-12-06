@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {useDataStore} from "../../DataStoreContext";
 import {useDataFromStore} from "../../../modules/datastore";
 import {Button, List, ListItem, ListItemText, MenuItem, Paper, Select, Typography} from "@mui/material";
@@ -10,23 +10,38 @@ import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 
 
 
+const possibleFilterActions = Object.keys(FilterAction);
+possibleFilterActions.push('default');
 
+const possibleFilterMethods = Object.keys(MLFilterMethod);
+possibleFilterMethods.push('default');
 
 const MLSubjectList = () => {
   const { subjectsDataStore } = useDataStore();
-  const [subjects] = useDataFromStore(subjectsDataStore);
+  const [subjectsKeyValueStore] = useDataFromStore(subjectsDataStore);
   const { showAlert } = useAlert();
+  const [ subjects, setSubjects ] = React.useState<MLSubject[]>([]);
 
-  const possibleFilterActions = Object.keys(FilterAction);
-  possibleFilterActions.push('default');
 
-  const possibleFilterMethods = Object.keys(MLFilterMethod);
-  possibleFilterMethods.push('default');
+  useEffect(() => {
+    if(subjectsKeyValueStore === null) {
+      return;
+    }
+    const sub = Object.values(subjectsKeyValueStore).map((keyValue) => {
+      return keyValue.value;
+    });
+    setSubjects(sub);
+  }, [subjectsKeyValueStore]);
+
+
 
   const deleteSubject = async (subjectDescription: string) => {
     const key = subjectDescription;
     try {
       await subjectsDataStore.clearKey(key);
+      //hack because i don't know why the stat wasn't updating
+      // the subject was being removed but then readded, but locally because disapeared on refersh
+      setSubjects(subjects.filter((subject) => subject.description !== subjectDescription));
       showAlert('success', 'Subject deleted successfully');
     } catch (e) {
       showAlert('error', 'An error occurred while deleting the subject');
@@ -62,29 +77,29 @@ const MLSubjectList = () => {
     }
   }
 
-  if (subjects === null) {
+  if (subjectsKeyValueStore === null) {
     return (
         <div>No subjects yet</div>
     )
   } else {
     return (
-           <Paper style={{
+      <Paper style={{
           padding: '20px',
           margin: '20px',
           boxShadow: '0px 0px 10px rgba(0,0,0,0.5)'
         }}>
         <Typography variant="h5" style={{ marginBottom: '1rem' }}>Your Subjects</Typography>
         <List>
-          {Object.keys(subjects).map((subjectDescription) => {
-            const subject = subjects[subjectDescription].value;
+          {subjects.map((subject) => {
+            const subjectDescription = subject.description;
             return (
-              <ListItem key={subjectDescription} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <ListItem key={subject.description} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <ListItemText primary={<Typography variant="subtitle1" style={{ fontWeight: 'bold' }}>{subjectDescription}</Typography>} />
 
 
                 <Typography variant="subtitle1" style={{ marginRight: '1rem' }}>Filter Method:</Typography>
                 <Select
-                  value={subject.filterMethod || 'default'}
+                  value={subject?.filterMethod || 'default'}
                   onChange={(event) => changeDefaultFilterMethod(subject, event)}
                   style={{ marginRight: '1rem' }}
                 >
@@ -95,7 +110,7 @@ const MLSubjectList = () => {
 
                 <Typography variant="subtitle1" style={{ marginRight: '1rem' }}>Filter Action:</Typography>
                 <Select
-                  value={subject.filterAction || 'default'}
+                  value={subject?.filterAction || 'default'}
                   onChange={(event) => changeDefaultAction(subject, event)}
                   style={{ marginRight: '1rem' }}
                 >
