@@ -35,6 +35,21 @@ export function preprocessTextBeforeEmbedding(text:string): string {
   return text;
 }
 
+export function preprocessTextBeforeHash(text:string): string {
+  // Convert to lowercase
+  text = text.toLowerCase();
+  // Remove URLs
+  text = text.replace(/https?:\/\/\S+/g, '');
+  // Remove numbers
+  text = text.replace(/\d+/g, '');
+  // Remove punctuation (excluding apostrophes for contractions)
+  text = text.replace(/[^\w\s']|_/g, '');
+  // Replace multiple whitespaces with a single space
+  text = text.replace(/\s\s+/g, ' ');
+  // Trim leading and trailing spaces
+  text = text.trim();
+  return text;
+}
 
 
 export interface MLFilterResult {
@@ -59,9 +74,9 @@ async function shouldTextBeFilteredML(text: string, subjects: MLSubject[], defau
   };
 }
 
-async function unfilterElements(elements: FilteredElement[]) {
+async function unfilterAllElements(elements: FilteredElement[]) {
   elements.map(async (element) => {
-    await unfilterElement(element);
+    await unfilterElement(element, "unfiltering all elements");
   });
 }
 
@@ -109,7 +124,9 @@ interface ProcessedElement {
 let processedElements : ProcessedElement[] = [];
 
 export function removeElementFromCaches(element: HTMLElement) {
-  console.log("removeElementFromProcessedElements");
+  if (DEBUG_FILTERING) {
+    console.log("removeElementFromCaches");
+  }
   const index = processedElements.findIndex(pe => pe.element === element);
   if (index > -1) {
     processedElements.splice(index, 1);
@@ -148,7 +165,7 @@ export async function checkAndFilterElements() {
   const isDisabled = await isCurrentSiteDisabled(CONTENT_CONTEXT);
   const elementsToCheck = await getElementsToCheck();
   if (isDisabled) {
-    await unfilterElements(filteredElements);
+    await unfilterAllElements(filteredElements);
     filteredElements.length = 0;
     processedElements.length = 0;
     return;
@@ -167,7 +184,7 @@ export async function checkAndFilterElements() {
     const clonedElement = cloneElementWithoutBubble(element);
 
     // Calculate the hash of the cloned element's text
-    const elementHash = hashCode(clonedElement.innerText);
+    const elementHash = hashCode(preprocessTextBeforeHash(clonedElement.innerText));
 
     const processed = processedElements.find(p => p.element === element);
 
@@ -183,7 +200,7 @@ export async function checkAndFilterElements() {
       // if filtered, unfilter
       const filteredElement = filteredElements.find(fe => fe.element === element);
       if (filteredElement) {
-        await unfilterElement(filteredElement);
+        await unfilterElement(filteredElement, "hash changed");
         const index = filteredElements.findIndex(fe => fe.element === element);
         if (index > -1) {
           filteredElements.splice(index, 1);

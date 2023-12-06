@@ -341,10 +341,13 @@ export async function filterMLElement(fe: FilteredMLElement): Promise<FilteredML
   return filterElement;
 }
 
-export async function unfilterElement(fe: FilteredElement) {
+export async function unfilterElement(fe: FilteredElement, reason?: string) {
   const element = fe.element;
   if(DEBUG_FILTERING){
     console.log('Unfiltering element', element);
+    if(reason){
+      console.log('Reason for unfilter', reason);
+    }
   }
   element.removeAttribute(PROCESSED_BY_ATTRIBUTE);
 
@@ -406,7 +409,7 @@ export async function unfilterElementsIfNotInTries(tries: Trie[], filteredElemen
       }
     }
     if (shouldUnfilter) {
-      unfilterElement(filteredElement);
+      unfilterElement(filteredElement, "word not in tries");
     } else {
       remainingElements.push(filteredElement);
     }
@@ -421,7 +424,7 @@ export async function unfilterElementIfNotInSubjects(subjects: MLSubject[], filt
     if (subjectDescriptions.includes(filteredElement.subject_description)) {
       remainingElements.push(filteredElement);
     } else {
-      unfilterElement(filteredElement);
+      unfilterElement(filteredElement, "subject not in subjects");
     }
   });
   return remainingElements;

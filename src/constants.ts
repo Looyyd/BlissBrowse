@@ -13,7 +13,7 @@ export const DEBUG = process.env.NODE_ENV === 'development'
 export const DEBUG_MESSAGES = false;
 export const DEBUG_PERFORMANCE = false;
 export const DEBUG_TOKEN_COST = false;
-export const DEBUG_FILTERING = false;
+export const DEBUG_FILTERING = true;
 export const DEBUG_EMBEDDING = false;
 export const DEBUG_CACHE = false;
 
