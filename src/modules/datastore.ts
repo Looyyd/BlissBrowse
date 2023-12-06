@@ -211,6 +211,8 @@ export abstract class RowDataStore<T> extends ListenableDataStore<T>{
 
 }
 
+/*
+//not used anymore, will need to readd local storage permissions if used again
 export abstract class LocalStorageStore<T> extends RowDataStore<T> {
   IndexedDBStoreName: string = LOCAL_STORAGE_STORE_NAME;
 
@@ -245,6 +247,7 @@ export abstract class LocalStorageStore<T> extends RowDataStore<T> {
   async set(value: T): Promise<void> {
     /* @throws {Error} if indexedDB errors */
     //synced through background script
+/*
     const processedValue = this.setPreprocessor(value);
     //TODO: does this cause double notification since we also have a dataChanged listener?
     this._currentData = processedValue;
@@ -253,6 +256,7 @@ export abstract class LocalStorageStore<T> extends RowDataStore<T> {
     await setLocalStorageKey(this.key, processedValue)
   }
 }
+*/
 
 
 export abstract class DatabaseStorage<T> extends RowDataStore<T> {

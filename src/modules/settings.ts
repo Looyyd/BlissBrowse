@@ -1,12 +1,10 @@
 import {
-  COLOR_THEME_KEY,
-  DEFAULT_COLOR_THEME,
   DEFAULT_FILTER_ACTION, DEFAULT_ML_FILTER_METHOD,
   FILTER_ACTION_KEY, LIST_SETTINGS_STORE_NAME, ML_FILTER_METHOD_KEY,
   SETTINGS_STORE_NAME
 } from "../constants";
 import {ColorTheme, FilterAction, isColorTheme, isFilterAction} from "./types";
-import {DatabaseStorage, FullDataStore, LocalStorageStore} from "./datastore";
+import {DatabaseStorage, FullDataStore} from "./datastore";
 import {isMLFilterMethod, MLFilterMethod} from "./ml/mlTypes";
 
 
@@ -17,14 +15,6 @@ export class FilterActionStore extends DatabaseStorage<FilterAction>{
   key = FILTER_ACTION_KEY;
   defaultValue = DEFAULT_FILTER_ACTION;
   isType = isFilterAction;
-  typeUpgrade = undefined;
-}
-
-export class ColorThemeStore extends LocalStorageStore<ColorTheme>{
-  IndexedDBStoreName = SETTINGS_STORE_NAME;
-  key = COLOR_THEME_KEY;
-  defaultValue = DEFAULT_COLOR_THEME;
-  isType = isColorTheme;
   typeUpgrade = undefined;
 }
 

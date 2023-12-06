@@ -7,7 +7,7 @@ import NewListForm from "./components/popup/NewListForm";
 import OpenOptionsButton from "./components/popup/OpenOptionsButton";
 import {ColorTheme} from "./modules/types";
 import {Box, Container, CssBaseline, ThemeProvider} from "@mui/material";
-import {ColorThemeStore} from "./modules/settings";
+//import {ColorThemeStore} from "./modules/settings";
 import {AlertProvider} from "./components/AlertContext";
 import AlertComponent from "./components/AlertComponent";
 import FeedbackButton from "./components/FeedbackButton";
@@ -20,10 +20,10 @@ import NewMLSubjectForm from "./components/popup/NewMLSubjectForm";
 
 
 const Popup: React.FC = () => {
-  const colorThemeStore = new ColorThemeStore();
-  const [colorTheme] = useDataFromStore(colorThemeStore);
+  //const colorThemeStore = new ColorThemeStore();
+  //const [colorTheme] = useDataFromStore(colorThemeStore);
 
-  const darkMode = colorTheme === ColorTheme.DARK;
+  //const darkMode = colorTheme === ColorTheme.DARK;
 
   return (
       <Container >

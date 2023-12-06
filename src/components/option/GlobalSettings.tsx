@@ -2,7 +2,6 @@ import {FilterAction, ColorTheme} from "../../modules/types"
 import {Container, MenuItem, Select, Tooltip} from "@mui/material";
 import React from "react";
 import {
-  ColorThemeStore,
   FilterActionStore, MLFilterMethodStore,
 } from "../../modules/settings";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
