@@ -1,4 +1,4 @@
-import {DEBUG, ML_FEATURES} from "../../constants";
+import {DEBUG, DEBUG_FILTERING, ML_FEATURES} from "../../constants";
 import {isCurrentSiteDisabled} from "../hostname";
 import {
   filterMLElement,
@@ -141,7 +141,7 @@ export async function checkAndFilterElements() {
     }, 0);
   }
 
-  if (DEBUG) {
+  if (DEBUG_FILTERING) {
     console.log("Entering checkAndFilterElements");
   }
 
