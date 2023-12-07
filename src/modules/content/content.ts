@@ -28,6 +28,8 @@ export function preprocessTextBeforeEmbedding(text:string): string {
   text = text.replace(/\d+/g, '');
   // Remove punctuation (excluding apostrophes for contractions)
   //text = text.replace(/[^\w\s']|_/g, '');
+  //Replace newlines with spaces
+  text = text.replace(/\n/g, ' ');//apparently this makes embedding results better
   // Replace multiple whitespaces with a single space
   text = text.replace(/\s\s+/g, ' ');
   // Trim leading and trailing spaces
