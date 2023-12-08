@@ -11,6 +11,27 @@ import {FilterAction} from "../types";
 export type llmServerTypes = 'openai' | 'local' | 'none';
 export type embedServerTypes = 'openai' | 'none';
 
+export enum EmbeddingCalculationMethod {
+  nearestNeighbour = "NEAREST_NEIGHBOUR",
+  average = "AVERAGE",
+}
+
+export interface EmbeddingSettings {
+  threshold:number,
+  calculationMethod: EmbeddingCalculationMethod,
+}
+
+export interface PotentialEmbeddingSettings {
+  threshold?:number,
+  calculationMethod?: EmbeddingCalculationMethod,
+}
+
+export const DEFAULT_EMBEDDING_SETTINGS: EmbeddingSettings = {
+  threshold: 0.76,//TODO: depends on calculation method
+  calculationMethod: EmbeddingCalculationMethod.average,
+}
+
+
 export interface inferenseServerSettings {
   llmType: llmServerTypes;
   llmURL?: string;
@@ -18,11 +39,13 @@ export interface inferenseServerSettings {
   embedType: embedServerTypes;
   embedURL?: string;
   embedToken?: string;
+  embeddingSettings: EmbeddingSettings;
 }
 
 const DEFAULT_INFERENCE_SERVER_SETTINGS: inferenseServerSettings = {
   llmType: 'none',
   embedType: 'none',
+  embeddingSettings: DEFAULT_EMBEDDING_SETTINGS,
 };
 
 export enum MLFilterMethod {
@@ -51,7 +74,10 @@ export class InferenseServerSettingsStore extends DatabaseStorage<inferenseServe
     const embedhasOptionalUrl = !('embedURL' in data) || typeof data.embedURL === 'string';
     const embedhasOptionalToken = !('embedToken' in data) || typeof data.embedToken === 'string';
 
-    return llmhasValidType && llmhasOptionalUrl && llmhasOptionalToken && embedhasValidType && embedhasOptionalUrl && embedhasOptionalToken;
+    const hasEmbeddingSettings = 'embeddingSettings' in data && typeof data.embeddingSettings === 'object' && data.embeddingSettings !== null;
+
+    //TODO: type check for settings
+    return llmhasValidType && llmhasOptionalUrl && llmhasOptionalToken && embedhasValidType && embedhasOptionalUrl && embedhasOptionalToken && hasEmbeddingSettings;
   };
   defaultValue = DEFAULT_INFERENCE_SERVER_SETTINGS;
 }
@@ -151,13 +177,16 @@ export class SubjectsStore extends FullDataStore<MLSubject> {
 
 export interface MLSubject {
   description: string;
-  embedding_keywords?: string[];
-  embedding?: number[];
+  sentences?: string[];
+  sentencesEmbeddings?: number[][];
+  embeddingAverage?: number[];
   filterAction?: FilterAction;
   filterMethod?: MLFilterMethod;
+  embeddingSettings?: PotentialEmbeddingSettings;
 }
 
 export interface PopulatedFilterSubject extends MLSubject {
-  embedding_keywords: string[];
-  embedding: number[];
+  sentences: string[];
+  sentencesEmbeddings: number[][];
+  embeddingAverage: number[];
 }

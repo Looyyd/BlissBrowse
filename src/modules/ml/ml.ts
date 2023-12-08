@@ -1,6 +1,7 @@
 import {DEBUG, DEBUG_TOKEN_COST} from "../../constants";
 import {averageEmbeddings, cosineSimilarity} from "./mlHelpers";
 import {
+  EmbeddingCalculationMethod,
   inferenseServerSettings,
   InferenseServerSettingsStore,
   MLFilterMethod,
@@ -47,15 +48,16 @@ export async function populateSubjectAndSave(subject: MLSubject){
   if(!subject.description){
     throw new Error('subject.description is required');
   }
-  if(!subject.embedding_keywords){
-    subject.embedding_keywords = await getKeywordsForSubject(subject.description, await settingsStore.get());
+  if(!subject.sentences){
+    subject.sentences = await getKeywordsForSubject(subject.description, await settingsStore.get());
   }
-  if(!subject.embedding){
-    const embedding_promises = subject.embedding_keywords.map(async keyword => await getEmbeddings(keyword));
+  if(!subject.embeddingAverage){
+    const embedding_promises = subject.sentences.map(async keyword => await getEmbeddings(keyword));
     // wait for all promises to resolve
     const embeddings = await Promise.all(embedding_promises);
     //average the embeddings
-    subject.embedding = averageEmbeddings(embeddings);
+    subject.sentencesEmbeddings = embeddings;
+    subject.embeddingAverage = averageEmbeddings(embeddings);
     await subjectsStore.set(subject.description, subject);
   }
   return subject as PopulatedFilterSubject;
@@ -66,7 +68,7 @@ export async function isTextInSubjectOpenAI(subject:MLSubject, text:string){
   //const threshold = 0.65; //jinaai
   const populatedSubject = await populateSubjectAndSave(subject);
   const textEmbedding = await getEmbeddings(text);
-  const similarity = cosineSimilarity(populatedSubject.embedding, textEmbedding);
+  const similarity = cosineSimilarity(populatedSubject.embeddingAverage, textEmbedding);
 
   const result = similarity > threshold;
 
@@ -114,15 +116,25 @@ export async function isTextInSubjectLLM(subject:MLSubject, text:string, setting
 }
 
 export async function isTextInSubjectEmbedding(subject:MLSubject, text:string, settings: inferenseServerSettings){
+  const threshold = subject.embeddingSettings?.threshold || settings.embeddingSettings.threshold;
+  const method = subject.embeddingSettings?.calculationMethod || settings.embeddingSettings.calculationMethod;
   if(settings.embedType !== "none") {
     let embed_result = false;
     if (settings.embedType === 'openai') {
-      const threshold = 0.76;
-      const populatedSubject = await populateSubjectAndSave(subject);
-      const textEmbedding = await getEmbeddings(text);
-      const similarity = cosineSimilarity(populatedSubject.embedding, textEmbedding);
+      if(method === EmbeddingCalculationMethod.average) {
+        const populatedSubject = await populateSubjectAndSave(subject);
+        const textEmbedding = await getEmbeddings(text);
+        const similarity = cosineSimilarity(populatedSubject.embeddingAverage, textEmbedding);
 
-      embed_result = similarity > threshold;
+        embed_result = similarity > threshold;
+      }
+      else if (method === EmbeddingCalculationMethod.nearestNeighbour) {
+        const populatedSubject = await populateSubjectAndSave(subject);
+        const textEmbedding = await getEmbeddings(text);
+        const similarities = populatedSubject.sentencesEmbeddings.map(embedding => cosineSimilarity(embedding, textEmbedding));
+        const maxSimilarity = Math.max(...similarities);
+        embed_result = maxSimilarity > threshold;
+      }
     } else {
       throw new Error('invalid embedding type');
     }

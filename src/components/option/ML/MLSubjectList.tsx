@@ -1,12 +1,24 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useDataStore} from "../../DataStoreContext";
 import {useDataFromStore} from "../../../modules/datastore";
-import {Button, List, ListItem, ListItemText, MenuItem, Paper, Select, Typography} from "@mui/material";
+import {
+  Button,
+  Dialog, DialogActions, DialogContent, DialogTitle,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  MenuItem,
+  Paper,
+  Select, Tooltip,
+  Typography
+} from "@mui/material";
 import {useAlert} from "../../AlertContext";
-import {Delete} from "@mui/icons-material";
+import {Delete, Settings} from "@mui/icons-material";
 import {FilterAction} from "../../../modules/types";
 import {MLFilterMethod, MLSubject, SubjectsStore} from "../../../modules/ml/mlTypes";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
+import MLAdvancedEmbeddingsSettings from "./MLAdvancedEmbeddingsSettings";
 
 
 
@@ -21,6 +33,18 @@ const MLSubjectList = () => {
   const [subjectsKeyValueStore] = useDataFromStore(subjectsDataStore);
   const { showAlert } = useAlert();
   const [ subjects, setSubjects ] = React.useState<MLSubject[]>([]);
+
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState<null | MLSubject>(null);
+
+  const openEditor = (subject: MLSubject) => {
+    setSelectedSubject(subject);
+    setIsEditorOpen(true);
+  };
+
+  const closeEditor = () => {
+    setIsEditorOpen(false);
+  };
 
 
   useEffect(() => {
@@ -96,6 +120,11 @@ const MLSubjectList = () => {
               <ListItem key={subject.description} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <ListItemText primary={<Typography variant="subtitle1" style={{ fontWeight: 'bold' }}>{subjectDescription}</Typography>} />
 
+                <Tooltip title="Open advanced embedding settings">
+                  <IconButton onClick={() => openEditor(subject)} size="large">
+                    <Settings />
+                  </IconButton>
+                </Tooltip>
 
                 <Typography variant="subtitle1" style={{ marginRight: '1rem' }}>Filter Method:</Typography>
                 <Select
@@ -131,6 +160,30 @@ const MLSubjectList = () => {
             )
           })}
         </List>
+
+        { selectedSubject && (
+          <Dialog
+            open={isEditorOpen}
+            onClose={closeEditor}
+            fullWidth={true}  // This will make the dialog take the full width of the container
+            maxWidth="md"     // You can adjust this value as 'sm', 'md', 'lg', or 'xl' as needed
+          >
+            <DialogTitle>Edit Subject</DialogTitle>
+            <DialogContent>
+                <MLAdvancedEmbeddingsSettings
+                  mlSubject={selectedSubject}
+                  setMLSubject={async (updatedSubject) => {
+                    // Logic to update the subject in your state and close the modal
+                    await subjectsDataStore.set(selectedSubject.description, updatedSubject);
+                    closeEditor();
+                  }}
+                />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={closeEditor}>Close</Button>
+            </DialogActions>
+          </Dialog>
+        )}
       </Paper>
     )
   }
