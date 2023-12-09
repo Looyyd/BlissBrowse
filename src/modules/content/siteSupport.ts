@@ -64,14 +64,18 @@ export async function getElementsToCheck(): Promise<HTMLElement[]> {
 }
 
 async function getTwitterElementText(element: HTMLElement): Promise<string> {
-  // tweetText is the first element with the attribute 'data-testid="tweetText"'
-  const tweetText = element.querySelector('[data-testid="tweetText"]');
-  // If tweetText is null, return an empty string
-  if (!tweetText || !(tweetText instanceof HTMLElement)) {
-    return "";
-  }
+  // tweetText is all the elements with the attribute 'data-testid="tweetText"' (includes quoted tweets)
+  const tweetTexts = element.querySelectorAll('[data-testid="tweetText"]');
+  //concateneate all tweetTexts
+  let tweetText = "";
+  tweetTexts.forEach(t => {
+    if(!t || !(t instanceof HTMLElement)){
+      return;
+    }
+    tweetText += t.innerText;
+  });
   // Return the text of tweetText
-  return tweetText.innerText;
+  return tweetText;
 }
 
 export async function getElementText(element: HTMLElement): Promise<string> {
