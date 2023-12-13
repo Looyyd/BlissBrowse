@@ -3,11 +3,11 @@ import {
   Button,
   FormControl, FormControlLabel,
   InputLabel,
-  MenuItem, Radio,
+  MenuItem,
   Select, Switch,
   TextField,
 } from "@mui/material";
-import {DEFAULT_EMBEDDING_SETTINGS, EmbeddingCalculationMethod, MLSubject} from "../../../modules/ml/mlTypes";
+import {EmbeddingCalculationMethod, MLSubject} from "../../../modules/ml/mlTypes";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 
 
@@ -23,7 +23,7 @@ const MLAdvancedEmbeddingsSettings: React.FC<MLAdvancedEmbeddingsSettingsProps> 
   const [localMLSubject, setLocalMLSubject] = useState(mlSubject);
 
   useEffect(() => {
-    setLocalMLSubject(mlSubject); // Update local state when mlSubject prop changes
+    setLocalMLSubject(mlSubject);
   }, [mlSubject]);
 
   const hasThreshold = localMLSubject.embeddingSettings?.threshold !== undefined;
@@ -36,14 +36,8 @@ const MLAdvancedEmbeddingsSettings: React.FC<MLAdvancedEmbeddingsSettingsProps> 
     setLocalMLSubject({ ...localMLSubject, sentences: newSentences });
   };
 
-  /*
-  const handleThresholdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newSettings = { ...localMLSubject.embeddingSettings, threshold: Number(event.target.value) };
-    setLocalMLSubject({ ...localMLSubject, embeddingSettings: newSettings });
-  };
-  */
   const handleAddSentence = () => {
-    const newSentences = [...(localMLSubject.sentences || []), '']; // Add an empty string as a new sentence
+    const newSentences = [...(localMLSubject.sentences || []), ''];
     //TODO: could do something more efficient than removing the embeddings, but this hsould be fine for now since it's cheap
     const newSubject = {...localMLSubject, sentences: newSentences, sentencesEmbeddings: undefined, embeddingAverage: undefined} as MLSubject;
     setLocalMLSubject(newSubject);
@@ -51,7 +45,7 @@ const MLAdvancedEmbeddingsSettings: React.FC<MLAdvancedEmbeddingsSettingsProps> 
 
   const handleDeleteSentence = (index: number) => {
     const newSentences = [...(localMLSubject.sentences || [])];
-    newSentences.splice(index, 1); // Remove the sentence at the specified index
+    newSentences.splice(index, 1);
     //TODO: could do something more efficient than removing the embeddings, but this hsould be fine for now since it's cheap
     const newSubject = {...localMLSubject, sentences: newSentences, sentencesEmbeddings: undefined, embeddingAverage: undefined};
     setLocalMLSubject(newSubject);
@@ -97,7 +91,7 @@ const MLAdvancedEmbeddingsSettings: React.FC<MLAdvancedEmbeddingsSettingsProps> 
   return (
     <div>
       {localMLSubject.sentences?.map((sentence, index) => (
-        <div key={index}>
+        <div key={sentence}>
           <TextField
             label={`Sentence ${index + 1}`}
             value={sentence}

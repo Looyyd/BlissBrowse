@@ -63,7 +63,7 @@ const MLSubjectList = () => {
     const key = subjectDescription;
     try {
       await subjectsDataStore.clearKey(key);
-      //hack because i don't know why the stat wasn't updating
+      // hack because i don't know why the stat wasn't updating
       // the subject was being removed but then readded, but locally because disapeared on refersh
       setSubjects(subjects.filter((subject) => subject.description !== subjectDescription));
       showAlert('success', 'Subject deleted successfully');
@@ -73,12 +73,12 @@ const MLSubjectList = () => {
     }
   }
 
-  const changeDefaultAction = async (subject: MLSubject, event: SelectChangeEvent<unknown>) => {
-    let action: string | undefined = event.target.value as string;
+  const changeDefaultAction = async (subject: MLSubject, event: SelectChangeEvent<FilterAction | "default">) => {
+    let action : FilterAction | "default" | undefined = event.target.value as FilterAction | "default" ;
     if(action === 'default') {
       action = undefined;
     }
-    const newSubject : MLSubject = {...subject, filterAction: action as FilterAction};
+    const newSubject : MLSubject = {...subject, filterAction: action};
     try {
       await subjectsDataStore.set(subject.description, newSubject);
       showAlert('success', 'Default action updated successfully!');
@@ -165,15 +165,14 @@ const MLSubjectList = () => {
           <Dialog
             open={isEditorOpen}
             onClose={closeEditor}
-            fullWidth={true}  // This will make the dialog take the full width of the container
-            maxWidth="md"     // You can adjust this value as 'sm', 'md', 'lg', or 'xl' as needed
+            fullWidth={true}
+            maxWidth="md"
           >
             <DialogTitle>Edit Subject</DialogTitle>
             <DialogContent>
                 <MLAdvancedEmbeddingsSettings
                   mlSubject={selectedSubject}
                   setMLSubject={async (updatedSubject) => {
-                    // Logic to update the subject in your state and close the modal
                     await subjectsDataStore.set(selectedSubject.description, updatedSubject);
                     closeEditor();
                   }}
