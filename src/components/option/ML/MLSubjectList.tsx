@@ -23,13 +23,9 @@ import {MLFilterMethod, MLSubject} from "../../../modules/ml/mlTypes";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 import MLAdvancedEmbeddingsSettings from "./MLAdvancedEmbeddingsSettings";
 import PaperBlissBrowse from "../../style/PaperBlissBrowse";
+import SelectFromEnum from "../../style/SelectFromEnum";
 
 
-const possibleFilterActions = Object.keys(FilterAction);
-possibleFilterActions.push('default');
-
-const possibleFilterMethods = Object.keys(MLFilterMethod);
-possibleFilterMethods.push('default');
 
 const MLSubjectList = () => {
   const { subjectsDataStore } = useDataStore();
@@ -75,7 +71,7 @@ const MLSubjectList = () => {
     }
   }
 
-  const changeDefaultAction = async (subject: MLSubject, event: SelectChangeEvent<FilterAction | "default">) => {
+  const changeDefaultAction = async (subject: MLSubject, event: SelectChangeEvent<string>) => {
     let action : FilterAction | "default" | undefined = event.target.value as FilterAction | "default" ;
     if(action === 'default') {
       action = undefined;
@@ -125,26 +121,20 @@ const MLSubjectList = () => {
                 </Tooltip>
 
                 <Typography variant="subtitle1" style={{ marginRight: '1rem' }}>Filter Method:</Typography>
-                <Select
-                  value={subject?.filterMethod || 'default'}
+                <SelectFromEnum
+                  enumObj={MLFilterMethod}
                   onChange={(event) => changeDefaultFilterMethod(subject, event)}
-                  style={{ marginRight: '1rem' }}
-                >
-                  {possibleFilterMethods.map((action) => (
-                    <MenuItem key={action} value={action}>{action}</MenuItem>
-                  ))}
-                </Select>
+                  value={subject?.filterMethod || 'default'}
+                  includeDefault={true}
+                />
 
                 <Typography variant="subtitle1" style={{ marginRight: '1rem' }}>Filter Action:</Typography>
-                <Select
-                  value={subject?.filterAction || 'default'}
+                <SelectFromEnum
+                  enumObj={FilterAction}
                   onChange={(event) => changeDefaultAction(subject, event)}
-                  style={{ marginRight: '1rem' }}
-                >
-                  {possibleFilterActions.map((action) => (
-                    <MenuItem key={action} value={action}>{action}</MenuItem>
-                  ))}
-                </Select>
+                  value={subject?.filterAction || 'default'}
+                  includeDefault={true}
+                />
 
                 <Button
                   variant="contained"

@@ -8,6 +8,7 @@ import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 import Box from "@mui/material/Box";
 import {useDataFromStore} from "../../modules/datastore";
 import {MLFilterMethod} from "../../modules/ml/mlTypes";
+import SelectFromEnum from "../style/SelectFromEnum";
 
 //const colorThemeStore = new ColorThemeStore();
 const filterActionStore = new FilterActionStore();
@@ -20,12 +21,12 @@ const GlobalSettings = () => {
   const filterActions = Object.values(FilterAction);
   //const colorThemes = Object.values(ColorTheme);
 
-  async function onActionChange(event: SelectChangeEvent<FilterAction>) {
+  async function onActionChange(event: SelectChangeEvent<string>) {
     const action = event.target.value as FilterAction;
     await filterActionStore.set(action);
   }
 
-  async function onMLFilterMethodChange(event: SelectChangeEvent<MLFilterMethod>) {
+  async function onMLFilterMethodChange(event: SelectChangeEvent<string>) {
     const action = event.target.value as MLFilterMethod;
     await mlFilterMethodStore.set(action);
   }
@@ -46,19 +47,13 @@ const GlobalSettings = () => {
               <label id="filterActionSelect-label">Change Default Filter Action</label>
             </Box>
           </Tooltip>
-          <Select
+          <SelectFromEnum
             labelId="filterActionSelect-label"
             id="filterActionSelect"
-            value={selectedAction === null ? "" : selectedAction}
+            enumObj={FilterAction}
             onChange={onActionChange}
-            disabled={filterActions.length === 0}
-          >
-            {filterActions.map((actionName) => (
-              <MenuItem key={actionName} value={actionName}>
-                {actionName}
-              </MenuItem>
-            ))}
-          </Select>
+            value={selectedAction === null ? "" : selectedAction}
+            />
         </Box>
 
         <Box mb={2}>
@@ -67,19 +62,13 @@ const GlobalSettings = () => {
               <label id="mlFilterMethodSelect-label">Change Default ML Filter Method</label>
             </Box>
           </Tooltip>
-          <Select
+          <SelectFromEnum
             labelId="mlFilterMethodSelect-label"
             id="mlFilterMethodSelect"
-            value={selectedMLFilterMethod === null ? "" : selectedMLFilterMethod}
+            enumObj={MLFilterMethod}
             onChange={onMLFilterMethodChange}
-            disabled={filterActions.length === 0}
-          >
-            {Object.values(MLFilterMethod).map((method) => (
-              <MenuItem key={method} value={method}>
-                {method}
-              </MenuItem>
-            ))}
-          </Select>
+            value={selectedMLFilterMethod === null ? "" : selectedMLFilterMethod}
+          />
         </Box>
 
         {/*

@@ -9,10 +9,9 @@ import {
 } from "@mui/material";
 import {EmbeddingCalculationMethod, MLSubject} from "../../../modules/ml/mlTypes";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
+import SelectFromEnum from "../../style/SelectFromEnum";
 
 
-const possibleCalculationMethods = Object.keys(EmbeddingCalculationMethod);
-possibleCalculationMethods.push('default');
 
 interface MLAdvancedEmbeddingsSettingsProps {
   mlSubject: MLSubject;
@@ -72,7 +71,7 @@ const MLAdvancedEmbeddingsSettings: React.FC<MLAdvancedEmbeddingsSettingsProps> 
     }
   };
 
-  const handleCalculationMethodChange = (event: SelectChangeEvent<EmbeddingCalculationMethod | "default">) => {
+  const handleCalculationMethodChange = (event: SelectChangeEvent<string>) => {
     if(event.target.value === 'default') {
       const newSettings = { ...localMLSubject.embeddingSettings, calculationMethod: undefined };
       setLocalMLSubject({ ...localMLSubject, embeddingSettings: newSettings });
@@ -110,16 +109,12 @@ const MLAdvancedEmbeddingsSettings: React.FC<MLAdvancedEmbeddingsSettingsProps> 
 
       <FormControl fullWidth margin="normal">
         <InputLabel>Calculation Method</InputLabel>
-        <Select
-          value={localMLSubject.embeddingSettings?.calculationMethod || 'default'}
+        <SelectFromEnum
+          enumObj={EmbeddingCalculationMethod}
           onChange={handleCalculationMethodChange}
-        >
-          {possibleCalculationMethods.map((method) => (
-            <MenuItem key={method} value={method}>
-              {method}
-            </MenuItem>
-          ))}
-        </Select>
+          value={localMLSubject.embeddingSettings?.calculationMethod || 'default'}
+          includeDefault={true}
+        />
       </FormControl>
       <div>
         <FormControlLabel
