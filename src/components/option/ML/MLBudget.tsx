@@ -5,6 +5,7 @@ import React, {useEffect, useState} from "react";
 import {Button, TextField, Typography} from "@mui/material";
 import {Save} from "@mui/icons-material";
 import PaperBlissBrowse from "../../style/PaperBlissBrowse";
+import LoadingScreen from "../../style/LoadingScreen";
 
 
 function displayCost(cost:number) {
@@ -61,7 +62,9 @@ const MLBudget = () => {
   };
 
   if (mlCost === null) {
-    return <div>Loading</div>;
+    return (
+      <LoadingScreen/>
+    )
   }
 
   return (

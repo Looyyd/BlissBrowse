@@ -7,6 +7,7 @@ import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 import {Save} from "@mui/icons-material";
 import {llmServerTypes} from "../../../modules/ml/mlTypes";
 import PaperBlissBrowse from "../../style/PaperBlissBrowse";
+import LoadingScreen from "../../style/LoadingScreen";
 
 
 //TODO: can remove hard-coded and get from type definition?
@@ -22,7 +23,7 @@ const MLInferenceSettings = () => {
   // Local state to manage form data
   const [localSettings, setLocalSettings] = useState(settings);
   // Add state hooks for field visibility
-  const [showEmbedURL, setShowEmbedURL] = useState(false);
+  const [showEmbedURL,] = useState(false);
   const [showEmbedToken, setShowEmbedToken] = useState(false);
   const [showLLMURL, setShowLLMURL] = useState(false);
   const [showLLMToken, setShowLLMToken] = useState(false);
@@ -77,7 +78,7 @@ const MLInferenceSettings = () => {
 
   if (settings === null || localSettings === null) {
     return (
-        <div>Loading</div>
+      <LoadingScreen/>
     )
   }
 

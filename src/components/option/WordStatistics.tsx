@@ -20,6 +20,7 @@ import {IndexedDBKeyValueStore, StatisticsEntry} from "../../modules/types";
 import InfoIcon from "@mui/icons-material/Info";
 import {useDataStore} from "../DataStoreContext";
 import {useDataFromStore} from "../../modules/datastore";
+import PaperBlissBrowse from "../style/PaperBlissBrowse";
 
 
 type sortKey = 'key' | 'value'; // 'key' for word, 'value' for statistic
@@ -141,49 +142,51 @@ const WordStatistics = () => {
 
   return (
     <Container>
-      <Typography variant="body1" display="flex" alignItems="center" gap={1} marginBottom={3}>
-        <InfoIcon color="primary" />
-        Words that have never been seen are not displayed in statistics.
-      </Typography>
-    <div>
-      <FormControl variant="outlined" fullWidth>
-        <ListSelector
-          lists={lists}
-          onListChange={handleListChange}
-          value={selectedList || ''}
-        />
-      </FormControl>
-      <div id="ListStatistics">
-        <Table>
-          <TableHead>
-            <TableRow>
-              {columnNames.map((name, index) => {
-                // Determine the sortKey based on the index or column name
-                const sortKey = index === 0 ? 'key' : 'value';
-                return (
-                  <TableCell key={name} onClick={() => handleSort(sortKey)}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
-                      <span>{name}</span>
-                      <span style={{ marginLeft: '8px', width: '24px', display: 'inline-block' }}>
+      <PaperBlissBrowse>
+        <Typography variant="body1" display="flex" alignItems="center" gap={1} marginBottom={3}>
+          <InfoIcon color="primary" />
+          Words that have never been seen are not displayed in statistics.
+        </Typography>
+        <div>
+          <FormControl variant="outlined" fullWidth>
+            <ListSelector
+              lists={lists}
+              onListChange={handleListChange}
+              value={selectedList || ''}
+            />
+          </FormControl>
+          <div id="ListStatistics">
+            <Table>
+              <TableHead>
+                <TableRow>
+                  {columnNames.map((name, index) => {
+                    // Determine the sortKey based on the index or column name
+                    const sortKey = index === 0 ? 'key' : 'value';
+                    return (
+                      <TableCell key={name} onClick={() => handleSort(sortKey)}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
+                          <span>{name}</span>
+                          <span style={{ marginLeft: '8px', width: '24px', display: 'inline-block' }}>
                       {getSortIndicator(sortKey)}
                     </span>
-                    </div>
-                  </TableCell>
-                );
-              })}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {sortedStatistics.map((entry) => (
-              <TableRow key={entry.key}>
-                <TableCell>{entry.key}</TableCell>
-                <TableCell>{entry.value.count}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+                        </div>
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {sortedStatistics.map((entry) => (
+                  <TableRow key={entry.key}>
+                    <TableCell>{entry.key}</TableCell>
+                    <TableCell>{entry.value.count}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </PaperBlissBrowse>
     </Container>
   );
 };

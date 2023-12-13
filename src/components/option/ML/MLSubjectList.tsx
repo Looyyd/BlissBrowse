@@ -11,8 +11,6 @@ import {
   List,
   ListItem,
   ListItemText,
-  MenuItem,
-  Select,
   Tooltip,
   Typography
 } from "@mui/material";
@@ -24,8 +22,6 @@ import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 import MLAdvancedEmbeddingsSettings from "./MLAdvancedEmbeddingsSettings";
 import PaperBlissBrowse from "../../style/PaperBlissBrowse";
 import SelectFromEnum from "../../style/SelectFromEnum";
-
-
 
 const MLSubjectList = () => {
   const { subjectsDataStore } = useDataStore();

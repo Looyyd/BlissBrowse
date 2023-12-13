@@ -153,7 +153,7 @@ const FilterWordlistsEditor = () => {
         <Box sx={{height: 20}}/>
         <PaperBlissBrowse>
           <Box display="flex" flexDirection="column" alignItems="start" gap={2}>
-            <Typography variant="h6">Edit a list</Typography>
+            <Typography variant="h5">Edit a list</Typography>
             <ListSelector
               lists={lists}
               onListChange={handleListChange}
@@ -161,7 +161,7 @@ const FilterWordlistsEditor = () => {
             />
             { selectedList && (
               <>
-                <Typography variant="h6">Filter Action</Typography>
+                <Typography variant="h5">Filter Action</Typography>
                 <Select
                   onChange={handleFilterActionChange}
                   value={selectedFilterAction}
