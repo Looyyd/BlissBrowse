@@ -14,6 +14,7 @@ import {useDataStore} from "../DataStoreContext";
 import {FilterList, FilterListDataStore} from "../../modules/wordLists";
 import {useDataFromStore} from "../../modules/datastore";
 import {FilterAction} from "../../modules/types";
+import PaperBlissBrowse from "./ML/PaperBlissBrowse";
 
 
 
@@ -145,38 +146,42 @@ const FilterWordlistsEditor = () => {
   return (
     <>
       <Container>
-        <NewListForm/>
+        <PaperBlissBrowse>
+          <NewListForm/>
+        </PaperBlissBrowse>
         {/* separator */}
         <Box sx={{height: 20}}/>
-        <Box display="flex" flexDirection="column" alignItems="start" gap={2}>
-          <Typography variant="h6">Edit a list</Typography>
-          <ListSelector
-            lists={lists}
-            onListChange={handleListChange}
-            value={selectedList}
-          />
-          { selectedList && (
-            <>
-              <Typography variant="h6">Filter Action</Typography>
-              <Select
-                onChange={handleFilterActionChange}
-                value={selectedFilterAction}
-              >
-                {possibleFilterActions.map((action) => (
-                  <MenuItem value={action}>{action}</MenuItem>
-                ))}
-              </Select>
-              <Button variant="contained" color="primary" onClick={saveWords} startIcon={<Save/>}>
-                Save
-              </Button>
-              <Button variant="contained" color="error" onClick={deleteSelectedList} startIcon={<Delete/>}>
-                Delete List
-              </Button>
-              <TextEditBox textAreaValue={textAreaValue} handleTextAreaChange={handleTextAreaChange} id={"filterWordlistsEditorTextArea"}/>
-            </>
-          )
-        }
-      </Box>
+        <PaperBlissBrowse>
+          <Box display="flex" flexDirection="column" alignItems="start" gap={2}>
+            <Typography variant="h6">Edit a list</Typography>
+            <ListSelector
+              lists={lists}
+              onListChange={handleListChange}
+              value={selectedList}
+            />
+            { selectedList && (
+              <>
+                <Typography variant="h6">Filter Action</Typography>
+                <Select
+                  onChange={handleFilterActionChange}
+                  value={selectedFilterAction}
+                >
+                  {possibleFilterActions.map((action) => (
+                    <MenuItem value={action}>{action}</MenuItem>
+                  ))}
+                </Select>
+                <Button variant="contained" color="primary" onClick={saveWords} startIcon={<Save/>}>
+                  Save
+                </Button>
+                <Button variant="contained" color="error" onClick={deleteSelectedList} startIcon={<Delete/>}>
+                  Delete List
+                </Button>
+                <TextEditBox textAreaValue={textAreaValue} handleTextAreaChange={handleTextAreaChange} id={"filterWordlistsEditorTextArea"}/>
+              </>
+            )
+            }
+          </Box>
+        </PaperBlissBrowse>
     </Container>
 </>
 

@@ -2,10 +2,11 @@ import React, {useEffect, useState} from 'react';
 import {useDataStore} from "../../DataStoreContext";
 import {useDataFromStore} from "../../../modules/datastore";
 import {useAlert} from "../../AlertContext";
-import {Button, FormControl, InputLabel, MenuItem, Paper, Select, TextField, Typography} from "@mui/material";
+import {Button, FormControl, InputLabel, MenuItem, Select, TextField, Typography} from "@mui/material";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 import {Save} from "@mui/icons-material";
 import {llmServerTypes} from "../../../modules/ml/mlTypes";
+import PaperBlissBrowse from "./PaperBlissBrowse";
 
 
 //TODO: can remove hard-coded and get from type definition?
@@ -81,12 +82,7 @@ const MLInferenceSettings = () => {
   }
 
   return (
-    <Paper style={{
-      padding: '20px',
-      margin: '20px',
-      //border: '2px solid #000', // Adjust color and width as needed
-      boxShadow: '0px 0px 10px rgba(0,0,0,0.5)' // Adjust shadow to make it more visible
-    }} >
+    <PaperBlissBrowse>
       <Typography variant="h5">Inference server settings</Typography>
       <Typography variant="h6">Machine Learning Embedding Inference Server Settings</Typography>
       <FormControl fullWidth margin="normal">
@@ -161,7 +157,7 @@ const MLInferenceSettings = () => {
       <Button variant="contained" color="primary" onClick={handleSave} style={{ marginTop: '20px' }} startIcon={<Save/>}>
         Save
       </Button>
-    </Paper>
+    </PaperBlissBrowse>
   );
 
 };

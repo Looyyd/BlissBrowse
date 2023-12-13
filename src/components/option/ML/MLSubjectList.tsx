@@ -3,23 +3,26 @@ import {useDataStore} from "../../DataStoreContext";
 import {useDataFromStore} from "../../../modules/datastore";
 import {
   Button,
-  Dialog, DialogActions, DialogContent, DialogTitle,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   IconButton,
   List,
   ListItem,
   ListItemText,
   MenuItem,
-  Paper,
-  Select, Tooltip,
+  Select,
+  Tooltip,
   Typography
 } from "@mui/material";
 import {useAlert} from "../../AlertContext";
 import {Delete, Settings} from "@mui/icons-material";
 import {FilterAction} from "../../../modules/types";
-import {MLFilterMethod, MLSubject, SubjectsStore} from "../../../modules/ml/mlTypes";
+import {MLFilterMethod, MLSubject} from "../../../modules/ml/mlTypes";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 import MLAdvancedEmbeddingsSettings from "./MLAdvancedEmbeddingsSettings";
-
+import PaperBlissBrowse from "./PaperBlissBrowse";
 
 
 const possibleFilterActions = Object.keys(FilterAction);
@@ -60,9 +63,8 @@ const MLSubjectList = () => {
 
 
   const deleteSubject = async (subjectDescription: string) => {
-    const key = subjectDescription;
     try {
-      await subjectsDataStore.clearKey(key);
+      await subjectsDataStore.clearKey(subjectDescription);
       // hack because i don't know why the stat wasn't updating
       // the subject was being removed but then readded, but locally because disapeared on refersh
       setSubjects(subjects.filter((subject) => subject.description !== subjectDescription));
@@ -107,11 +109,7 @@ const MLSubjectList = () => {
     )
   } else {
     return (
-      <Paper style={{
-          padding: '20px',
-          margin: '20px',
-          boxShadow: '0px 0px 10px rgba(0,0,0,0.5)'
-        }}>
+      <PaperBlissBrowse>
         <Typography variant="h5" style={{ marginBottom: '1rem' }}>Your Subjects</Typography>
         <List>
           {subjects.map((subject) => {
@@ -183,7 +181,7 @@ const MLSubjectList = () => {
             </DialogActions>
           </Dialog>
         )}
-      </Paper>
+      </PaperBlissBrowse>
     )
   }
 };
