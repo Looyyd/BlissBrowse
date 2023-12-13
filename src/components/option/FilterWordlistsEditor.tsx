@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import ListSelector from "../ListSelector";
 import {useAlert} from "../AlertContext";
-import {TextEditBox} from "../TextEditBox";
+import {TextEditBox} from "../style/TextEditBox";
 import {Delete, Save} from "@mui/icons-material";
 import NewListForm from "../popup/NewListForm";
 import {useDataStore} from "../DataStoreContext";

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
-import {EXTENSION_NAME} from "../constants";
+import {EXTENSION_NAME} from "../../constants";
 
 const StyledTypography = styled(Typography)({
   textAlign: 'center',

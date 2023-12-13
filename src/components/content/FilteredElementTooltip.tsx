@@ -3,7 +3,7 @@ import React from "react";
 import FilterIgnore from "./FilterIgnore";
 import {unfilterAndIgnoreElement} from "../../modules/content/filter";
 import TooltipBox from "./TooltipBox";
-import ExtensionTitle from "../ExtensionTitle";
+import ExtensionTitle from "../style/ExtensionTitle";
 import {FilteredElement} from "../../modules/content/content";
 
 

@@ -1,14 +1,12 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {
   Box,
-  Button,
   Container, IconButton, List, ListItem, ListItemSecondaryAction, ListItemText,
   Typography
 } from '@mui/material';
 import {BlacklistDatastore} from "../../modules/hostname";
 import {useAlert} from "../AlertContext";
-import {TextEditBox} from "../TextEditBox";
-import {RadioButtonChecked, RadioButtonUnchecked, Save} from "@mui/icons-material";
+import {RadioButtonChecked, RadioButtonUnchecked} from "@mui/icons-material";
 import InfoIcon from '@mui/icons-material/Info';
 import {useDataFromStore} from "../../modules/datastore";
 import {supportedWebsites} from "../../modules/content/siteSupport";

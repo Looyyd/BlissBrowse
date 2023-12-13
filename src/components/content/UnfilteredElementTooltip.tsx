@@ -2,7 +2,7 @@ import React from "react";
 import FilterIgnore from "./FilterIgnore";
 import {Button} from "@mui/material";
 import TooltipBox from "./TooltipBox";
-import ExtensionTitle from "../ExtensionTitle";
+import ExtensionTitle from "../style/ExtensionTitle";
 import {reAllowFilterElement} from "../../modules/content/filter";
 
 
