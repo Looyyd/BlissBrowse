@@ -3,7 +3,7 @@ import {Box, Container} from "@mui/material";
 import MLSubjectList from "./MLSubjectList";
 import MLInferenceSettings from "./MLInferenceSettings";
 import MLBudget from "./MLBudget";
-import PaperBlissBrowse from "./PaperBlissBrowse";
+import PaperBlissBrowse from "../../style/PaperBlissBrowse";
 import NewMLSubjectForm from "../../popup/NewMLSubjectForm";
 
 

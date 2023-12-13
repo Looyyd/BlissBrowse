@@ -4,7 +4,7 @@ import {useAlert} from "../../AlertContext";
 import React, {useEffect, useState} from "react";
 import {Button, TextField, Typography} from "@mui/material";
 import {Save} from "@mui/icons-material";
-import PaperBlissBrowse from "./PaperBlissBrowse";
+import PaperBlissBrowse from "../../style/PaperBlissBrowse";
 
 
 function displayCost(cost:number) {

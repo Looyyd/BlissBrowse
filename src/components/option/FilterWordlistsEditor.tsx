@@ -14,7 +14,7 @@ import {useDataStore} from "../DataStoreContext";
 import {FilterList, FilterListDataStore} from "../../modules/wordLists";
 import {useDataFromStore} from "../../modules/datastore";
 import {FilterAction} from "../../modules/types";
-import PaperBlissBrowse from "./ML/PaperBlissBrowse";
+import PaperBlissBrowse from "../style/PaperBlissBrowse";
 
 
 

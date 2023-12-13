@@ -22,7 +22,7 @@ import {FilterAction} from "../../../modules/types";
 import {MLFilterMethod, MLSubject} from "../../../modules/ml/mlTypes";
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 import MLAdvancedEmbeddingsSettings from "./MLAdvancedEmbeddingsSettings";
-import PaperBlissBrowse from "./PaperBlissBrowse";
+import PaperBlissBrowse from "../../style/PaperBlissBrowse";
 
 
 const possibleFilterActions = Object.keys(FilterAction);

@@ -84,7 +84,7 @@ const MLAdvancedEmbeddingsSettings: React.FC<MLAdvancedEmbeddingsSettingsProps> 
   };
 
   const handleSave = () => {
-    setMLSubject(localMLSubject); // Update parent state with local state
+    setMLSubject(localMLSubject);
   };
 
 

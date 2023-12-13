@@ -6,7 +6,7 @@ import {Button, FormControl, InputLabel, MenuItem, Select, TextField, Typography
 import {SelectChangeEvent} from "@mui/material/Select/SelectInput";
 import {Save} from "@mui/icons-material";
 import {llmServerTypes} from "../../../modules/ml/mlTypes";
-import PaperBlissBrowse from "./PaperBlissBrowse";
+import PaperBlissBrowse from "../../style/PaperBlissBrowse";
 
 
 //TODO: can remove hard-coded and get from type definition?
