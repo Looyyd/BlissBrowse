@@ -122,6 +122,7 @@ const MLSubjectList = () => {
                   onChange={(event) => changeDefaultFilterMethod(subject, event)}
                   value={subject?.filterMethod || 'default'}
                   includeDefault={true}
+                  style={{ marginRight: '1rem' }}
                 />
 
                 <Typography variant="subtitle1" style={{ marginRight: '1rem' }}>Filter Action:</Typography>
@@ -130,6 +131,7 @@ const MLSubjectList = () => {
                   onChange={(event) => changeDefaultAction(subject, event)}
                   value={subject?.filterAction || 'default'}
                   includeDefault={true}
+                  style={{ marginRight: '1rem' }}
                 />
 
                 <Button
