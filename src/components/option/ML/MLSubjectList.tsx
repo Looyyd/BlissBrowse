@@ -134,14 +134,15 @@ const MLSubjectList = () => {
                   style={{ marginRight: '1rem' }}
                 />
 
-                <Button
-                  variant="contained"
-                  color="error"
-                  onClick={() => deleteSubject(subjectDescription)}
-                  startIcon={<Delete style={{ fontSize: 'small' }} />}
-                >
-                  Delete
-                </Button>
+                <Tooltip title="Delete subject">
+                  <Button
+                    variant="contained"
+                    color="error"
+                    onClick={() => deleteSubject(subjectDescription)}
+                  >
+                    <Delete />
+                  </Button>
+                </Tooltip>
               </ListItem>
             )
           })}
