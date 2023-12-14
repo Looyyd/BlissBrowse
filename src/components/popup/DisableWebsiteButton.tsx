@@ -52,9 +52,9 @@ const DisableWebsiteButton: React.FC = () => {
   const unsupportedSite = !supportedWebsites.includes(hostname);
 
   const buttonText =
-    forbiddenSite ? 'Site Restricted' :
-      unsupportedSite ? 'Site Unsupported' :
-        isDisabled ? 'Site Disabled' : 'Site Enabled';
+    forbiddenSite ? 'Restricted' :
+      unsupportedSite ? 'Unsupported' :
+        isDisabled ? 'Disabled' : 'Enabled';
 
   const buttonColor =
     forbiddenSite ? "info" :
