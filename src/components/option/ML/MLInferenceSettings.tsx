@@ -138,6 +138,12 @@ const MLInferenceSettings = () => {
           ))}
         </Select>
       </FormControl>
+      {localSettings.llmType === 'local' && (
+        <Typography variant="body1" display="flex" alignItems="center" gap={1}>
+          <InfoIcon color="warning"/>
+          Some adblockers may block local inference server requests.
+        </Typography>
+      )}
       {showLLMURL && (
         <TextField
           label="URL"
