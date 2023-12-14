@@ -10,12 +10,13 @@ export const ML_MODEL_PATH = "js_model/model.json"
 
 // DEBUG
 export const DEBUG = process.env.NODE_ENV === 'development'
-export const DEBUG_MESSAGES = false;
-export const DEBUG_PERFORMANCE = false;
-export const DEBUG_TOKEN_COST = false;
-export const DEBUG_FILTERING = false;
-export const DEBUG_EMBEDDING = false;
-export const DEBUG_CACHE = false;
+export const DEBUG_MESSAGES = DEBUG && false;
+export const DEBUG_PERFORMANCE = DEBUG && false;
+export const DEBUG_TOKEN_COST = DEBUG && false;
+export const DEBUG_FILTERING = DEBUG && false;
+export const DEBUG_EMBEDDING = DEBUG && false;
+export const DEBUG_PROMPTS = DEBUG && false;
+export const DEBUG_CACHE = DEBUG && false;
 
 //CONTENT AND COMPONENTS RELATED CONSTANTS
 export const FILTER_IGNORE_ATTRIBUTE = `data-${EXTENSION_NAME}-ignore`.toLowerCase();

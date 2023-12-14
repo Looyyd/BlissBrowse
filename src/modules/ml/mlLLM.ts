@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import {DEBUG, DEBUG_CACHE, DEBUG_EMBEDDING} from "../../constants";
+import {DEBUG, DEBUG_CACHE, DEBUG_EMBEDDING, DEBUG_PROMPTS} from "../../constants";
 import {addGPTTokensUsed} from "./mlCosts";
 import {inferenseServerSettings, MLSubject, MlCostStore} from "./mlTypes";
 import {extractAndParseJSON, getAnswerFromJSON, openAIClientFromSettings} from "./mlHelpers";
@@ -145,14 +145,16 @@ async function getLocalCompletion(messages: OpenAI.Chat.Completions.ChatCompleti
 
 function createClassificationPrompt(text: string, descriptions: string[]): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
   const systemPrompt = "You are a helpful assistant.";
-  let userMsg = "For each description, say if the given text fits the description. " +
+  let userMsg = "For each description, say if the given text specifically fits the description with 90%+ certainty. " +
     "Answer with JSON, with the key being the description number and the value being \"YES\" (yes it matches the description) or \"NO\" (no it doesn't match) or \"IDK\" (unsure if it matches the description):";
 
   descriptions.forEach((description, index) => {
     userMsg += `\nDescription ${index + 1}: ${description}`;
   });
 
-  let expectedOutputFormat = "\nExpected output format: \n{\n";
+  let expectedOutputFormat = "\nFirst give 1 or 2 sentences of reasoning then answer with a JSON string of this format:" +
+    "*reasoning first*" +
+    "\n{\n";
   descriptions.forEach((_, index) => {
     expectedOutputFormat += `"${index + 1}": "ANSWER"`;
     if (index < descriptions.length - 1) {
@@ -162,7 +164,7 @@ function createClassificationPrompt(text: string, descriptions: string[]): OpenA
   expectedOutputFormat += "\n}\n";
 
   userMsg += expectedOutputFormat;
-  userMsg += `\nText to analyse:\n${text}`;
+  userMsg += `\nText to categorize:\n${text}`;
 
   return [
     {role: "system", content: systemPrompt},
@@ -182,7 +184,7 @@ export async function getGPTClassification(text: string, settings:inferenseServe
   const openai = openAIClientFromSettings(settings);
   while (retries < maxRetries) {
     if (settings.llmType === 'openai') {
-      response = await getOpenAICompletion(messages, openai);
+      response = await getOpenAICompletion(messages, openai, false);
     } else if (settings.llmType === 'local') {
       response = await getLocalCompletion(messages, openai);
     } else {
@@ -190,9 +192,14 @@ export async function getGPTClassification(text: string, settings:inferenseServe
     }
 
     // Assuming response is a JSON string, parse it to a JavaScript object
+    if (DEBUG_PROMPTS) {
+      console.log('Prompt:', messages);
+      console.log('Response:', response);
+    }
     resObj = extractAndParseJSON(response);
     if (resObj === null) {
       retries++;
+      //TODO: retry by continuing the conversation
       console.log('resObj is null, retrying');
     } else {
       break;

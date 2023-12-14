@@ -63,48 +63,6 @@ export async function populateSubjectAndSave(subject: MLSubject){
   return subject as PopulatedFilterSubject;
 }
 
-export async function isTextInSubjectOpenAI(subject:MLSubject, text:string){
-  const threshold = 0.76;
-  //const threshold = 0.65; //jinaai
-  const populatedSubject = await populateSubjectAndSave(subject);
-  const textEmbedding = await getEmbeddings(text);
-  const similarity = cosineSimilarity(populatedSubject.embeddingAverage, textEmbedding);
-
-  const result = similarity > threshold;
-
-  if(DEBUG){
-    if(result) {
-      console.log('text:', text);
-      //console.log('subject:', subject);
-      console.log('similarity:', similarity);
-      //console.log('Embedding lengths:', populatedSubject.embedding.length, textEmbedding.length);
-    }
-  }
-  if(result){
-    //confirm with gpt
-    const gptResult = await getGPTClassification(text, await settingsStore.get(), subject);
-    if(gptResult){
-      return true;
-    }
-    else{
-      return false;
-    }
-  }
-
-  return result;
-}
-
-export async function isTextInSubjectLocal(subject:MLSubject, text:string){
-  const gptResult = await getGPTClassification(text, await settingsStore.get(), subject);
-  if(gptResult){
-    return true;
-  }
-  else{
-    return false;
-  }
-}
-
-
 export async function isTextInSubjectLLM(subject:MLSubject, text:string, settings: inferenseServerSettings){
   if(settings.llmType !== "none"){
     //llm only
@@ -148,15 +106,17 @@ export async function isTextInSubject(subject:MLSubject, text:string, filterMeth
   const settings = await settingsStore.get();
 
   if (filterMethod === MLFilterMethod.EMBEDDING) {
-    return isTextInSubjectEmbedding(subject, text, settings);
+    return await isTextInSubjectEmbedding(subject, text, settings);
   } else if (filterMethod === MLFilterMethod.LLM) {
-    return isTextInSubjectLLM(subject, text, settings);
+    return await isTextInSubjectLLM(subject, text, settings);
   } else if (filterMethod === MLFilterMethod.EMBEDDING_AND_LLM){
     const embed_result = await isTextInSubjectEmbedding(subject, text, settings);
     if(embed_result){
-      return true;
-    } else {
+      //confirm with llm
       return await isTextInSubjectLLM(subject, text, settings);
+    } else {
+      return false;
     }
   }
+  return false;
 }
