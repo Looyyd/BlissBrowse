@@ -175,8 +175,6 @@ function createClassificationPrompt(text: string, descriptions: string[]): OpenA
 export async function getGPTClassification(text: string, settings:inferenseServerSettings, subject: MLSubject) {
   // TODO: multiple descriptions at once
   const messages = createClassificationPrompt(text, [subject.description]);
-
-
   let retries = 0
   const maxRetries = 2;
   let response: string;
@@ -199,8 +197,8 @@ export async function getGPTClassification(text: string, settings:inferenseServe
     resObj = extractAndParseJSON(response);
     if (resObj === null) {
       retries++;
-      //TODO: retry by continuing the conversation
-      console.log('resObj is null, retrying');
+      messages.push({role: "assistant", content: response});
+      messages.push({role: "user", content: "Please respond with a valid json string."});
     } else {
       break;
     }
