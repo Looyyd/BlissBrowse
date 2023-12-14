@@ -12,7 +12,7 @@ const StyledTypography = styled(Typography)({
 function ExtensionTitle() {
   return (
     <StyledTypography  variant="h5">
-      {EXTENSION_NAME} - Content Filter
+      {EXTENSION_NAME}
     </StyledTypography>
   );
 }
