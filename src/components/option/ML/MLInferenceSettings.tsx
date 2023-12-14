@@ -8,6 +8,7 @@ import {Save} from "@mui/icons-material";
 import {llmServerTypes} from "../../../modules/ml/mlTypes";
 import PaperBlissBrowse from "../../style/PaperBlissBrowse";
 import LoadingScreen from "../../style/LoadingScreen";
+import InfoIcon from "@mui/icons-material/Info";
 
 
 //TODO: can remove hard-coded and get from type definition?
@@ -86,6 +87,10 @@ const MLInferenceSettings = () => {
     <PaperBlissBrowse>
       <Typography variant="h5">Inference server settings</Typography>
       <Typography variant="h6">Machine Learning Embedding Inference Server Settings</Typography>
+      <Typography variant="body1" display="flex" alignItems="center" gap={1}>
+        <InfoIcon color="primary" />
+        Embeddings require valid LLM settings to generate sentences to compare to.
+      </Typography>
       <FormControl fullWidth margin="normal">
         <InputLabel>Type</InputLabel>
         <Select

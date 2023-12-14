@@ -3,6 +3,7 @@ import {useAlert} from "../AlertContext";
 import {Button, FormControl, TextField, Typography} from "@mui/material";
 import {Add} from "@mui/icons-material";
 import {createNewSubject} from "../../modules/ml/ml";
+import InfoIcon from "@mui/icons-material/Info";
 
 
 const NewMLSubjectForm: React.FC = () => {
@@ -30,12 +31,16 @@ const NewMLSubjectForm: React.FC = () => {
   return (
     <>
       <Typography variant="h5">Create a new subject to filter</Typography>
+      <Typography variant="body1" display="flex" alignItems="center" gap={1}>
+        <InfoIcon color="warning"/>
+        Requires valid inference server settings in Machine Learning options.
+      </Typography>
       <form onSubmit={handleSubmit}>
         <FormControl fullWidth margin="normal">
           <TextField
             id="subjectDescriptionInputField"
             type="text"
-            placeholder="Enter a subject description"
+            placeholder='Describe a subject to filter'
             value={subjectDescription}
             onChange={(e) => setSubjectDescription(e.target.value)}
             autoComplete="off"
