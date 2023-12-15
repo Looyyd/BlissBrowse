@@ -37,6 +37,7 @@ export interface inferenseServerSettings {
   llmURL?: string;
   llmToken?: string;
   llmModelName?: string;
+  llmTokenCost?: number;
   embedType: embedServerTypes;
   embedURL?: string;
   embedToken?: string;

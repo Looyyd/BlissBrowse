@@ -30,6 +30,7 @@ const MLInferenceSettings = () => {
   const [showLLMURL, setShowLLMURL] = useState(false);
   const [showLLMToken, setShowLLMToken] = useState(false);
   const [showLLMName, setShowLLMName] = useState(false);
+  const [showLLMTokenCost, setShowLLMTokenCost] = useState(false);
 
   useEffect(() => {
     if(localSettings === null) {
@@ -41,6 +42,10 @@ const MLInferenceSettings = () => {
     setShowLLMURL(localSettings.llmType === "local" || localSettings.llmType === "remote");
     setShowLLMToken(localSettings.llmType === "openai" || localSettings.llmType === "remote");
     setShowLLMName(localSettings.llmType === "remote");
+
+    //TODO: token usage was detected by the openAI api, when it is correctly sent when using curl request
+    // need to implement api calls myself
+    //setShowLLMTokenCost(localSettings.llmType === "remote");
   }, [localSettings]);
 
   // Update local state when settings change
@@ -147,6 +152,12 @@ const MLInferenceSettings = () => {
           Some adblockers may block local inference server requests.
         </Typography>
       )}
+      {localSettings.llmType === 'remote' && (
+        <Typography variant="body1" display="flex" alignItems="center" gap={1}>
+          <InfoIcon color="warning"/>
+          Remote inference server needs to comply with OpenAI API.
+        </Typography>
+      )}
       {showLLMURL && (
         <TextField
           label="URL"
@@ -177,6 +188,17 @@ const MLInferenceSettings = () => {
           onChange={handleInputChange}
           fullWidth
           type="text"
+          margin="normal"
+        />
+      )}
+      {showLLMTokenCost && (
+        <TextField
+          label="Cost per 1 token"
+          name="llmTokenCost"
+          value={localSettings.llmTokenCost || ''}
+          onChange={handleInputChange}
+          fullWidth
+          type="number"
           margin="normal"
         />
       )}

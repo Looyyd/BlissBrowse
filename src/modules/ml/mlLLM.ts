@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import {DEBUG, DEBUG_CACHE, DEBUG_EMBEDDING, DEBUG_PROMPTS} from "../../constants";
+import {DEBUG_CACHE, DEBUG_EMBEDDING, DEBUG_PROMPTS, DEBUG_TOKEN_COST} from "../../constants";
 import {addGPTTokensUsed} from "./mlCosts";
 import {inferenseServerSettings, MLSubject, MlCostStore} from "./mlTypes";
 import {extractAndParseJSON, getAnswerFromJSON, openAIClientFromSettings} from "./mlHelpers";
@@ -76,7 +76,12 @@ async function getOpenAICompletion(messages: OpenAI.Chat.Completions.ChatComplet
 }
 
 // TODO: this can be blocked by brave adblocker
-async function getLocalCompletion(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[], openai:OpenAI, model_name = "local", json_mode = false) {
+async function getLocalCompletion(
+  messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+  openai:OpenAI, model_name = "local",
+  token_cost: number | undefined = undefined,
+  json_mode = false
+) {
   const userMessage = messages[1].content as string
   const systemPrompt = messages[0].content as string;
   const cacheKey = `userMessage:${userMessage}|systemPrompt:${systemPrompt}`;
@@ -101,6 +106,7 @@ async function getLocalCompletion(messages: OpenAI.Chat.Completions.ChatCompleti
 
     // Store a new promise in the cache immediately to handle concurrent calls
     const time = Date.now();
+
     const promise = openai.chat.completions.create({
       model: model_name,
       messages: messages,
@@ -111,13 +117,24 @@ async function getLocalCompletion(messages: OpenAI.Chat.Completions.ChatCompleti
       stop: ["}"],//stop at the end of the json
       frequency_penalty: 0,
       presence_penalty: 0,
-    }).then(response => {
+    }).then(async response => {
       let content = response.choices[0].message.content;
-      if (DEBUG) {
+      if (DEBUG_PROMPTS) {
         console.log("Local completion content:", content);
         console.log(messages);
         console.log('time taken to get local completion:', Date.now() - time);
       }
+      if(token_cost !== undefined) {
+        const tokensUsed = response.usage?.total_tokens || 0;
+        await costStore.add(tokensUsed * token_cost);
+        if(DEBUG_TOKEN_COST){
+          console.log('tokens used:', tokensUsed);
+          console.log('token cost:', tokensUsed * token_cost);
+          console.log('usage:', response.usage)
+          console.log(response)
+        }
+      }
+
       if (content === null) {
         throw new Error('content is null');
       }
@@ -189,7 +206,14 @@ export async function getGPTClassification(text: string, settings:inferenseServe
       if(settings.llmModelName === undefined){
         throw new Error('model name is undefined');
       }
-      response = await getLocalCompletion(messages, openai, settings.llmModelName);
+      let tokenCost;
+      if(settings.llmTokenCost === undefined){
+        console.log('token cost is undefined, using default');
+        tokenCost = 0;
+      } else {
+        tokenCost = settings.llmTokenCost;
+      }
+      response = await getLocalCompletion(messages, openai, settings.llmModelName, tokenCost);
     } else {
       throw new Error('invalid settings type');
     }
