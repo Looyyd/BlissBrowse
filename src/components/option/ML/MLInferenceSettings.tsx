@@ -12,7 +12,8 @@ import InfoIcon from "@mui/icons-material/Info";
 
 
 //TODO: can remove hard-coded and get from type definition?
-const llmServerTypes: llmServerTypes[] = ['openai', 'local', 'none'];
+//TODO: how is none handled?
+const llmServerTypes: llmServerTypes[] = ['openai', 'local', 'none', 'remote'];
 const embedServerTypes: llmServerTypes[] = ['openai', 'none'];
 
 
@@ -28,6 +29,7 @@ const MLInferenceSettings = () => {
   const [showEmbedToken, setShowEmbedToken] = useState(false);
   const [showLLMURL, setShowLLMURL] = useState(false);
   const [showLLMToken, setShowLLMToken] = useState(false);
+  const [showLLMName, setShowLLMName] = useState(false);
 
   useEffect(() => {
     if(localSettings === null) {
@@ -36,8 +38,9 @@ const MLInferenceSettings = () => {
     // Update visibility based on selection
     //setShowEmbedURL(localSettings.embedType === "no");
     setShowEmbedToken(localSettings.embedType === "openai");
-    setShowLLMURL(localSettings.llmType === "local");
-    setShowLLMToken(localSettings.llmType === "openai");
+    setShowLLMURL(localSettings.llmType === "local" || localSettings.llmType === "remote");
+    setShowLLMToken(localSettings.llmType === "openai" || localSettings.llmType === "remote");
+    setShowLLMName(localSettings.llmType === "remote");
   }, [localSettings]);
 
   // Update local state when settings change
@@ -163,6 +166,17 @@ const MLInferenceSettings = () => {
           onChange={handleInputChange}
           fullWidth
           type="password"
+          margin="normal"
+        />
+      )}
+      {showLLMName && (
+        <TextField
+          label="Name"
+          name="llmModelName"
+          value={localSettings.llmModelName || ''}
+          onChange={handleInputChange}
+          fullWidth
+          type="text"
           margin="normal"
         />
       )}

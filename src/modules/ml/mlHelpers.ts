@@ -96,6 +96,19 @@ export function openAIClientFromSettings(settings: inferenseServerSettings): Ope
       dangerouslyAllowBrowser: true,//this is a security check to avoid that companies but their api key in the source code
       // it's ok, because there is no api key for local
     });
+  } else if(settings.llmType === "remote"){
+    if (!settings.llmURL) {
+      throw new Error('url is required');
+    }
+    if (!settings.llmToken) {
+      throw new Error('token is required');
+    }
+    return new OpenAI({
+      baseURL: settings.llmURL,
+      apiKey: settings.llmToken,
+      dangerouslyAllowBrowser: true,//this is a security check to avoid that companies but their api key in the source code
+      // it's ok, because there is no api key for local
+    });
   } else {
     throw new Error('invalid settings type');
   }

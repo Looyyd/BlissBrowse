@@ -76,7 +76,7 @@ async function getOpenAICompletion(messages: OpenAI.Chat.Completions.ChatComplet
 }
 
 // TODO: this can be blocked by brave adblocker
-async function getLocalCompletion(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[], openai:OpenAI, json_mode = true) {
+async function getLocalCompletion(messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[], openai:OpenAI, model_name = "local", json_mode = false) {
   const userMessage = messages[1].content as string
   const systemPrompt = messages[0].content as string;
   const cacheKey = `userMessage:${userMessage}|systemPrompt:${systemPrompt}`;
@@ -102,7 +102,7 @@ async function getLocalCompletion(messages: OpenAI.Chat.Completions.ChatCompleti
     // Store a new promise in the cache immediately to handle concurrent calls
     const time = Date.now();
     const promise = openai.chat.completions.create({
-      model: "local", //need model that supports json mode
+      model: model_name,
       messages: messages,
       response_format: json_mode ? {"type": "json_object"} : undefined,
       temperature: 0,
@@ -185,6 +185,11 @@ export async function getGPTClassification(text: string, settings:inferenseServe
       response = await getOpenAICompletion(messages, openai, false);
     } else if (settings.llmType === 'local') {
       response = await getLocalCompletion(messages, openai);
+    } else if (settings.llmType === "remote"){
+      if(settings.llmModelName === undefined){
+        throw new Error('model name is undefined');
+      }
+      response = await getLocalCompletion(messages, openai, settings.llmModelName);
     } else {
       throw new Error('invalid settings type');
     }

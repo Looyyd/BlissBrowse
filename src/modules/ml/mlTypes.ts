@@ -8,7 +8,7 @@ import {
 } from "../../constants";
 import {FilterAction} from "../types";
 
-export type llmServerTypes = 'openai' | 'local' | 'none';
+export type llmServerTypes = 'openai' | 'local' | 'none' | 'remote';
 export type embedServerTypes = 'openai' | 'none';
 
 export enum EmbeddingCalculationMethod {
@@ -36,6 +36,7 @@ export interface inferenseServerSettings {
   llmType: llmServerTypes;
   llmURL?: string;
   llmToken?: string;
+  llmModelName?: string;
   embedType: embedServerTypes;
   embedURL?: string;
   embedToken?: string;
