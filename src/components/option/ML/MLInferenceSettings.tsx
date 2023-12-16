@@ -94,6 +94,10 @@ const MLInferenceSettings = () => {
   return (
     <PaperBlissBrowse>
       <Typography variant="h5">Inference server settings</Typography>
+      <Typography variant="body1" display="flex" alignItems="center" gap={1}>
+        <InfoIcon color="primary" />
+        By configuring the inference server, you accept that content from supported websites you visit will be sent to the inference server.
+      </Typography>
       <Typography variant="h6">Machine Learning Embedding Inference Server Settings</Typography>
       <Typography variant="body1" display="flex" alignItems="center" gap={1}>
         <InfoIcon color="primary" />
