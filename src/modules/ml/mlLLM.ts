@@ -45,7 +45,7 @@ async function getOpenAICompletion(messages: OpenAI.Chat.Completions.ChatComplet
       messages: messages,
       response_format: json_mode ? {"type": "json_object"} : undefined,
       temperature: 0,
-      max_tokens: 256,
+      max_tokens: 512,
       top_p: 1,
       frequency_penalty: 0,
       presence_penalty: 0,
@@ -112,7 +112,7 @@ async function getLocalCompletion(
       messages: messages,
       response_format: json_mode ? {"type": "json_object"} : undefined,
       temperature: 0,
-      max_tokens: 256,
+      max_tokens: 512,
       top_p: 1,
       stop: ["}"],//stop at the end of the json
       frequency_penalty: 0,
@@ -198,6 +198,7 @@ export async function getGPTClassification(text: string, settings:inferenseServe
   let resObj: any;
   const openai = openAIClientFromSettings(settings);
   while (retries < maxRetries) {
+    //TODO: single completion function
     if (settings.llmType === 'openai') {
       response = await getOpenAICompletion(messages, openai, false);
     } else if (settings.llmType === 'local') {
@@ -243,7 +244,7 @@ export async function getGPTClassification(text: string, settings:inferenseServe
   return answers[0] === 1;//TODO: handle multiple descriptions
 }
 
-export async function getKeywordsForSubject(subject: string, inferenceSettings:inferenseServerSettings): Promise<string[]> {
+export async function getSentencesForSubjectEmbeddings(subject: string, inferenceSettings:inferenseServerSettings): Promise<string[]> {
   let systemPrompt = "You are a helpful assistant."
   let userMessage = "That sends back around 10 strings that are related to the description of the given subject. Make sure the strings are diverse in style but keep them all related to the user subject!"
   userMessage += `Send back a JSON string with key "sentences" and value being an array of strings.`;
@@ -253,7 +254,15 @@ export async function getKeywordsForSubject(subject: string, inferenceSettings:i
     {role: "user", content: userMessage}
   ] as OpenAI.Chat.Completions.ChatCompletionMessageParam[];
   const openai = openAIClientFromSettings(inferenceSettings);
-  const response = await getOpenAICompletion(messages, openai, true);
+  let response;
+  //TODO: single completion function, that follows openAI api
+  if(inferenceSettings.llmType === "remote" || inferenceSettings.llmType === "local"){
+    response = await getLocalCompletion(messages, openai, inferenceSettings.llmModelName, inferenceSettings.llmTokenCost, true);
+  } else if (inferenceSettings.llmType === "openai") {
+    response = await getOpenAICompletion(messages, openai, true);
+  } else {
+    throw new Error('invalid llm type to get sentences for subject embeddings');
+  }
   const resObj = JSON.parse(response);
   if(resObj === null){
     throw new Error('resObj is null');

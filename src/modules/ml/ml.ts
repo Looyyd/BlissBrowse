@@ -11,7 +11,7 @@ import {
 } from "./mlTypes";
 import {logCost,} from "./mlCosts";
 import {getEmbeddings} from "./mlEmbeddings";
-import {getGPTClassification, getKeywordsForSubject} from "./mlLLM";
+import {getGPTClassification, getSentencesForSubjectEmbeddings} from "./mlLLM";
 
 
 const settingsStore = new InferenseServerSettingsStore()
@@ -49,7 +49,7 @@ export async function populateSubjectAndSave(subject: MLSubject){
     throw new Error('subject.description is required');
   }
   if(!subject.sentences){
-    subject.sentences = await getKeywordsForSubject(subject.description, await settingsStore.get());
+    subject.sentences = await getSentencesForSubjectEmbeddings(subject.description, await settingsStore.get());
   }
   if(!subject.embeddingAverage){
     const embedding_promises = subject.sentences.map(async keyword => await getEmbeddings(keyword));
