@@ -1,6 +1,7 @@
 import {addEmbeddingTokensUsed} from "./mlCosts";
 import {InferenseServerSettingsStore, MlCostStore} from "./mlTypes";
 import {huggingFaceToken} from "../secrets";
+import {DEBUG_EMBEDDING} from "../../constants";
 
 //TODO: is used by ml and mlEmbeddings, how to have single instance?
 const settingsStore = new InferenseServerSettingsStore()
@@ -38,7 +39,9 @@ async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
           model: model
         })
       });
-      console.log('time taken to fetch embeddings:', Date.now() - time);
+      if(DEBUG_EMBEDDING) {
+        console.log('time taken to fetch embeddings:', Date.now() - time);
+      }
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -66,7 +69,6 @@ async function getEmbeddingsOpenAI(texts: string[]): Promise<number[][]> {
 
   const time = Date.now();
   const response = await fetchEmbedding(texts);
-  console.log('time taken to get embeddings:', Date.now() - time);
   return response as number[][];
 }
 
