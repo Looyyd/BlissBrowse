@@ -12,7 +12,7 @@ export const ML_MODEL_PATH = "js_model/model.json"
 export const DEBUG = process.env.NODE_ENV === 'development'
 export const DEBUG_MESSAGES = DEBUG && false;
 export const DEBUG_PERFORMANCE = DEBUG && false;
-export const DEBUG_TOKEN_COST = DEBUG && true;
+export const DEBUG_TOKEN_COST = DEBUG && false;
 export const DEBUG_FILTERING = DEBUG && false;
 export const DEBUG_EMBEDDING = DEBUG && false;
 export const DEBUG_PROMPTS = DEBUG && false;
