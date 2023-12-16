@@ -237,7 +237,7 @@ export async function getGPTClassification(text: string, settings:inferenseServe
     return false;
   }
 
-  // Initialize the answers array
+  //TODO: retry if wrong format in json, try catch error
   const answers = getAnswerFromJSON(resObj);
 
   return answers[0] === 1;//TODO: handle multiple descriptions
