@@ -33,7 +33,7 @@
       "matches": ["<all_urls>"]
     }
   ],
-  "description": "Content filter for the browser. Block keywords that you don't want to see."
+  "description": "Content filter for the browser. Filter web content by blocking keywords or subjects, ensuring that your online space is exactly as you wish it to be."
 }
 
 
