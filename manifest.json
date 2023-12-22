@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "BlissBrowse",
-  "version": "1.0",
+  "version": "1.01",
   "permissions": ["tabs"],
   "options_page": "options.html",
   "background": {
@@ -33,7 +33,7 @@
       "matches": ["<all_urls>"]
     }
   ],
-  "description": "Content filter for the browser. Filter web content by blocking keywords or subjects, ensuring that your online space is exactly as you wish it to be."
+  "description": "Filter web content by blocking keywords or subjects, ensuring that your online space is exactly as you wish it to be."
 }
 
 
